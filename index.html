@@ -1497,24 +1497,24 @@
   <!-- VERSİYON ROZET -->
   <div class="build-ver" id="build-ver-badge"></div>
 
+  <!-- HOLOGRAM PANELİ — body seviyesinde, her zaman fixed -->
+  <div class="holo-panel" id="holo-panel" style="display:none">
+    <div class="holo-label">// KİMLİK TARAMASI //</div>
+    <div class="holo-ring">
+      <div class="holo-spin-ring"></div>
+      <div class="holo-spin-ring2"></div>
+      <div class="holo-avatar-wrap">
+        <img id="holo-img" src="" alt=""/>
+      </div>
+    </div>
+    <div class="holo-bar"></div>
+    <div class="holo-name" id="holo-name">—</div>
+    <div class="holo-rutbe" id="holo-rutbe">—</div>
+    <div class="holo-id" id="holo-id">—</div>
+  </div>
+
   <!-- LOGIN -->
   <div class="login-screen" id="login-screen">
-    <!-- HOLOGRAM PANELİ -->
-    <div class="holo-panel" id="holo-panel" style="display:none">
-      <div class="holo-label">// KİMLİK TARAMASI //</div>
-      <div class="holo-ring">
-        <div class="holo-spin-ring"></div>
-        <div class="holo-spin-ring2"></div>
-        <div class="holo-avatar-wrap">
-          <img id="holo-img" src="" alt=""/>
-        </div>
-      </div>
-      <div class="holo-bar"></div>
-      <div class="holo-name" id="holo-name">—</div>
-      <div class="holo-rutbe" id="holo-rutbe">—</div>
-      <div class="holo-id" id="holo-id">—</div>
-    </div>
-
     <div class="login-box">
       <div class="login-hdr">
         <div class="login-hdr-title">◈ TESİS-62 ◈</div>
@@ -1623,7 +1623,7 @@
     // Supabase Auth'taki e-posta adresiyle eşleşmeli
     // ============ VERSİYON ============
     // Her git commit'te sadece bu satırı güncelle:
-    const BUILD_VERSION = 'v2.2';
+    const BUILD_VERSION = 'v2.3';
     // ====================================
 
     const USER_PROFILES = {
@@ -1698,24 +1698,10 @@
 
       if (profile.robloxId) {
         idEl.textContent = 'RBX-ID: ' + profile.robloxId;
-        // Roblox thumbnail — doğrudan img src olarak yükle (CORS sorunu yok)
-        const tryUrls = [
-          `https://www.roblox.com/headshot-thumbnail/image?userId=${profile.robloxId}&width=150&height=150&format=png`,
-          `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${profile.robloxId}&size=150x150&format=Png&isCircular=false`
-        ];
-        // Önce doğrudan img.src yöntemiyle dene (CORS yok)
-        img.onerror = async function() {
+        // Roblox thumbnail — img.src ile yükle (CORS bypass)
+        img.onerror = function() {
           img.onerror = null;
-          // Fallback: thumbnails API'yi dene (proxy üzerinden)
-          try {
-            const res = await fetch(
-              `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${profile.robloxId}&size=150x150&format=Png&isCircular=false`
-            );
-            const json = await res.json();
-            const url  = json?.data?.[0]?.imageUrl;
-            if (url) { img.onerror = null; img.src = url; }
-            else img.src = '';
-          } catch(e) { img.src = ''; }
+          img.src = '';
         };
         img.src = `https://www.roblox.com/headshot-thumbnail/image?userId=${profile.robloxId}&width=150&height=150&format=png`;
       } else {
