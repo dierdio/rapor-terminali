@@ -1237,7 +1237,15 @@
   <div class="build-ver" id="build-ver-badge"></div>
 
   <!-- MAIN -->
-  <div class="main-screen active" id="main-screen">
+  <!-- BAŞLANGIÇ YÜKLENİYOR EKRANI -->
+  <div id="init-loading" style="position:fixed;inset:0;background:#050a05;display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:12px">
+    <div style="font-family:'VT323',monospace;font-size:28px;color:#00ff41;letter-spacing:4px;text-shadow:0 0 12px #00ff41">◈ TESİS-62 ◈</div>
+    <div style="font-size:11px;color:#00a82a;letter-spacing:3px">KİMLİK DOĞRULANIYOR...</div>
+    <div style="width:160px;height:2px;background:#003d10;margin-top:4px"><div style="height:100%;background:#00ff41;animation:load-bar 1.2s ease-in-out infinite"></div></div>
+    <style>@keyframes load-bar{0%{width:0}100%{width:100%}}</style>
+  </div>
+
+  <div class="main-screen" id="main-screen">
     <div class="hdr">
       <div class="hdr-top">
         <div class="hdr-logo">
@@ -1319,7 +1327,7 @@
     // Supabase Auth'taki e-posta adresiyle eşleşmeli
     // ============ VERSİYON ============
     // Her git commit'te sadece bu satırı güncelle:
-    const BUILD_VERSION = 'v1.0';
+    const BUILD_VERSION = 'v2.6';
     // ====================================
 
     const USER_PROFILES = {
@@ -1388,6 +1396,8 @@
       re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
       buildSidebar();
       showPage(CU.role === 'yetkisiz' ? 'rapor-yaz' : 'tum-raporlar');
+      document.getElementById('init-loading').style.display = 'none';
+      document.getElementById('main-screen').classList.add('active');
       updateClock();
     })();
 
