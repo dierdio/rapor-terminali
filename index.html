@@ -1623,7 +1623,7 @@
     // Supabase Auth'taki e-posta adresiyle eşleşmeli
     // ============ VERSİYON ============
     // Her git commit'te sadece bu satırı güncelle:
-    const BUILD_VERSION = 'v1.0';
+    const BUILD_VERSION = 'v2.2';
     // ====================================
 
     const USER_PROFILES = {
@@ -1698,17 +1698,26 @@
 
       if (profile.robloxId) {
         idEl.textContent = 'RBX-ID: ' + profile.robloxId;
-        // Roblox thumbnail API (CORS açık)
-        try {
-          const res = await fetch(
-            'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=' +
-            profile.robloxId + '&size=150x150&format=Png&isCircular=false'
-          );
-          const json = await res.json();
-          const url  = json?.data?.[0]?.imageUrl;
-          if (url) img.src = url;
-          else img.src = '';
-        } catch(e) { img.src = ''; }
+        // Roblox thumbnail — doğrudan img src olarak yükle (CORS sorunu yok)
+        const tryUrls = [
+          `https://www.roblox.com/headshot-thumbnail/image?userId=${profile.robloxId}&width=150&height=150&format=png`,
+          `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${profile.robloxId}&size=150x150&format=Png&isCircular=false`
+        ];
+        // Önce doğrudan img.src yöntemiyle dene (CORS yok)
+        img.onerror = async function() {
+          img.onerror = null;
+          // Fallback: thumbnails API'yi dene (proxy üzerinden)
+          try {
+            const res = await fetch(
+              `https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=${profile.robloxId}&size=150x150&format=Png&isCircular=false`
+            );
+            const json = await res.json();
+            const url  = json?.data?.[0]?.imageUrl;
+            if (url) { img.onerror = null; img.src = url; }
+            else img.src = '';
+          } catch(e) { img.src = ''; }
+        };
+        img.src = `https://www.roblox.com/headshot-thumbnail/image?userId=${profile.robloxId}&width=150&height=150&format=png`;
       } else {
         idEl.textContent = 'RBX-ID: TANIMLI DEĞİL';
         img.src = '';
