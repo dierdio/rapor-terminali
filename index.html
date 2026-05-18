@@ -197,6 +197,25 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .onay-btn.reddet{color:var(--red);border-color:var(--red-dim)}
 .onay-btn.reddet:hover{background:var(--red-dim);color:#fff}
 
+/* SİLME */
+.sil-btn{background:none;border:1px solid var(--red-dim);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:10px;padding:3px 10px;cursor:pointer;letter-spacing:1px;transition:all .15s}
+.sil-btn:hover{background:var(--red-dim);color:#fff;box-shadow:0 0 8px rgba(255,34,34,0.2)}
+/* ONAY MODAL */
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:3000;align-items:center;justify-content:center;padding:20px}
+.confirm-overlay.active{display:flex}
+.confirm-box{background:var(--bg2);border:1px solid var(--red);max-width:420px;width:100%;box-shadow:0 0 30px rgba(255,34,34,0.15)}
+.confirm-hdr{background:var(--red-dim);border-bottom:1px solid var(--red);padding:10px 16px}
+.confirm-hdr-title{font-family:'VT323',monospace;font-size:20px;color:var(--red);letter-spacing:2px}
+.confirm-body{padding:20px}
+.confirm-warn{font-size:11px;color:var(--text-dim);letter-spacing:1px;line-height:1.7;margin-bottom:6px}
+.confirm-warn::before{content:'[UYARI] ';color:var(--red)}
+.confirm-target{font-family:'VT323',monospace;font-size:16px;color:var(--green);margin:10px 0 16px;letter-spacing:1px}
+.confirm-btns{display:flex;gap:8px}
+.confirm-evet{background:var(--red-dim);border:1px solid var(--red);color:#fff;font-family:'VT323',monospace;font-size:18px;padding:6px 20px;cursor:pointer;letter-spacing:2px;transition:all .15s}
+.confirm-evet:hover{background:var(--red);box-shadow:0 0 12px rgba(255,34,34,0.4)}
+.confirm-hayir{background:none;border:1px solid var(--green-dark);color:var(--text-dim);font-family:'VT323',monospace;font-size:18px;padding:6px 20px;cursor:pointer;letter-spacing:2px;transition:all .15s}
+.confirm-hayir:hover{border-color:var(--green);color:var(--green)}
+
 .lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:2000;align-items:center;justify-content:center;cursor:zoom-out}
 .lb.active{display:flex}
 .lb img{max-width:90vw;max-height:88vh;border:1px solid var(--green);box-shadow:0 0 40px rgba(0,255,65,0.2);object-fit:contain}
@@ -268,6 +287,21 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
   </div>
 </div>
 
+<!-- SİLME ONAY MODALI -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-hdr"><div class="confirm-hdr-title">⚠ KAYIT SİLME İŞLEMİ</div></div>
+    <div class="confirm-body">
+      <div class="confirm-warn">Bu rapor kalıcı olarak silinecektir. Bu işlem geri alınamaz.</div>
+      <div class="confirm-target" id="confirm-target">—</div>
+      <div class="confirm-btns">
+        <button class="confirm-evet" onclick="confirmSil()">[ EVET, SİL ]</button>
+        <button class="confirm-hayir" onclick="cancelSil()">[ İPTAL ]</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- LIGHTBOX -->
 <div class="lb" id="lb" onclick="closeLb()">
   <button class="lb-close" onclick="closeLb()">[ KAPAT ]</button>
@@ -280,7 +314,10 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
   <div class="mb">
     <div class="mh">
       <div class="mt" id="mt">RAPOR DETAYI</div>
-      <button class="mc" onclick="closeMoDirect()">[ KAPAT ]</button>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="sil-btn" id="mo-sil-btn" onclick="silFromModal()" style="font-size:10px">[ SİL ]</button>
+        <button class="mc" onclick="closeMoDirect()">[ KAPAT ]</button>
+      </div>
     </div>
     <div class="mbody" id="mbody"></div>
   </div>
@@ -601,7 +638,10 @@ function rCard(r,su){
       </div>
     </div>
     <div class="rc-body">${r.amac?r.amac.substring(0,120)+'…':''}</div>
-    <button class="exp-btn" onclick="openMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="exp-btn" onclick="openMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>
+      ${(CU.role==='yetkili'||CU.username===r.username)?`<button class="sil-btn" onclick="silRapor(${r.id})">[ SİL ]</button>`:''}
+    </div>
   </div>`;
 }
 
@@ -629,6 +669,10 @@ function openFolder(u){VF=u;document.getElementById('ca').innerHTML=bDosyalar()}
 
 function openMo(id){
   const r=getRaps().find(x=>x.id===id);if(!r)return;
+  openModalId=id;
+  // Silme butonunu göster/gizle
+  const silBtn=document.getElementById('mo-sil-btn');
+  if(silBtn) silBtn.style.display=(CU.role==='yetkili'||CU.username===r.username)?'block':'none';
   document.getElementById('mt').textContent=`${r.scd||'—'} // DENEY-${r.dNo||'000'}`;
   const rk=RUTBE_LIST.find(x=>x.label===r.rutbe);
   const rc=rk?RC[rk.kat]||'var(--green)':'var(--green)';
@@ -708,6 +752,36 @@ function reddetRapor(id){
   saveRaps(raps);
   openMo(id);
   document.getElementById('ca').innerHTML=CU.role==='yetkili'?(document.getElementById('nav-tum-raporlar')?.classList.contains('active')?bTumRaporlar():bDosyalar()):bRaporlarim();
+}
+
+let silPendingId=null,openModalId=null;
+
+function silFromModal(){if(openModalId)silRapor(openModalId)}
+
+function silRapor(id){
+  const r=getRaps().find(x=>x.id===id);if(!r)return;
+  silPendingId=id;
+  document.getElementById('confirm-target').textContent=`${r.scd||'—'} // DENEY-${r.dNo||'000'} — ${r.displayName}`;
+  document.getElementById('confirm-overlay').classList.add('active');
+}
+function confirmSil(){
+  if(!silPendingId)return;
+  const raps=getRaps().filter(x=>x.id!==silPendingId);
+  saveRaps(raps);
+  silPendingId=null;
+  document.getElementById('confirm-overlay').classList.remove('active');
+  closeMoDirect();
+  // sayfayı yenile
+  const activeNav=document.querySelector('.sb-item.active');
+  if(activeNav){
+    const id=activeNav.id.replace('nav-','');
+    if(id==='dosyalar'&&VF){document.getElementById('ca').innerHTML=bDosyalar();}
+    else showPage(id);
+  }
+}
+function cancelSil(){
+  silPendingId=null;
+  document.getElementById('confirm-overlay').classList.remove('active');
 }
 
 function closeMo(e){if(e.target===document.getElementById('mo'))closeMoDirect()}
