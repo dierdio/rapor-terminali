@@ -1804,9 +1804,9 @@
 
     function bDosyalar() {
       const raps = getRaps();
-      const yetk = USERS.filter(u => u.role === 'yetkisiz');
+      const yetk = Object.values(USER_PROFILES).filter(u => u.role === 'yetkisiz');
       if (VF) {
-        const u = USERS.find(x => x.username === VF);
+        const u = Object.values(USER_PROFILES).find(x => x.username === VF);
         const ur = raps.filter(r => r.username === VF);
         let h = `<div><button class="back-btn" onclick="VF=null;setNav('dosyalar');document.getElementById('ca').innerHTML=bDosyalar()">PERSONEL DOSYALARINA DÖN</button>
     <div class="ph"><h2>${u ? u.displayName.toUpperCase() : VF} // DOSYA</h2><p>// ${ur.length} RAPOR KAYDI</p></div><div class="rlist">`;
