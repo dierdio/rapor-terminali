@@ -123,6 +123,143 @@
       margin-left: 2px
     }
 
+    /* VERSİYON ROZET */
+    .build-ver {
+      position: fixed;
+      bottom: 10px;
+      right: 14px;
+      font-size: 10px;
+      color: var(--text-dark);
+      letter-spacing: 2px;
+      z-index: 10000;
+      pointer-events: none;
+      font-family: 'Share Tech Mono', monospace
+    }
+    .build-ver span { color: var(--green-dim) }
+
+    /* HOLOGRAM */
+    @keyframes holoFloat {
+      0%,100% { transform: translateY(0px) }
+      50%      { transform: translateY(-10px) }
+    }
+    @keyframes holoSpin {
+      from { transform: rotateY(0deg) }
+      to   { transform: rotateY(360deg) }
+    }
+    @keyframes holoScan {
+      0%   { top: 0% }
+      100% { top: 100% }
+    }
+    @keyframes holoPulse {
+      0%,100% { opacity: .7 }
+      50%      { opacity: 1 }
+    }
+    .holo-panel {
+      position: fixed;
+      right: 40px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      z-index: 50;
+      animation: holoFloat 4s ease-in-out infinite
+    }
+    .holo-label {
+      font-size: 8px;
+      letter-spacing: 3px;
+      color: var(--green-dim);
+      text-align: center
+    }
+    .holo-ring {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      perspective: 600px
+    }
+    .holo-ring::before, .holo-ring::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(0,255,65,0.3)
+    }
+    .holo-ring::before {
+      inset: -10px;
+      border-color: rgba(0,255,65,0.15);
+      box-shadow: 0 0 20px rgba(0,255,65,0.08)
+    }
+    .holo-ring::after {
+      inset: -20px;
+      border-color: rgba(0,255,65,0.07)
+    }
+    .holo-avatar-wrap {
+      width: 140px;
+      height: 140px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 4px;
+      border: 1px solid rgba(0,255,65,0.4);
+      box-shadow: 0 0 25px rgba(0,255,65,0.2), inset 0 0 20px rgba(0,0,0,0.5)
+    }
+    .holo-avatar-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(0) brightness(1.1) sepia(1) hue-rotate(80deg) saturate(3);
+      mix-blend-mode: screen;
+      animation: holoPulse 3s ease-in-out infinite
+    }
+    .holo-avatar-wrap::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      height: 30%;
+      background: linear-gradient(transparent, rgba(0,255,65,0.08), transparent);
+      animation: holoScan 2s linear infinite;
+      pointer-events: none
+    }
+    .holo-spin-ring {
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0,255,65,0.35);
+      animation: holoSpin 6s linear infinite
+    }
+    .holo-spin-ring2 {
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0,255,65,0.15);
+      animation: holoSpin 10s linear infinite reverse
+    }
+    .holo-name {
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      color: var(--green);
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px var(--green);
+      text-align: center
+    }
+    .holo-rutbe {
+      font-size: 8px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      text-align: center
+    }
+    .holo-bar {
+      width: 140px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--green), transparent);
+      opacity: .5
+    }
+    .holo-id {
+      font-size: 8px;
+      color: var(--text-dark);
+      letter-spacing: 1px;
+      text-align: center
+    }
+
     /* LOGIN */
     .login-screen {
       display: flex;
@@ -1357,8 +1494,27 @@
 <body>
   <div class="scanline"></div>
 
+  <!-- VERSİYON ROZET -->
+  <div class="build-ver" id="build-ver-badge"></div>
+
   <!-- LOGIN -->
   <div class="login-screen" id="login-screen">
+    <!-- HOLOGRAM PANELİ -->
+    <div class="holo-panel" id="holo-panel" style="display:none">
+      <div class="holo-label">// KİMLİK TARAMASI //</div>
+      <div class="holo-ring">
+        <div class="holo-spin-ring"></div>
+        <div class="holo-spin-ring2"></div>
+        <div class="holo-avatar-wrap">
+          <img id="holo-img" src="" alt=""/>
+        </div>
+      </div>
+      <div class="holo-bar"></div>
+      <div class="holo-name" id="holo-name">—</div>
+      <div class="holo-rutbe" id="holo-rutbe">—</div>
+      <div class="holo-id" id="holo-id">—</div>
+    </div>
+
     <div class="login-box">
       <div class="login-hdr">
         <div class="login-hdr-title">◈ TESİS-62 ◈</div>
@@ -1465,13 +1621,19 @@
 
     // Kullanıcı profil bilgileri — şifreler ARTIK BURADA YOK
     // Supabase Auth'taki e-posta adresiyle eşleşmeli
+    // ============ VERSİYON ============
+    // Her git commit'te sadece bu satırı güncelle:
+    const BUILD_VERSION = 'v1.0';
+    // ====================================
+
     const USER_PROFILES = {
-      'dr_axo@site62.local': { username: 'dr_axo', role: 'yetkili', displayName: 'Yönetici', rutbe: 'Bilim Direktörü - S4', rutbeKat: 'hc' },
-      'dr_hyperius@site62.local': { username: 'dr_hyperius', role: 'yetkili', displayName: 'Dr Hyperius', rutbe: 'Bilim Direktörü Asistanı - S4', rutbeKat: 'hc' },
-      'dr_skynet@site62.local': { username: 'dr_skynet', role: 'yetkili', displayName: 'Dr Skynet', rutbe: 'Baş Araştırmacı - S4', rutbeKat: 'hc' },
-      'yetkisiz@site62.local': { username: 'yetkisiz', role: 'yetkisiz', displayName: 'Yetkisiz Kullanıcı', rutbe: 'Araştırmacı - S3', rutbeKat: 'mr' },
-      'site_director@site62.local': { username: 'site_director', role: 'yönetici', displayName: 'Site Direktörü', rutbe: 'Site Direktörü - S5', rutbeKat: 'hq' }
+      'dr_axo@site62.local':        { username: 'dr_axo',        role: 'yetkili',  displayName: 'Yönetici',         rutbe: 'Bilim Direktörü - S4',          rutbeKat: 'hc', robloxId: 1661733801 },
+      'dr_hyperius@site62.local':   { username: 'dr_hyperius',   role: 'yetkili',  displayName: 'Dr Hyperius',      rutbe: 'Bilim Direktörü Asistanı - S4', rutbeKat: 'hc', robloxId: null },
+      'dr_skynet@site62.local':     { username: 'dr_skynet',     role: 'yetkili',  displayName: 'Dr Skynet',        rutbe: 'Baş Araştırmacı - S4',          rutbeKat: 'hc', robloxId: null },
+      'yetkisiz@site62.local':      { username: 'yetkisiz',      role: 'yetkisiz', displayName: 'Yetkisiz Kullanıcı', rutbe: 'Araştırmacı - S3',           rutbeKat: 'mr', robloxId: null },
+      'site_director@site62.local': { username: 'site_director', role: 'yönetici', displayName: 'Site Direktörü',   rutbe: 'Site Direktörü - S5',           rutbeKat: 'hq', robloxId: 1974901807 }
     };
+    // robloxId'leri buraya gir — örnek: 'dr_axo@site62.local' için robloxId: 123456789
 
     const SCP_LIST = [
       { s: 'Sektör 2', i: ['SCP-012 – Kötü Bir Kompozisyon', 'SCP-066 – Eric\'in Oyuncağı', 'SCP-087 – Merdiven Boşluğu', 'SCP-093 – Kızıl Deniz Nesnesi', 'SCP-120 – Işınlanma Özellikli Çocuk Havuzu', 'SCP-173 – Heykel', 'SCP-207 – Kola Şişesi', 'SCP-316 – Renk-Soldurucu Işık', 'SCP-330 – Sadece İki Tane Al', 'SCP-513 – İnek Çanı', 'SCP-701 – Asılan Kralın Trajedisi', 'SCP-714 – Yorgun Yüzük', 'SCP-860 – Mavi Anahtar', 'SCP-914 – Saat Mekanizması', 'SCP-966 – Uyku Katilleri', 'SCP-999 – Gıdıklama Canavarı', 'SCP-1025 – Hastalıklar Ansiklopedisi', 'SCP-1056 – Boyutunu Değiştir!', 'SCP-1162 – Duvardaki Bir Delik'] },
@@ -1517,6 +1679,48 @@
     }
     setInterval(updateClock, 1000);
 
+    // Versiyon rozeti render
+    (function() {
+      const el = document.getElementById('build-ver-badge');
+      if (el) el.innerHTML = 'BUILD <span>' + BUILD_VERSION + '</span>';
+    })();
+
+    // Roblox hologram yükle
+    async function loadHologram(profile) {
+      const panel = document.getElementById('holo-panel');
+      const img   = document.getElementById('holo-img');
+      const name  = document.getElementById('holo-name');
+      const rutbe = document.getElementById('holo-rutbe');
+      const idEl  = document.getElementById('holo-id');
+
+      name.textContent  = profile.displayName;
+      rutbe.textContent = profile.rutbe;
+
+      if (profile.robloxId) {
+        idEl.textContent = 'RBX-ID: ' + profile.robloxId;
+        // Roblox thumbnail API (CORS açık)
+        try {
+          const res = await fetch(
+            'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=' +
+            profile.robloxId + '&size=150x150&format=Png&isCircular=false'
+          );
+          const json = await res.json();
+          const url  = json?.data?.[0]?.imageUrl;
+          if (url) img.src = url;
+          else img.src = '';
+        } catch(e) { img.src = ''; }
+      } else {
+        idEl.textContent = 'RBX-ID: TANIMLI DEĞİL';
+        img.src = '';
+      }
+
+      panel.style.display = 'flex';
+    }
+
+    function hideHologram() {
+      document.getElementById('holo-panel').style.display = 'none';
+    }
+
     document.addEventListener('keydown', e => {
       if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
     });
@@ -1545,6 +1749,7 @@
       if (!profile) { errEl.style.display = 'block'; await _supabase.auth.signOut(); return; }
 
       CU = { ...profile, email: data.user.email };
+      loadHologram(profile);
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('main-screen').classList.add('active');
       document.getElementById('hun').textContent = CU.displayName;
@@ -1558,6 +1763,7 @@
     async function doLogout() {
       await _supabase.auth.signOut();
       CU = null; VF = null; imgs = []; tsc = 0;
+      hideHologram();
       document.getElementById('main-screen').classList.remove('active');
       document.getElementById('login-screen').style.display = 'flex';
       document.getElementById('lu').value = ''; document.getElementById('lp').value = '';
