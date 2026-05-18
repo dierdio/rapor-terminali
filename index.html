@@ -1466,10 +1466,11 @@
     // Kullanıcı profil bilgileri — şifreler ARTIK BURADA YOK
     // Supabase Auth'taki e-posta adresiyle eşleşmeli
     const USER_PROFILES = {
-      'dr_axo@site62.local': { username: 'dr_axo', role: 'yetkili', displayName: 'Yönetici', rutbe: 'Bilim Direktörü - S4', rutbeKat: 'hc' },
-      'dr_hyperius@site62.local': { username: 'dr_hyperius', role: 'yetkili', displayName: 'Dr Hyperius', rutbe: 'Bilim Direktörü Asistanı - S4', rutbeKat: 'hc' },
-      'dr_skynet@site62.local': { username: 'dr_skynet', role: 'yetkili', displayName: 'Dr Skynet', rutbe: 'Baş Araştırmacı - S4', rutbeKat: 'hc' },
+      'dr_axo@site62.local': { username: 'dr_axo', role: 'yetkili', displayName: 'Dr. Axo', rutbe: 'Bilim Direktörü - S4', rutbeKat: 'hc' },
+      'dr_hyperius@site62.local': { username: 'dr_hyperius', role: 'yetkili', displayName: 'Dr. Hyperius', rutbe: 'Bilim Direktörü Asistanı - S4', rutbeKat: 'hc' },
+      'dr_skynet@site62.local': { username: 'dr_skynet', role: 'yetkili', displayName: 'Dr. Skynet', rutbe: 'Baş Araştırmacı - S4', rutbeKat: 'hc' },
       'yetkisiz@site62.local': { username: 'yetkisiz', role: 'yetkisiz', displayName: 'Yetkisiz Kullanıcı', rutbe: 'Araştırmacı - S3', rutbeKat: 'mr' },
+      'site_director@site62.local': { username: 'site_director', role: 'yönetici', displayName: 'Site Direktörü', rutbe: 'Site Direktörü - S5', rutbeKat: 'sd' }
     };
 
     const SCP_LIST = [
@@ -1804,9 +1805,9 @@
 
     function bDosyalar() {
       const raps = getRaps();
-      const yetk = Object.values(USER_PROFILES).filter(u => u.role === 'yetkisiz');
+      const yetk = USERS.filter(u => u.role === 'yetkisiz');
       if (VF) {
-        const u = Object.values(USER_PROFILES).find(x => x.username === VF);
+        const u = USERS.find(x => x.username === VF);
         const ur = raps.filter(r => r.username === VF);
         let h = `<div><button class="back-btn" onclick="VF=null;setNav('dosyalar');document.getElementById('ca').innerHTML=bDosyalar()">PERSONEL DOSYALARINA DÖN</button>
     <div class="ph"><h2>${u ? u.displayName.toUpperCase() : VF} // DOSYA</h2><p>// ${ur.length} RAPOR KAYDI</p></div><div class="rlist">`;
