@@ -1323,21 +1323,9 @@
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     // =================================================
 
-    // Kullanıcı profil bilgileri — şifreler ARTIK BURADA YOK
-    // Supabase Auth'taki e-posta adresiyle eşleşmeli
     // ============ VERSİYON ============
-    // Her git commit'te sadece bu satırı güncelle:
-    const BUILD_VERSION = 'v2.6';
+    const BUILD_VERSION = 'v2.7';
     // ====================================
-
-    const USER_PROFILES = {
-      'dr_axo@site62.local':        { username: 'dr_axo',        role: 'yetkili',  displayName: 'Yönetici',         rutbe: 'Bilim Direktörü - S4',          rutbeKat: 'hc', robloxId: 1661733801 },
-      'dr_hyperius@site62.local':   { username: 'dr_hyperius',   role: 'yetkili',  displayName: 'Dr Hyperius',      rutbe: 'Bilim Direktörü Asistanı - S4', rutbeKat: 'hc', robloxId: null },
-      'dr_skynet@site62.local':     { username: 'dr_skynet',     role: 'yetkili',  displayName: 'Dr Skynet',        rutbe: 'Baş Araştırmacı - S4',          rutbeKat: 'hc', robloxId: null },
-      'yetkisiz@site62.local':      { username: 'yetkisiz',      role: 'yetkisiz', displayName: 'Yetkisiz Kullanıcı', rutbe: 'Araştırmacı - S3',           rutbeKat: 'mr', robloxId: null },
-      'site_director@site62.local': { username: 'site_director', role: 'yönetici', displayName: 'Site Direktörü',   rutbe: 'Site Direktörü - S5',           rutbeKat: 'hq', robloxId: 1974901807 }
-    };
-    // robloxId'leri buraya gir — örnek: 'dr_axo@site62.local' için robloxId: 123456789
 
     const SCP_LIST = [
       { s: 'Sektör 2', i: ['SCP-012 – Kötü Bir Kompozisyon', 'SCP-066 – Eric\'in Oyuncağı', 'SCP-087 – Merdiven Boşluğu', 'SCP-093 – Kızıl Deniz Nesnesi', 'SCP-120 – Işınlanma Özellikli Çocuk Havuzu', 'SCP-173 – Heykel', 'SCP-207 – Kola Şişesi', 'SCP-316 – Renk-Soldurucu Işık', 'SCP-330 – Sadece İki Tane Al', 'SCP-513 – İnek Çanı', 'SCP-701 – Asılan Kralın Trajedisi', 'SCP-714 – Yorgun Yüzük', 'SCP-860 – Mavi Anahtar', 'SCP-914 – Saat Mekanizması', 'SCP-966 – Uyku Katilleri', 'SCP-999 – Gıdıklama Canavarı', 'SCP-1025 – Hastalıklar Ansiklopedisi', 'SCP-1056 – Boyutunu Değiştir!', 'SCP-1162 – Duvardaki Bir Delik'] },
@@ -1370,7 +1358,7 @@
     ];
     const RC = { hc: '#9b2335', hr: '#e05252', mr: '#d4a017', lr: '#4caf50' };
 
-    let CU = null, VF = null, imgs = [], tsc = 0;
+    let CU = null, VF = null, imgs = [], tsc = 0, ALL_PROFILES = [];
 
     function getRaps() { try { return JSON.parse(localStorage.getItem('scp62_raps') || '[]') } catch { return [] } }
     function saveRaps(r) { localStorage.setItem('scp62_raps', JSON.stringify(r)) }
@@ -1381,16 +1369,31 @@
     (async function initSession() {
       const { data } = await _supabase.auth.getSession();
       if (!data?.session?.user) {
-        window.location.replace('login.html');
+        window.location.replace('login');
         return;
       }
-      const profile = USER_PROFILES[data.session.user.email];
-      if (!profile) {
+      const userId = data.session.user.id;
+      // Tüm profilleri çek (dosyalar sayfası için)
+      const { data: allProfiles } = await _supabase.from('profiles').select('*');
+      ALL_PROFILES = (allProfiles || []).map(p => ({
+        username: p.username, role: p.role, displayName: p.display_name,
+        rutbe: p.rutbe, rutbeKat: p.rutbe_kat, robloxId: p.roblox_id
+      }));
+      const profileData = ALL_PROFILES.find(p => p.username === (allProfiles||[]).find(x => x.id === userId)?.username);
+      if (!profileData) {
         await _supabase.auth.signOut();
-        window.location.replace('login.html');
+        window.location.replace('login');
         return;
       }
-      CU = Object.freeze({ ...profile, email: data.session.user.email });
+      CU = Object.freeze({
+        username:    profileData.username,
+        role:        profileData.role,
+        displayName: profileData.displayName,
+        rutbe:       profileData.rutbe,
+        rutbeKat:    profileData.rutbeKat,
+        robloxId:    profileData.robloxId,
+        email:       data.session.user.email
+      });
       document.getElementById('hun').textContent = CU.displayName;
       const re = document.getElementById('hrutbe');
       re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
@@ -1698,9 +1701,9 @@
 
     function bDosyalar() {
       const raps = getRaps();
-      const yetk = Object.values(USER_PROFILES).filter(u => u.role === 'yetkisiz');
+      const yetk = ALL_PROFILES.filter(u => u.role === 'yetkisiz');
       if (VF) {
-        const u = Object.values(USER_PROFILES).find(x => x.username === VF);
+        const u = ALL_PROFILES.find(x => x.username === VF);
         const ur = raps.filter(r => r.username === VF);
         let h = `<div><button class="back-btn" onclick="VF=null;setNav('dosyalar');document.getElementById('ca').innerHTML=bDosyalar()">PERSONEL DOSYALARINA DÖN</button>
     <div class="ph"><h2>${u ? u.displayName.toUpperCase() : VF} // DOSYA</h2><p>// ${ur.length} RAPOR KAYDI</p></div><div class="rlist">`;

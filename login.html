@@ -82,25 +82,23 @@
   <script>
     const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3YWptbHh4bXhhbXduZXllYmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTA0MTIsImV4cCI6MjA5NDY4NjQxMn0.Buifz0hiJ-3SrXpCX31EiaQ_f8TMgyWOzmsm-9YIMoY';
-    const BUILD_VERSION = 'v2.6';
+    const BUILD_VERSION = 'v2.7';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    const USER_PROFILES = {
-      'dr_axo@site62.local':        { username: 'dr_axo',        role: 'yetkili',  displayName: 'Yönetici',         rutbe: 'Bilim Direktörü - S4',          rutbeKat: 'hc', robloxId: 1661733801 },
-      'dr_hyperius@site62.local':   { username: 'dr_hyperius',   role: 'yetkili',  displayName: 'Dr Hyperius',      rutbe: 'Bilim Direktörü Asistanı - S4', rutbeKat: 'hc', robloxId: null },
-      'dr_skynet@site62.local':     { username: 'dr_skynet',     role: 'yetkili',  displayName: 'Dr Skynet',        rutbe: 'Baş Araştırmacı - S4',          rutbeKat: 'hc', robloxId: null },
-      'yetkisiz@site62.local':      { username: 'yetkisiz',      role: 'yetkisiz', displayName: 'Yetkisiz Kullanıcı', rutbe: 'Araştırmacı - S3',           rutbeKat: 'mr', robloxId: null },
-      'site_director@site62.local': { username: 'site_director', role: 'yönetici', displayName: 'Site Direktörü',   rutbe: 'Site Direktörü - S5',           rutbeKat: 'hq', robloxId: 1974901807 }
-    };
 
     document.getElementById('build-ver-badge').innerHTML = 'BUILD <span>' + BUILD_VERSION + '</span>';
 
-    // Zaten giriş yapılmışsa direkt index.html'e yönlendir
+    // URL'den .html uzantısını kaldır
+    if (window.location.pathname.endsWith('.html')) {
+      const clean = window.location.pathname.replace(/\.html$/, '');
+      window.history.replaceState(null, '', clean + window.location.search + window.location.hash);
+    }
+
+    // Zaten giriş yapılmışsa direkt index'e yönlendir
     (async function() {
       const { data } = await _supabase.auth.getSession();
       if (data?.session?.user) {
-        const profile = USER_PROFILES[data.session.user.email];
-        if (profile) { window.location.replace('index.html'); return; }
+        const { data: profile } = await _supabase.from('profiles').select('id').eq('id', data.session.user.id).single();
+        if (profile) { window.location.replace('index'); return; }
         await _supabase.auth.signOut();
       }
     })();
@@ -110,24 +108,35 @@
     });
 
     async function doLogin() {
-      const emailOrUser = document.getElementById('lu').value.trim();
+      const usernameInput = document.getElementById('lu').value.trim();
       const p = document.getElementById('lp').value;
       const errEl = document.getElementById('lerr');
       const infoEl = document.getElementById('login-info');
       const btn = document.getElementById('login-btn');
       errEl.style.display = 'none';
 
-      if (!emailOrUser || !p) { errEl.style.display = 'block'; return; }
-
-      let email = emailOrUser;
-      if (!emailOrUser.includes('@')) {
-        const found = Object.entries(USER_PROFILES).find(([, v]) => v.username === emailOrUser);
-        if (found) email = found[0];
-        else { errEl.style.display = 'block'; return; }
-      }
+      if (!usernameInput || !p) { errEl.style.display = 'block'; return; }
 
       btn.disabled = true;
       infoEl.style.display = 'block';
+
+      // username'den email bul (profiles tablosundan)
+      let email = usernameInput;
+      if (!usernameInput.includes('@')) {
+        const { data: profileRow } = await _supabase
+          .from('profiles')
+          .select('id, username')
+          .eq('username', usernameInput)
+          .single();
+        if (!profileRow) {
+          errEl.style.display = 'block';
+          infoEl.style.display = 'none';
+          btn.disabled = false;
+          return;
+        }
+        // id üzerinden auth.users'dan email çekemeyiz, email formatını koru
+        email = usernameInput + '@site62.local';
+      }
 
       const { data, error } = await _supabase.auth.signInWithPassword({ email, password: p });
       if (error || !data.user) {
@@ -137,7 +146,8 @@
         return;
       }
 
-      const profile = USER_PROFILES[data.user.email];
+      // Profiles tablosunda kaydı var mı kontrol et
+      const { data: profile } = await _supabase.from('profiles').select('id').eq('id', data.user.id).single();
       if (!profile) {
         errEl.style.display = 'block';
         infoEl.style.display = 'none';
@@ -146,9 +156,9 @@
         return;
       }
 
-      // Başarılı — index.html'e yönlendir
+      // Başarılı
       infoEl.textContent = 'ERİŞİM ONAYLANDI. YÖNLENDİRİLİYOR...';
-      window.location.replace('index.html');
+      window.location.replace('index');
     }
   </script>
 </body>
