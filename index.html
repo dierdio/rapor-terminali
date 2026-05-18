@@ -291,8 +291,9 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 // Buradan kullanıcı ekleyip düzenleyebilirsiniz
 const USERS=[
   {username:'dr_axo',password:'axobirsigma',role:'yetkili',  displayName:'Yönetici',   rutbe:'Bilim Direktörü - S4',rutbeKat:'hq'},
-  {username:'patron',  password:'admin456',role:'yetkili',  displayName:'Patron',      rutbe:'Baş Araştırmacı - S4',        rutbeKat:'hc'},
-  {username:'dr_omer',   password:'omerbirmal',    role:'yetkisiz', displayName:'Dr Ömer',    rutbe:'Araştırmacı - S3',            rutbeKat:'mr'},
+  {username:'dr_hyperius',   password:'hyperius123',    role:'yetkili', displayName:'Dr Hyperius',    rutbe:'Bilim Direktörü Asistanı - S4',rutbeKat:'hc'},
+  {username:'dr_skynet',   password:'skynet456',    role:'yetkili', displayName:'Dr Skynet',    rutbe:'Baş Araştırmacı - S4',rutbeKat:'hc'},
+  {username:'yetkisiz',   password:'yetkisiz123',    role:'yetkisiz', displayName:'Yetkisiz Kullanıcı',    rutbe:'Araştırmacı - S3',rutbeKat:'mr'},
 ];
 // ======================================
 
@@ -426,7 +427,7 @@ function bRaporYaz(){
       </div>
       <div class="frow">
         <div class="fg"><label>SCP</label><select class="ts" id="r-scp">${scpOpts()}</select><span class="val-msg" id="err-scp">SCP seçilmelidir.</span></div>
-        <div class="fg"><label>DENEY SORUMLUSU</label><input type="text" class="tin" id="r-sor" placeholder="Ad Soyad"/><span class="val-msg" id="err-sor">Deney sorumlusu girilmelidir.</span></div>
+        <div class="fg"><label>DENEY SORUMLUSU</label><input type="text" class="tin" id="r-sor" placeholder="Kod Adı"/><span class="val-msg" id="err-sor">Deney sorumlusu girilmelidir.</span></div>
       </div>
       <div class="fg"><label>PERSONEL RÜTBESİ</label><select class="ts" id="r-rutbe" onchange="upRutbeClr()">${rutbeOpts()}</select><span class="val-msg" id="err-rutbe">Rütbe seçilmelidir.</span></div>
       <div class="frow">
