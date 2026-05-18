@@ -175,7 +175,34 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
 .mts-t{color:var(--amber);min-width:100px}
 .mimgs{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
 .mimg{max-width:200px;max-height:140px;border:1px solid var(--green-dark);filter:saturate(0.4)}
-.mimg:hover{filter:none;border-color:var(--green)}
+.mimg:hover{filter:none;border-color:var(--green);cursor:zoom-in}
+
+/* VALİDASYON */
+.field-err{border-color:var(--red)!important;box-shadow:0 0 8px rgba(255,34,34,0.2)!important}
+.val-msg{display:none;font-size:9px;color:var(--red);letter-spacing:1px;margin-top:4px}
+.val-msg::before{content:'[!] '}
+.val-msg.show{display:block}
+.form-err-box{display:none;background:rgba(139,0,0,0.12);border:1px solid var(--red-dim);padding:10px 14px;margin-bottom:14px;font-size:10px;color:var(--red);letter-spacing:1px;line-height:1.8}
+.form-err-box::before{content:'[HATA] ZORUNLU ALANLAR EKSİK:\A';white-space:pre;font-size:9px;color:var(--red-dim)}
+.form-err-box.show{display:block}
+
+.onay-badge{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:1px;padding:2px 8px;border:1px solid}
+.onay-bekliyor{color:var(--amber);border-color:var(--amber-dim);background:rgba(255,176,0,0.06)}
+.onay-onaylandi{color:var(--lr);border-color:#2e7d32;background:rgba(76,175,80,0.06)}
+.onay-reddedildi{color:var(--red);border-color:var(--red-dim);background:rgba(139,0,0,0.1)}
+.onay-btn-grp{display:flex;gap:6px;margin-top:10px}
+.onay-btn{background:none;font-family:'Share Tech Mono',monospace;font-size:10px;padding:4px 12px;cursor:pointer;letter-spacing:1px;transition:all .15s;border:1px solid}
+.onay-btn.onayla{color:var(--lr);border-color:#2e7d32}
+.onay-btn.onayla:hover{background:#1b5e20;color:#fff}
+.onay-btn.reddet{color:var(--red);border-color:var(--red-dim)}
+.onay-btn.reddet:hover{background:var(--red-dim);color:#fff}
+
+.lb{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:2000;align-items:center;justify-content:center;cursor:zoom-out}
+.lb.active{display:flex}
+.lb img{max-width:90vw;max-height:88vh;border:1px solid var(--green);box-shadow:0 0 40px rgba(0,255,65,0.2);object-fit:contain}
+.lb-close{position:fixed;top:16px;right:20px;background:none;border:1px solid var(--red-dim);color:var(--red);font-family:'Share Tech Mono',monospace;font-size:11px;padding:4px 12px;cursor:pointer;letter-spacing:1px;z-index:2001}
+.lb-close:hover{background:var(--red-dim)}
+.lb-hint{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text-dark);letter-spacing:2px}
 </style>
 </head>
 <body>
@@ -239,6 +266,13 @@ body::after{content:'';position:fixed;inset:0;background:radial-gradient(ellipse
     <div class="sidebar" id="sidebar"></div>
     <div class="content" id="ca"></div>
   </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lb" id="lb" onclick="closeLb()">
+  <button class="lb-close" onclick="closeLb()">[ KAPAT ]</button>
+  <img id="lb-img" src="" alt=""/>
+  <div class="lb-hint">ESC veya tıkla — kapat</div>
 </div>
 
 <!-- MODAL -->
@@ -382,28 +416,29 @@ function bRaporYaz(){
   return`<div>
   <div class="ph"><h2>YENİ DENEY RAPORU</h2><p>// TÜM ALANLAR GİZLİLİK SEVİYESİ-4 KAPSAMINDADIR</p></div>
   <div class="suc" id="suc">RAPOR BAŞARIYLA SİSTEME İLETİLDİ. KAYIT OLUŞTURULDU.</div>
+  <div class="form-err-box" id="form-err"></div>
   <div class="rf">
     <div class="fs">
       <div class="fs-title">// TEMEL BİLGİLER</div>
       <div class="frow">
-        <div class="fg"><label>DENEY KODU</label><select class="ts" id="r-scd">${scdOpts()}</select></div>
+        <div class="fg"><label>DENEY KODU</label><select class="ts" id="r-scd">${scdOpts()}</select><span class="val-msg" id="err-scd">Deney kodu seçilmelidir.</span></div>
         <div class="fg"><label>DENEY NUMARASI</label><input type="text" class="tin" value="${nextNo}" readonly style="color:var(--amber);border-left-color:var(--amber-dim)"/></div>
       </div>
       <div class="frow">
-        <div class="fg"><label>SCP</label><select class="ts" id="r-scp">${scpOpts()}</select></div>
-        <div class="fg"><label>DENEY SORUMLUSU</label><input type="text" class="tin" id="r-sor" placeholder="Ad Soyad"/></div>
+        <div class="fg"><label>SCP</label><select class="ts" id="r-scp">${scpOpts()}</select><span class="val-msg" id="err-scp">SCP seçilmelidir.</span></div>
+        <div class="fg"><label>DENEY SORUMLUSU</label><input type="text" class="tin" id="r-sor" placeholder="Ad Soyad"/><span class="val-msg" id="err-sor">Deney sorumlusu girilmelidir.</span></div>
       </div>
-      <div class="fg"><label>PERSONEL RÜTBESİ</label><select class="ts" id="r-rutbe" onchange="upRutbeClr()">${rutbeOpts()}</select></div>
+      <div class="fg"><label>PERSONEL RÜTBESİ</label><select class="ts" id="r-rutbe" onchange="upRutbeClr()">${rutbeOpts()}</select><span class="val-msg" id="err-rutbe">Rütbe seçilmelidir.</span></div>
       <div class="frow">
-        <div class="fg"><label>BAŞLANGIÇ ZAMANI</label><input type="time" class="ttm" id="r-zb"/></div>
-        <div class="fg"><label>BİTİŞ ZAMANI</label><input type="time" class="ttm" id="r-ze"/></div>
+        <div class="fg"><label>BAŞLANGIÇ ZAMANI</label><input type="time" class="ttm" id="r-zb"/><span class="val-msg" id="err-zb">Başlangıç zamanı girilmelidir.</span></div>
+        <div class="fg"><label>BİTİŞ ZAMANI</label><input type="time" class="ttm" id="r-ze"/><span class="val-msg" id="err-ze">Bitiş zamanı girilmelidir.</span></div>
       </div>
-      <div class="fg"><label>KULLANILAN SINIF-D SAYISI</label><input type="number" class="tn" id="r-sd" placeholder="0" min="0"/></div>
+      <div class="fg"><label>KULLANILAN SINIF-D SAYISI</label><input type="number" class="tn" id="r-sd" placeholder="0" min="0"/><span class="val-msg" id="err-sd">Sınıf-D sayısı girilmelidir.</span></div>
     </div>
     <div class="fs">
       <div class="fs-title">// DENEY DETAYLARI</div>
-      <div class="fg"><label>DENEY AMACI</label><textarea class="ta" id="r-amac" placeholder="Deneyin amacını açıklayın..."></textarea></div>
-      <div class="fg"><label>DENEY SONUCU</label><textarea class="ta" id="r-sonuc" placeholder="Deney sonuçlarını detaylıca açıklayın..."></textarea></div>
+      <div class="fg"><label>DENEY AMACI</label><textarea class="ta" id="r-amac" placeholder="Deneyin amacını açıklayın..."></textarea><span class="val-msg" id="err-amac">Deney amacı girilmelidir.</span></div>
+      <div class="fg"><label>DENEY SONUCU</label><textarea class="ta" id="r-sonuc" placeholder="Deney sonuçlarını detaylıca açıklayın..."></textarea><span class="val-msg" id="err-sonuc">Deney sonucu girilmelidir.</span></div>
     </div>
     <div class="fs">
       <div class="fs-title">// ZAMAN DAMGALARI</div>
@@ -460,13 +495,50 @@ function renderImgs(){
 function rmImg(i){imgs.splice(i,1);renderImgs()}
 
 function gonder(){
+  // Tüm hataları temizle
+  ['r-scd','r-scp','r-sor','r-rutbe','r-zb','r-ze','r-sd','r-amac','r-sonuc'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.classList.remove('field-err');
+  });
+  document.querySelectorAll('.val-msg').forEach(e=>e.classList.remove('show'));
+  document.getElementById('form-err').classList.remove('show');
+
+  const alanlar=[
+    {id:'r-scd', errId:'err-scd', label:'Deney Kodu'},
+    {id:'r-scp', errId:'err-scp', label:'SCP'},
+    {id:'r-sor', errId:'err-sor', label:'Deney Sorumlusu'},
+    {id:'r-rutbe',errId:'err-rutbe',label:'Personel Rütbesi'},
+    {id:'r-zb',  errId:'err-zb',  label:'Başlangıç Zamanı'},
+    {id:'r-ze',  errId:'err-ze',  label:'Bitiş Zamanı'},
+    {id:'r-sd',  errId:'err-sd',  label:'Sınıf-D Sayısı'},
+    {id:'r-amac',errId:'err-amac',label:'Deney Amacı'},
+    {id:'r-sonuc',errId:'err-sonuc',label:'Deney Sonucu'},
+  ];
+
+  const eksikler=[];
+  alanlar.forEach(a=>{
+    const el=document.getElementById(a.id);if(!el)return;
+    const val=el.value.trim();
+    if(!val){
+      el.classList.add('field-err');
+      const em=document.getElementById(a.errId);if(em)em.classList.add('show');
+      eksikler.push(a.label);
+    }
+  });
+
+  if(eksikler.length){
+    const box=document.getElementById('form-err');
+    box.innerHTML=eksikler.map(l=>`• ${l}`).join('<br>');
+    box.classList.add('show');
+    box.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+
   const scd=document.getElementById('r-scd').value;
   const scp=document.getElementById('r-scp').value;
   const sor=document.getElementById('r-sor').value.trim();
   const rutbe=document.getElementById('r-rutbe').value;
   const amac=document.getElementById('r-amac').value.trim();
   const sonuc=document.getElementById('r-sonuc').value.trim();
-  if(!scd||!scp||!sor||!amac||!sonuc){alert('[HATA] Deney Kodu, SCP, Sorumlu, Amaç ve Sonuç zorunludur.');return}
 
   const raps=getRaps();
   const no=fmtNo(userRapCount(CU.username)+1);
@@ -522,7 +594,10 @@ function rCard(r,su){
         <div class="rc-id">${r.scd||'—'} // DENEY-${r.dNo||'000'}</div>
         <div class="rc-meta">${su?`<span style="color:var(--green)">${r.displayName}</span> · `:''}<span style="color:${RC[RUTBE_LIST.find(x=>x.label===r.rutbe)?.kat]||'var(--text-dim)'}">${r.rutbe||'—'}</span> · ${r.tarih}</div>
       </div>
-      <span class="rc-scp">${r.scp?r.scp.split('–')[0].trim():'—'}</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span class="rc-scp">${r.scp?r.scp.split('–')[0].trim():'—'}</span>
+        ${onayDurumBadge(r.onayDurum)}
+      </div>
     </div>
     <div class="rc-body">${r.amac?r.amac.substring(0,120)+'…':''}</div>
     <button class="exp-btn" onclick="openMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>
@@ -573,14 +648,67 @@ function openMo(id){
   }
   b+=`<div class="mf"><div class="mfl">// ANORMAL DURUMLAR</div><div class="mfp">${r.ano||'Kayıt yok.'}</div></div>`;
   b+=`<div class="mf"><div class="mfl">// EKLEMELERİM</div><div class="mfp">${r.ek||'Kayıt yok.'}</div></div>`;
+  // Onay durumu
+  b+=`<div class="mf"><div class="mfl">// ONAY DURUMU</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
+      ${onayDurumBadge(r.onayDurum)}
+      ${r.onayYapan?`<span style="font-size:10px;color:var(--text-dim)">— ${r.onayYapan} · ${r.onayTarih}</span>`:''}
+    </div>
+    ${CU.role==='yetkili'?`<div class="onay-btn-grp">
+      <button class="onay-btn onayla" onclick="onaylaRapor(${r.id})">[ ✓ ONAYLA ]</button>
+      <button class="onay-btn reddet" onclick="reddetRapor(${r.id})">[ ✕ REDDET ]</button>
+    </div>`:''}
+  </div>`;
   if(r.images?.length){
     b+=`<div class="mf"><div class="mfl">// GÖRSELLER</div><div class="mimgs">`;
-    r.images.forEach(s=>b+=`<img src="${s}" class="mimg"/>`);
+    r.images.forEach(s=>b+=`<img src="${s}" class="mimg" onclick="openLb('${s}')" title="Büyütmek için tıkla"/>`);
     b+=`</div></div>`;
   }
   document.getElementById('mbody').innerHTML=b;
   document.getElementById('mo').classList.add('active');
 }
+function openLb(src){
+  document.getElementById('lb-img').src=src;
+  document.getElementById('lb').classList.add('active');
+  document.body.style.overflow='hidden';
+}
+function closeLb(){
+  document.getElementById('lb').classList.remove('active');
+  document.getElementById('lb-img').src='';
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLb()});
+
+function onayDurumBadge(durum){
+  if(durum==='onaylandi') return `<span class="onay-badge onay-onaylandi">✓ ONAYLANDI</span>`;
+  if(durum==='reddedildi') return `<span class="onay-badge onay-reddedildi">✕ REDDEDİLDİ</span>`;
+  return `<span class="onay-badge onay-bekliyor">◎ ONAY BEKLİYOR</span>`;
+}
+
+function onaylaRapor(id){
+  const raps=getRaps();
+  const i=raps.findIndex(x=>x.id===id);
+  if(i<0)return;
+  raps[i].onayDurum='onaylandi';
+  raps[i].onayYapan=CU.displayName;
+  raps[i].onayTarih=new Date().toLocaleString('tr-TR');
+  saveRaps(raps);
+  openMo(id);
+  document.getElementById('ca').innerHTML=CU.role==='yetkili'?(document.getElementById('nav-tum-raporlar')?.classList.contains('active')?bTumRaporlar():bDosyalar()):bRaporlarim();
+}
+
+function reddetRapor(id){
+  const raps=getRaps();
+  const i=raps.findIndex(x=>x.id===id);
+  if(i<0)return;
+  raps[i].onayDurum='reddedildi';
+  raps[i].onayYapan=CU.displayName;
+  raps[i].onayTarih=new Date().toLocaleString('tr-TR');
+  saveRaps(raps);
+  openMo(id);
+  document.getElementById('ca').innerHTML=CU.role==='yetkili'?(document.getElementById('nav-tum-raporlar')?.classList.contains('active')?bTumRaporlar():bDosyalar()):bRaporlarim();
+}
+
 function closeMo(e){if(e.target===document.getElementById('mo'))closeMoDirect()}
 function closeMoDirect(){document.getElementById('mo').classList.remove('active')}
 </script>
