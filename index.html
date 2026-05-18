@@ -137,267 +137,6 @@
     }
     .build-ver span { color: var(--green-dim) }
 
-    /* HOLOGRAM */
-    @keyframes holoFloat {
-      0%,100% { transform: translateY(0px) }
-      50%      { transform: translateY(-10px) }
-    }
-    @keyframes holoSpin {
-      from { transform: rotateY(0deg) }
-      to   { transform: rotateY(360deg) }
-    }
-    @keyframes holoScan {
-      0%   { top: 0% }
-      100% { top: 100% }
-    }
-    @keyframes holoPulse {
-      0%,100% { opacity: .7 }
-      50%      { opacity: 1 }
-    }
-    .holo-panel {
-      position: fixed;
-      right: 40px;
-      top: 50%;
-      transform: translateY(-50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      z-index: 50;
-      animation: holoFloat 4s ease-in-out infinite
-    }
-    .holo-label {
-      font-size: 8px;
-      letter-spacing: 3px;
-      color: var(--green-dim);
-      text-align: center
-    }
-    .holo-ring {
-      position: relative;
-      width: 140px;
-      height: 140px;
-      perspective: 600px
-    }
-    .holo-ring::before, .holo-ring::after {
-      content: '';
-      position: absolute;
-      border-radius: 50%;
-      border: 1px solid rgba(0,255,65,0.3)
-    }
-    .holo-ring::before {
-      inset: -10px;
-      border-color: rgba(0,255,65,0.15);
-      box-shadow: 0 0 20px rgba(0,255,65,0.08)
-    }
-    .holo-ring::after {
-      inset: -20px;
-      border-color: rgba(0,255,65,0.07)
-    }
-    .holo-avatar-wrap {
-      width: 140px;
-      height: 140px;
-      position: relative;
-      overflow: hidden;
-      border-radius: 4px;
-      border: 1px solid rgba(0,255,65,0.4);
-      box-shadow: 0 0 25px rgba(0,255,65,0.2), inset 0 0 20px rgba(0,0,0,0.5)
-    }
-    .holo-avatar-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      filter: saturate(0) brightness(1.1) sepia(1) hue-rotate(80deg) saturate(3);
-      mix-blend-mode: screen;
-      animation: holoPulse 3s ease-in-out infinite
-    }
-    .holo-avatar-wrap::after {
-      content: '';
-      position: absolute;
-      left: 0; right: 0;
-      height: 30%;
-      background: linear-gradient(transparent, rgba(0,255,65,0.08), transparent);
-      animation: holoScan 2s linear infinite;
-      pointer-events: none
-    }
-    .holo-spin-ring {
-      position: absolute;
-      inset: -6px;
-      border-radius: 50%;
-      border: 1px dashed rgba(0,255,65,0.35);
-      animation: holoSpin 6s linear infinite
-    }
-    .holo-spin-ring2 {
-      position: absolute;
-      inset: -14px;
-      border-radius: 50%;
-      border: 1px dashed rgba(0,255,65,0.15);
-      animation: holoSpin 10s linear infinite reverse
-    }
-    .holo-name {
-      font-family: 'VT323', monospace;
-      font-size: 16px;
-      color: var(--green);
-      letter-spacing: 2px;
-      text-shadow: 0 0 10px var(--green);
-      text-align: center
-    }
-    .holo-rutbe {
-      font-size: 8px;
-      color: var(--text-dim);
-      letter-spacing: 2px;
-      text-align: center
-    }
-    .holo-bar {
-      width: 140px;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--green), transparent);
-      opacity: .5
-    }
-    .holo-id {
-      font-size: 8px;
-      color: var(--text-dark);
-      letter-spacing: 1px;
-      text-align: center
-    }
-
-    /* LOGIN */
-    .login-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 20px;
-      animation: fadeIn .5s ease
-    }
-
-    .login-box {
-      border: 1px solid var(--green);
-      background: var(--bg2);
-      width: 100%;
-      max-width: 460px;
-      box-shadow: 0 0 40px rgba(0, 255, 65, 0.08), inset 0 0 60px rgba(0, 0, 0, 0.4)
-    }
-
-    .login-hdr {
-      background: var(--green-dark);
-      border-bottom: 1px solid var(--green-dim);
-      padding: 14px 18px;
-      text-align: center
-    }
-
-    .login-hdr-title {
-      font-family: 'VT323', monospace;
-      font-size: 24px;
-      color: var(--green);
-      letter-spacing: 4px;
-      text-shadow: 0 0 12px var(--green)
-    }
-
-    .login-hdr-sub {
-      font-size: 9px;
-      color: var(--text-dim);
-      letter-spacing: 2px;
-      margin-top: 3px
-    }
-
-    .login-body {
-      padding: 24px
-    }
-
-    .login-ascii {
-      font-size: 8px;
-      color: var(--text-dark);
-      text-align: center;
-      margin-bottom: 14px;
-      line-height: 1.4;
-      white-space: pre
-    }
-
-    .login-warn {
-      border: 1px solid var(--red-dim);
-      background: rgba(139, 0, 0, 0.1);
-      padding: 8px;
-      font-size: 9px;
-      color: var(--red);
-      letter-spacing: 1px;
-      margin-bottom: 16px;
-      text-align: center
-    }
-
-    .tf {
-      margin-bottom: 14px
-    }
-
-    .tf label {
-      font-size: 10px;
-      color: var(--text-dim);
-      letter-spacing: 1px;
-      display: block;
-      margin-bottom: 5px
-    }
-
-    .tf label::before {
-      content: '> '
-    }
-
-    .ti {
-      width: 100%;
-      background: var(--bg3);
-      border: 1px solid var(--green-dark);
-      border-left: 3px solid var(--green);
-      color: var(--green);
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 13px;
-      padding: 8px 10px;
-      outline: none;
-      transition: all .15s
-    }
-
-    .ti:focus {
-      border-color: var(--green);
-      box-shadow: 0 0 10px rgba(0, 255, 65, 0.18);
-      background: var(--bg2)
-    }
-
-    .ti::placeholder {
-      color: var(--text-dark)
-    }
-
-    .login-btn {
-      width: 100%;
-      background: var(--green-dark);
-      border: 1px solid var(--green);
-      color: var(--green);
-      font-family: 'VT323', monospace;
-      font-size: 22px;
-      padding: 9px;
-      cursor: pointer;
-      letter-spacing: 3px;
-      transition: all .2s;
-      margin-top: 4px
-    }
-
-    .login-btn:hover {
-      background: var(--green);
-      color: var(--bg);
-      box-shadow: 0 0 20px rgba(0, 255, 65, 0.35)
-    }
-
-    .login-err {
-      font-size: 10px;
-      color: var(--red);
-      border: 1px solid var(--red-dim);
-      background: rgba(139, 0, 0, 0.1);
-      padding: 8px 10px;
-      margin-top: 10px;
-      display: none;
-      letter-spacing: 1px
-    }
-
-    .login-err::before {
-      content: '[HATA] '
-    }
-
     /* HEADER */
     .hdr {
       background: var(--bg2);
@@ -1497,51 +1236,8 @@
   <!-- VERSİYON ROZET -->
   <div class="build-ver" id="build-ver-badge"></div>
 
-  <!-- HOLOGRAM PANELİ — body seviyesinde, login/main'den bağımsız fixed panel -->
-  <div class="holo-panel" id="holo-panel" style="display:none">
-    <div class="holo-label">// KİMLİK TARAMASI //</div>
-    <div class="holo-ring">
-      <div class="holo-spin-ring"></div>
-      <div class="holo-spin-ring2"></div>
-      <div class="holo-avatar-wrap">
-        <img id="holo-img" src="" alt=""/>
-      </div>
-    </div>
-    <div class="holo-bar"></div>
-    <div class="holo-name" id="holo-name">—</div>
-    <div class="holo-rutbe" id="holo-rutbe">—</div>
-    <div class="holo-id" id="holo-id">—</div>
-  </div>
-
-  <!-- LOGIN -->
-  <div class="login-screen" id="login-screen">
-    <div class="login-box">
-      <div class="login-hdr">
-        <div class="login-hdr-title">◈ TESİS-62 ◈</div>
-        <div class="login-hdr-sub">BİLİM VE ARAŞTIRMA DEPARTMANI // RAPOR TERMİNALİ</div>
-      </div>
-      <div class="login-body">
-        <pre class="login-ascii">╔══════════════════════════════════╗
-║            VAKIF 62               ║
-║     YETKİSİZ ERİŞİM YASAKTIR      ║
-╚══════════════════════════════════╝</pre>
-        <div class="login-warn">⚠ TÜM GİRİŞ DENEMELERİ KAYIT ALTINA ALINMAKTADIR ⚠</div>
-        <div class="tf">
-          <label>PERSONEL KİMLİK KODU</label>
-          <input type="text" class="ti" id="lu" placeholder="kullanici_adi" autocomplete="off" />
-        </div>
-        <div class="tf">
-          <label>ERİŞİM KODU</label>
-          <input type="password" class="ti" id="lp" placeholder="••••••••" />
-        </div>
-        <button class="login-btn" onclick="doLogin()">[ SİSTEME GİR ]<span class="cursor"></span></button>
-        <div class="login-err" id="lerr">ERİŞİM REDDEDİLDİ. KİMLİK DOĞRULANAMADI.</div>
-      </div>
-    </div>
-  </div>
-
   <!-- MAIN -->
-  <div class="main-screen" id="main-screen">
+  <div class="main-screen active" id="main-screen">
     <div class="hdr">
       <div class="hdr-top">
         <div class="hdr-logo">
@@ -1623,7 +1319,7 @@
     // Supabase Auth'taki e-posta adresiyle eşleşmeli
     // ============ VERSİYON ============
     // Her git commit'te sadece bu satırı güncelle:
-    const BUILD_VERSION = 'v2.4';
+    const BUILD_VERSION = 'v1.0';
     // ====================================
 
     const USER_PROFILES = {
@@ -1673,6 +1369,28 @@
     function userRapCount(u) { return getRaps().filter(r => r.username === u).length }
     function fmtNo(n) { return String(n).padStart(3, '0') }
 
+    // Sayfa yüklendiğinde Supabase oturumunu doğrula — yoksa login'e at
+    (async function initSession() {
+      const { data } = await _supabase.auth.getSession();
+      if (!data?.session?.user) {
+        window.location.replace('login.html');
+        return;
+      }
+      const profile = USER_PROFILES[data.session.user.email];
+      if (!profile) {
+        await _supabase.auth.signOut();
+        window.location.replace('login.html');
+        return;
+      }
+      CU = Object.freeze({ ...profile, email: data.session.user.email });
+      document.getElementById('hun').textContent = CU.displayName;
+      const re = document.getElementById('hrutbe');
+      re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
+      buildSidebar();
+      showPage(CU.role === 'yetkisiz' ? 'rapor-yaz' : 'tum-raporlar');
+      updateClock();
+    })();
+
     function updateClock() {
       const el = document.getElementById('hclock');
       if (el) { const n = new Date(); el.textContent = n.toLocaleDateString('tr-TR') + ' ' + n.toTimeString().split(' ')[0] }
@@ -1698,14 +1416,15 @@
 
       if (profile.robloxId) {
         idEl.textContent = 'RBX-ID: ' + profile.robloxId;
-        // Roblox thumbnail — corsproxy.io üzerinden CORS bypass
+        // Roblox thumbnail API (CORS açık)
         try {
-          const apiUrl = 'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=' +
-            profile.robloxId + '&size=150x150&format=Png&isCircular=false';
-          const res = await fetch('https://corsproxy.io/?' + encodeURIComponent(apiUrl));
+          const res = await fetch(
+            'https://thumbnails.roblox.com/v1/users/avatar-headshot?userIds=' +
+            profile.robloxId + '&size=150x150&format=Png&isCircular=false'
+          );
           const json = await res.json();
           const url  = json?.data?.[0]?.imageUrl;
-          if (url) { img.src = url; }
+          if (url) img.src = url;
           else img.src = '';
         } catch(e) { img.src = ''; }
       } else {
@@ -1720,52 +1439,11 @@
       document.getElementById('holo-panel').style.display = 'none';
     }
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') doLogin();
-    });
-
-    async function doLogin() {
-      const emailOrUser = document.getElementById('lu').value.trim();
-      const p = document.getElementById('lp').value;
-      const errEl = document.getElementById('lerr');
-      errEl.style.display = 'none';
-
-      // Kullanıcı adı girilmişse e-postaya çevir
-      let email = emailOrUser;
-      if (!emailOrUser.includes('@')) {
-        const found = Object.entries(USER_PROFILES).find(([, v]) => v.username === emailOrUser);
-        if (found) email = found[0];
-        else { errEl.style.display = 'block'; return; }
-      }
-
-      const { data, error } = await _supabase.auth.signInWithPassword({ email, password: p });
-      if (error || !data.user) {
-        errEl.style.display = 'block';
-        return;
-      }
-
-      const profile = USER_PROFILES[data.user.email];
-      if (!profile) { errEl.style.display = 'block'; await _supabase.auth.signOut(); return; }
-
-      CU = { ...profile, email: data.user.email };
-      loadHologram(profile);
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('main-screen').classList.add('active');
-      document.getElementById('hun').textContent = CU.displayName;
-      const re = document.getElementById('hrutbe');
-      re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
-      buildSidebar();
-      showPage(CU.role === 'yetkisiz' ? 'rapor-yaz' : 'tum-raporlar');
-      updateClock();
-    }
 
     async function doLogout() {
       await _supabase.auth.signOut();
       CU = null; VF = null; imgs = []; tsc = 0;
-      hideHologram();
-      document.getElementById('main-screen').classList.remove('active');
-      document.getElementById('login-screen').style.display = 'flex';
-      document.getElementById('lu').value = ''; document.getElementById('lp').value = '';
+      window.location.replace('login.html');
     }
 
     function buildSidebar() {
