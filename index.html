@@ -135,7 +135,10 @@
       pointer-events: none;
       font-family: 'Share Tech Mono', monospace
     }
-    .build-ver span { color: var(--green-dim) }
+
+    .build-ver span {
+      color: var(--green-dim)
+    }
 
     /* HEADER */
     .hdr {
@@ -431,12 +434,14 @@
     }
 
     .tn {
-      -moz-appearance: textfield
+      -moz-appearance: textfield;
+      appearance: textfield
     }
 
     .tn::-webkit-outer-spin-button,
     .tn::-webkit-inner-spin-button {
-      -webkit-appearance: none
+      -webkit-appearance: none;
+      appearance: none
     }
 
     /* TIMESTAMPS */
@@ -1238,11 +1243,26 @@
 
   <!-- MAIN -->
   <!-- BAŞLANGIÇ YÜKLENİYOR EKRANI -->
-  <div id="init-loading" style="position:fixed;inset:0;background:#050a05;display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:12px">
-    <div style="font-family:'VT323',monospace;font-size:28px;color:#00ff41;letter-spacing:4px;text-shadow:0 0 12px #00ff41">◈ TESİS-62 ◈</div>
+  <div id="init-loading"
+    style="position:fixed;inset:0;background:#050a05;display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:12px">
+    <div
+      style="font-family:'VT323',monospace;font-size:28px;color:#00ff41;letter-spacing:4px;text-shadow:0 0 12px #00ff41">
+      ◈ TESİS-62 ◈</div>
     <div style="font-size:11px;color:#00a82a;letter-spacing:3px">KİMLİK DOĞRULANIYOR...</div>
-    <div style="width:160px;height:2px;background:#003d10;margin-top:4px"><div style="height:100%;background:#00ff41;animation:load-bar 1.2s ease-in-out infinite"></div></div>
-    <style>@keyframes load-bar{0%{width:0}100%{width:100%}}</style>
+    <div style="width:160px;height:2px;background:#003d10;margin-top:4px">
+      <div style="height:100%;background:#00ff41;animation:load-bar 1.2s ease-in-out infinite"></div>
+    </div>
+    <style>
+      @keyframes load-bar {
+        0% {
+          width: 0
+        }
+
+        100% {
+          width: 100%
+        }
+      }
+    </style>
   </div>
 
   <div class="main-screen" id="main-screen">
@@ -1358,12 +1378,54 @@
     ];
     const RC = { hc: '#9b2335', hr: '#e05252', mr: '#d4a017', lr: '#4caf50' };
 
-    let CU = null, VF = null, imgs = [], tsc = 0, ALL_PROFILES = [];
+    // ============ GÜVENLİK: XSS KORUMASI ============
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+
+    // ============ GÜVENLİK: TAMPER-PROOF KULLANICI SİSTEMİ ============
+    // CU artık doğrudan değiştirilemez — closure ile korunuyor
+    const _CU_STORE = (() => {
+      const _key = Symbol('cu');
+      const store = { [_key]: null };
+      return {
+        set(data) {
+          store[_key] = Object.freeze({ ...data, _ts: Date.now() });
+        },
+        get() { return store[_key]; },
+      };
+    })();
+    // CU property — getter only, setter yok
+    Object.defineProperty(window, 'CU', {
+      get() { return _CU_STORE.get(); },
+      set() { console.warn('[GÜVENLİK] CU değiştirilemez.'); },
+      configurable: false
+    });
+
+    let VF = null, imgs = [], tsc = 0, ALL_PROFILES = [];
+    let _VERIFIED_USER_ID = null; // Supabase auth user id
 
     function getRaps() { try { return JSON.parse(localStorage.getItem('scp62_raps') || '[]') } catch { return [] } }
     function saveRaps(r) { localStorage.setItem('scp62_raps', JSON.stringify(r)) }
     function userRapCount(u) { return getRaps().filter(r => r.username === u).length }
     function fmtNo(n) { return String(n).padStart(3, '0') }
+
+    // ============ GÜVENLİK: ROL DOĞRULAMA (her hassas işlemde çağrılır) ============
+    async function verifyRole(requiredRole) {
+      const { data } = await _supabase.auth.getSession();
+      if (!data?.session?.user) { window.location.replace('login'); return false; }
+      const { data: profile } = await _supabase.from('profiles')
+        .select('role').eq('id', data.session.user.id).single();
+      if (!profile) { window.location.replace('login'); return false; }
+      if (requiredRole && profile.role !== requiredRole) {
+        console.warn('[GÜVENLİK] Yetkisiz işlem girişimi tespit edildi.');
+        return false;
+      }
+      return true;
+    }
 
     // Sayfa yüklendiğinde Supabase oturumunu doğrula — yoksa login'e at
     (async function initSession() {
@@ -1373,28 +1435,29 @@
         return;
       }
       const userId = data.session.user.id;
+      _VERIFIED_USER_ID = userId;
       // Tüm profilleri çek (dosyalar sayfası için)
       const { data: allProfiles } = await _supabase.from('profiles').select('*');
       ALL_PROFILES = (allProfiles || []).map(p => ({
         username: p.username, role: p.role, displayName: p.display_name,
         rutbe: p.rutbe, rutbeKat: p.rutbe_kat, robloxId: p.roblox_id
       }));
-      const profileData = ALL_PROFILES.find(p => p.username === (allProfiles||[]).find(x => x.id === userId)?.username);
+      const profileData = ALL_PROFILES.find(p => p.username === (allProfiles || []).find(x => x.id === userId)?.username);
       if (!profileData) {
         await _supabase.auth.signOut();
         window.location.replace('login');
         return;
       }
-      CU = Object.freeze({
-        username:    profileData.username,
-        role:        profileData.role,
+      _CU_STORE.set({
+        username: profileData.username,
+        role: profileData.role,
         displayName: profileData.displayName,
-        rutbe:       profileData.rutbe,
-        rutbeKat:    profileData.rutbeKat,
-        robloxId:    profileData.robloxId,
-        email:       data.session.user.email
+        rutbe: profileData.rutbe,
+        rutbeKat: profileData.rutbeKat,
+        robloxId: profileData.robloxId,
+        email: data.session.user.email
       });
-      document.getElementById('hun').textContent = CU.displayName;
+      document.getElementById('hun').textContent = escapeHtml(CU.displayName);
       const re = document.getElementById('hrutbe');
       re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
       buildSidebar();
@@ -1411,7 +1474,7 @@
     setInterval(updateClock, 1000);
 
     // Versiyon rozeti render
-    (function() {
+    (function () {
       const el = document.getElementById('build-ver-badge');
       if (el) el.innerHTML = 'BUILD <span>' + BUILD_VERSION + '</span>';
     })();
@@ -1419,12 +1482,12 @@
     // Roblox hologram yükle
     async function loadHologram(profile) {
       const panel = document.getElementById('holo-panel');
-      const img   = document.getElementById('holo-img');
-      const name  = document.getElementById('holo-name');
+      const img = document.getElementById('holo-img');
+      const name = document.getElementById('holo-name');
       const rutbe = document.getElementById('holo-rutbe');
-      const idEl  = document.getElementById('holo-id');
+      const idEl = document.getElementById('holo-id');
 
-      name.textContent  = profile.displayName;
+      name.textContent = profile.displayName;
       rutbe.textContent = profile.rutbe;
 
       if (profile.robloxId) {
@@ -1436,10 +1499,10 @@
             profile.robloxId + '&size=150x150&format=Png&isCircular=false'
           );
           const json = await res.json();
-          const url  = json?.data?.[0]?.imageUrl;
+          const url = json?.data?.[0]?.imageUrl;
           if (url) img.src = url;
           else img.src = '';
-        } catch(e) { img.src = ''; }
+        } catch (e) { img.src = ''; }
       } else {
         idEl.textContent = 'RBX-ID: TANIMLI DEĞİL';
         img.src = '';
@@ -1455,7 +1518,7 @@
 
     async function doLogout() {
       await _supabase.auth.signOut();
-      CU = null; VF = null; imgs = []; tsc = 0;
+      _CU_STORE.set(null); VF = null; imgs = []; tsc = 0;
       window.location.replace('login.html');
     }
 
@@ -1683,15 +1746,15 @@
       return `<div class="rc">
     <div class="rc-hdr">
       <div>
-        <div class="rc-id">${r.scd || '—'} // DENEY-${r.dNo || '000'}</div>
-        <div class="rc-meta">${su ? `<span style="color:var(--green)">${r.displayName}</span> · ` : ''}<span style="color:${RC[RUTBE_LIST.find(x => x.label === r.rutbe)?.kat] || 'var(--text-dim)'}">${r.rutbe || '—'}</span> · ${r.tarih}</div>
+        <div class="rc-id">${escapeHtml(r.scd) || '—'} // DENEY-${escapeHtml(r.dNo) || '000'}</div>
+        <div class="rc-meta">${su ? `<span style="color:var(--green)">${escapeHtml(r.displayName)}</span> · ` : ''}<span style="color:${RC[RUTBE_LIST.find(x => x.label === r.rutbe)?.kat] || 'var(--text-dim)'}">${escapeHtml(r.rutbe) || '—'}</span> · ${escapeHtml(r.tarih)}</div>
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
-        <span class="rc-scp">${r.scp ? r.scp.split('–')[0].trim() : '—'}</span>
+        <span class="rc-scp">${r.scp ? escapeHtml(r.scp.split('–')[0].trim()) : '—'}</span>
         ${onayDurumBadge(r.onayDurum)}
       </div>
     </div>
-    <div class="rc-body">${r.amac ? r.amac.substring(0, 120) + '…' : ''}</div>
+    <div class="rc-body">${r.amac ? escapeHtml(r.amac.substring(0, 120)) + '…' : ''}</div>
     <div style="display:flex;gap:6px;margin-top:8px">
       <button class="exp-btn" onclick="openMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>
       ${(CU.role === 'yetkili' || CU.username === r.username) ? `<button class="sil-btn" onclick="silRapor(${r.id})">[ SİL ]</button>` : ''}
@@ -1706,7 +1769,7 @@
         const u = ALL_PROFILES.find(x => x.username === VF);
         const ur = raps.filter(r => r.username === VF);
         let h = `<div><button class="back-btn" onclick="VF=null;setNav('dosyalar');document.getElementById('ca').innerHTML=bDosyalar()">PERSONEL DOSYALARINA DÖN</button>
-    <div class="ph"><h2>${u ? u.displayName.toUpperCase() : VF} // DOSYA</h2><p>// ${ur.length} RAPOR KAYDI</p></div><div class="rlist">`;
+    <div class="ph"><h2>${u ? escapeHtml(u.displayName.toUpperCase()) : escapeHtml(VF)} // DOSYA</h2><p>// ${ur.length} RAPOR KAYDI</p></div><div class="rlist">`;
         if (!ur.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`;
         else ur.slice().reverse().forEach(r => h += rCard(r, false));
         return h + `</div></div>`;
@@ -1714,7 +1777,7 @@
       let h = `<div><div class="ph"><h2>PERSONEL DOSYALARI</h2><p>// YETKİSİZ PERSONEL DENEY ARŞİVLERİ</p></div><div class="fgrid">`;
       yetk.forEach(u => {
         const c = raps.filter(r => r.username === u.username).length;
-        h += `<div class="fi" onclick="openFolder('${u.username}')"><span class="fi-icon">[DIR]</span><div class="fi-name">${u.displayName}</div><div class="fi-count">${c} RAPOR KAYDI</div></div>`;
+        h += `<div class="fi" onclick="openFolder('${escapeHtml(u.username)}')"><span class="fi-icon">[DIR]</span><div class="fi-name">${escapeHtml(u.displayName)}</div><div class="fi-count">${c} RAPOR KAYDI</div></div>`;
       });
       return h + `</div></div>`;
     }
@@ -1731,27 +1794,27 @@
       const rk = RUTBE_LIST.find(x => x.label === r.rutbe);
       const rc = rk ? RC[rk.kat] || 'var(--green)' : 'var(--green)';
       let b = `
-    <div class="mf"><div class="mfl">DENEY KODU / NUMARA</div><div class="mfv">${r.scd || '—'} &nbsp;|&nbsp; DENEY-${r.dNo || '000'}</div></div>
-    <div class="mf"><div class="mfl">SCP</div><div class="mfv">${r.scp || '—'}</div></div>
-    <div class="mf"><div class="mfl">DENEY SORUMLUSU</div><div class="mfv">${r.sorumlu || '—'}</div></div>
-    <div class="mf"><div class="mfl">PERSONEL RÜTBESİ</div><div class="mfv" style="color:${rc}">${r.rutbe || '—'}</div></div>
-    <div class="mf"><div class="mfl">ZAMAN</div><div class="mfv">${r.zb || '--:--'} → ${r.ze || '--:--'}</div></div>
-    <div class="mf"><div class="mfl">KULLANILAN SINIF-D</div><div class="mfv">${r.sd || '0'} KİŞİ</div></div>
-    <div class="mf"><div class="mfl">RAPOR TARİHİ</div><div class="mfv">${r.tarih}</div></div>
-    <div class="mf"><div class="mfl">// DENEY AMACI</div><div class="mfp">${r.amac || '—'}</div></div>
-    <div class="mf"><div class="mfl">// DENEY SONUCU</div><div class="mfp">${r.sonuc || '—'}</div></div>`;
+    <div class="mf"><div class="mfl">DENEY KODU / NUMARA</div><div class="mfv">${escapeHtml(r.scd) || '—'} &nbsp;|&nbsp; DENEY-${escapeHtml(r.dNo) || '000'}</div></div>
+    <div class="mf"><div class="mfl">SCP</div><div class="mfv">${escapeHtml(r.scp) || '—'}</div></div>
+    <div class="mf"><div class="mfl">DENEY SORUMLUSU</div><div class="mfv">${escapeHtml(r.sorumlu) || '—'}</div></div>
+    <div class="mf"><div class="mfl">PERSONEL RÜTBESİ</div><div class="mfv" style="color:${rc}">${escapeHtml(r.rutbe) || '—'}</div></div>
+    <div class="mf"><div class="mfl">ZAMAN</div><div class="mfv">${escapeHtml(r.zb) || '--:--'} → ${escapeHtml(r.ze) || '--:--'}</div></div>
+    <div class="mf"><div class="mfl">KULLANILAN SINIF-D</div><div class="mfv">${escapeHtml(r.sd) || '0'} KİŞİ</div></div>
+    <div class="mf"><div class="mfl">RAPOR TARİHİ</div><div class="mfv">${escapeHtml(r.tarih)}</div></div>
+    <div class="mf"><div class="mfl">// DENEY AMACI</div><div class="mfp">${escapeHtml(r.amac) || '—'}</div></div>
+    <div class="mf"><div class="mfl">// DENEY SONUCU</div><div class="mfp">${escapeHtml(r.sonuc) || '—'}</div></div>`;
       if (r.timestamps?.length) {
         b += `<div class="mf"><div class="mfl">// ZAMAN DAMGALARI</div>`;
-        r.timestamps.forEach(t => b += `<div class="mts"><span class="mts-t">[${t.time || '--:--:--'}]</span><span>${t.note || ''}</span></div>`);
+        r.timestamps.forEach(t => b += `<div class="mts"><span class="mts-t">[${escapeHtml(t.time) || '--:--:--'}]</span><span>${escapeHtml(t.note) || ''}</span></div>`);
         b += `</div>`;
       }
-      b += `<div class="mf"><div class="mfl">// ANORMAL DURUMLAR</div><div class="mfp">${r.ano || 'Kayıt yok.'}</div></div>`;
-      b += `<div class="mf"><div class="mfl">// EKLEMELERİM</div><div class="mfp">${r.ek || 'Kayıt yok.'}</div></div>`;
+      b += `<div class="mf"><div class="mfl">// ANORMAL DURUMLAR</div><div class="mfp">${escapeHtml(r.ano) || 'Kayıt yok.'}</div></div>`;
+      b += `<div class="mf"><div class="mfl">// EKLEMELERİM</div><div class="mfp">${escapeHtml(r.ek) || 'Kayıt yok.'}</div></div>`;
       // Onay durumu
       b += `<div class="mf"><div class="mfl">// ONAY DURUMU</div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
       ${onayDurumBadge(r.onayDurum)}
-      ${r.onayYapan ? `<span style="font-size:10px;color:var(--text-dim)">— ${r.onayYapan} · ${r.onayTarih}</span>` : ''}
+      ${r.onayYapan ? `<span style="font-size:10px;color:var(--text-dim)">— ${escapeHtml(r.onayYapan)} · ${escapeHtml(r.onayTarih)}</span>` : ''}
     </div>
     ${CU.role === 'yetkili' ? `<div class="onay-btn-grp">
       <button class="onay-btn onayla" onclick="onaylaRapor(${r.id})">[ ✓ ONAYLA ]</button>
@@ -1784,7 +1847,10 @@
       return `<span class="onay-badge onay-bekliyor">◎ ONAY BEKLİYOR</span>`;
     }
 
-    function onaylaRapor(id) {
+    async function onaylaRapor(id) {
+      // GÜVENLİK: Sunucu tarafından rolü doğrula
+      const yetkili = await verifyRole('yetkili');
+      if (!yetkili) { alert('[GÜVENLİK] Bu işlem için yetkiniz yok.'); return; }
       const raps = getRaps();
       const i = raps.findIndex(x => x.id === id);
       if (i < 0) return;
@@ -1796,7 +1862,10 @@
       document.getElementById('ca').innerHTML = CU.role === 'yetkili' ? (document.getElementById('nav-tum-raporlar')?.classList.contains('active') ? bTumRaporlar() : bDosyalar()) : bRaporlarim();
     }
 
-    function reddetRapor(id) {
+    async function reddetRapor(id) {
+      // GÜVENLİK: Sunucu tarafından rolü doğrula
+      const yetkili = await verifyRole('yetkili');
+      if (!yetkili) { alert('[GÜVENLİK] Bu işlem için yetkiniz yok.'); return; }
       const raps = getRaps();
       const i = raps.findIndex(x => x.id === id);
       if (i < 0) return;
@@ -1814,12 +1883,27 @@
 
     function silRapor(id) {
       const r = getRaps().find(x => x.id === id); if (!r) return;
+      // GÜVENLİK: Sadece rapor sahibi veya yetkili silebilir
+      if (CU.role !== 'yetkili' && CU.username !== r.username) {
+        alert('[GÜVENLİK] Bu raporu silme yetkiniz yok.');
+        return;
+      }
       silPendingId = id;
       document.getElementById('confirm-target').textContent = `${r.scd || '—'} // DENEY-${r.dNo || '000'} — ${r.displayName}`;
       document.getElementById('confirm-overlay').classList.add('active');
     }
-    function confirmSil() {
+    async function confirmSil() {
       if (!silPendingId) return;
+      // GÜVENLİK: Silme öncesi sunucudan oturumu tekrar doğrula
+      const valid = await verifyRole();
+      if (!valid) return;
+      const targetRap = getRaps().find(x => x.id === silPendingId);
+      if (targetRap && CU.role !== 'yetkili' && CU.username !== targetRap.username) {
+        alert('[GÜVENLİK] Bu raporu silme yetkiniz yok.');
+        silPendingId = null;
+        document.getElementById('confirm-overlay').classList.remove('active');
+        return;
+      }
       const raps = getRaps().filter(x => x.id !== silPendingId);
       saveRaps(raps);
       silPendingId = null;
