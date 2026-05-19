@@ -320,6 +320,11 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3YWptbHh4bXhhbXduZXllYmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTA0MTIsImV4cCI6MjA5NDY4NjQxMn0.Buifz0hiJ-3SrXpCX31EiaQ_f8TMgyWOzmsm-9YIMoY';
     const BUILD_VERSION = 'v2.7';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Konsol erişimini engelle
+    delete window.supabase;
+    Object.defineProperty(window, '_supabase', { value: undefined, writable: false, configurable: false });
+    Object.defineProperty(window, 'SUPABASE_URL', { value: undefined, writable: false, configurable: false });
+    Object.defineProperty(window, 'SUPABASE_ANON_KEY', { value: undefined, writable: false, configurable: false });
 
     document.getElementById('build-ver-badge').innerHTML = 'BUILD <span>' + BUILD_VERSION + '</span>';
 
@@ -343,6 +348,12 @@
       if (e.key === 'Enter') doLogin();
     });
 
+    // ============ RATE LIMITING ============
+    let _loginAttempts = 0;
+    let _lockoutUntil = 0;
+    const MAX_ATTEMPTS = 5;
+    const LOCKOUT_MS = 60 * 1000; // 60 saniye
+
     async function doLogin() {
       const usernameInput = document.getElementById('lu').value.trim();
       const p = document.getElementById('lp').value;
@@ -351,7 +362,15 @@
       const btn = document.getElementById('login-btn');
       errEl.style.display = 'none';
 
-      if (!usernameInput || !p) { errEl.style.display = 'block'; return; }
+      // Rate limit kontrolü
+      if (Date.now() < _lockoutUntil) {
+        const kalan = Math.ceil((_lockoutUntil - Date.now()) / 1000);
+        errEl.textContent = `[GÜVENLİK] Çok fazla deneme. ${kalan}sn bekleyin.`;
+        errEl.style.display = 'block';
+        return;
+      }
+
+      if (!usernameInput || !p) { errEl.textContent = 'ERİŞİM REDDEDİLDİ. GEÇERSİZ KİMLİK BİLGİLERİ.'; errEl.style.display = 'block'; return; }
 
       btn.disabled = true;
       infoEl.style.display = 'block';
@@ -365,6 +384,9 @@
           .eq('username', usernameInput)
           .single();
         if (!profileRow) {
+          _loginAttempts++;
+          if (_loginAttempts >= MAX_ATTEMPTS) { _lockoutUntil = Date.now() + LOCKOUT_MS; _loginAttempts = 0; }
+          errEl.textContent = 'ERİŞİM REDDEDİLDİ. GEÇERSİZ KİMLİK BİLGİLERİ.';
           errEl.style.display = 'block';
           infoEl.style.display = 'none';
           btn.disabled = false;
@@ -376,15 +398,19 @@
 
       const { data, error } = await _supabase.auth.signInWithPassword({ email, password: p });
       if (error || !data.user) {
+        _loginAttempts++;
+        if (_loginAttempts >= MAX_ATTEMPTS) { _lockoutUntil = Date.now() + LOCKOUT_MS; _loginAttempts = 0; }
+        errEl.textContent = 'ERİŞİM REDDEDİLDİ. GEÇERSİZ KİMLİK BİLGİLERİ.';
         errEl.style.display = 'block';
         infoEl.style.display = 'none';
         btn.disabled = false;
         return;
       }
 
-      // Profiles tablosunda kaydı var mı kontrol et
+      // Profiles tablosında kaydı var mı kontrol et
       const { data: profile } = await _supabase.from('profiles').select('id').eq('id', data.user.id).single();
       if (!profile) {
+        errEl.textContent = 'ERİŞİM REDDEDİLDİ. GEÇERSİZ KİMLİK BİLGİLERİ.';
         errEl.style.display = 'block';
         infoEl.style.display = 'none';
         btn.disabled = false;
@@ -392,7 +418,8 @@
         return;
       }
 
-      // Başarılı
+      // Başarılı — sayacı sıfırla
+      _loginAttempts = 0;
       infoEl.textContent = 'ERİŞİM ONAYLANDI. YÖNLENDİRİLİYOR...';
       window.location.replace('index');
     }

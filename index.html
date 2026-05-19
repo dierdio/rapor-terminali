@@ -1341,6 +1341,12 @@
     const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3YWptbHh4bXhhbXduZXllYmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTA0MTIsImV4cCI6MjA5NDY4NjQxMn0.Buifz0hiJ-3SrXpCX31EiaQ_f8TMgyWOzmsm-9YIMoY';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Global supabase constructor'ı sil — konsoldan yeni client oluşturulmasını engelle
+    delete window.supabase;
+    // _supabase erişimini kısıtla
+    Object.defineProperty(window, '_supabase', { value: undefined, writable: false, configurable: false });
+    Object.defineProperty(window, 'SUPABASE_URL', { value: undefined, writable: false, configurable: false });
+    Object.defineProperty(window, 'SUPABASE_ANON_KEY', { value: undefined, writable: false, configurable: false });
     // =================================================
 
     // ============ VERSİYON ============
@@ -1451,6 +1457,35 @@
         return false;
       }
       return true;
+    }
+
+    // ============ OTURUM ZAMAN AŞIMI (30dk hareketsizlik) ============
+    const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 dakika
+    let _sessionTimer = null;
+    function resetSessionTimer() {
+      clearTimeout(_sessionTimer);
+      _sessionTimer = setTimeout(async () => {
+        await _supabase.auth.signOut();
+        alert('[GÜVENLİK] 30 dakika hareketsizlik — oturum kapatıldı.');
+        window.location.replace('login.html');
+      }, SESSION_TIMEOUT_MS);
+    }
+    ['click', 'keydown', 'mousemove', 'scroll'].forEach(evt =>
+      document.addEventListener(evt, resetSessionTimer, { passive: true })
+    );
+    resetSessionTimer();
+
+    // ============ AUDIT LOG (kritik işlemleri logla) ============
+    async function logActivity(action, targetId, details) {
+      try {
+        await _supabase.from('activity_logs').insert({
+          user_id: _VERIFIED_USER_ID,
+          username: CU?.username || 'bilinmiyor',
+          action,
+          target_id: targetId,
+          details: details || {}
+        });
+      } catch (e) { console.warn('[LOG] Audit log yazılamadı:', e); }
     }
 
     // Sayfa yüklendiğinde Supabase oturumunu doğrula — yoksa login'e at
@@ -1898,6 +1933,7 @@
         onay_tarih: new Date().toLocaleString('tr-TR')
       }).eq('id', id);
       if (error) { console.error('[DB] Onay hatası:', error); return; }
+      await logActivity('rapor_onay', id, { islem: 'onaylandi' });
       await loadRaps();
       openMo(id);
       document.getElementById('ca').innerHTML = CU.role === 'yetkili' ? (document.getElementById('nav-tum-raporlar')?.classList.contains('active') ? bTumRaporlar() : bDosyalar()) : bRaporlarim();
@@ -1913,6 +1949,7 @@
         onay_tarih: new Date().toLocaleString('tr-TR')
       }).eq('id', id);
       if (error) { console.error('[DB] Red hatası:', error); return; }
+      await logActivity('rapor_red', id, { islem: 'reddedildi' });
       await loadRaps();
       openMo(id);
       document.getElementById('ca').innerHTML = CU.role === 'yetkili' ? (document.getElementById('nav-tum-raporlar')?.classList.contains('active') ? bTumRaporlar() : bDosyalar()) : bRaporlarim();
@@ -1948,6 +1985,7 @@
       // Supabase'den sil
       const { error } = await _supabase.from('raporlar').delete().eq('id', silPendingId);
       if (error) { console.error('[DB] Silme hatası:', error); }
+      await logActivity('rapor_sil', silPendingId, { silinen: targetRap?.scd || 'bilinmiyor' });
       await loadRaps(); // Cache'i güncelle
       silPendingId = null;
       document.getElementById('confirm-overlay').classList.remove('active');
