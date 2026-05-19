@@ -1407,9 +1407,35 @@
 
     let VF = null, imgs = [], tsc = 0, ALL_PROFILES = [];
     let _VERIFIED_USER_ID = null; // Supabase auth user id
+    let _RAPS_CACHE = []; // Supabase'den çekilen raporlar cache
 
-    function getRaps() { try { return JSON.parse(localStorage.getItem('scp62_raps') || '[]') } catch { return [] } }
-    function saveRaps(r) { localStorage.setItem('scp62_raps', JSON.stringify(r)) }
+    // ============ VERİ KATMANI: SUPABASE ============
+    // DB'den raporları çek ve cache'le
+    async function loadRaps() {
+      const { data, error } = await _supabase.from('raporlar')
+        .select('*').order('created_at', { ascending: false });
+      if (error) { console.error('[DB] Rapor yükleme hatası:', error); return []; }
+      _RAPS_CACHE = (data || []).map(r => ({
+        id: r.id,
+        user_id: r.user_id,
+        username: r.username,
+        displayName: r.display_name,
+        scd: r.scd, scp: r.scp, dNo: r.d_no,
+        sorumlu: r.sorumlu, rutbe: r.rutbe,
+        zb: r.zb, ze: r.ze, sd: r.sd,
+        amac: r.amac, sonuc: r.sonuc,
+        ano: r.ano, ek: r.ek,
+        timestamps: r.timestamps || [],
+        images: r.images || [],
+        tarih: r.tarih,
+        onayDurum: r.onay_durum,
+        onayYapan: r.onay_yapan,
+        onayTarih: r.onay_tarih
+      }));
+      return _RAPS_CACHE;
+    }
+    // Senkron okuma — render fonksiyonları bu cache'i kullanır
+    function getRaps() { return _RAPS_CACHE; }
     function userRapCount(u) { return getRaps().filter(r => r.username === u).length }
     function fmtNo(n) { return String(n).padStart(3, '0') }
 
@@ -1461,6 +1487,7 @@
       const re = document.getElementById('hrutbe');
       re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
       buildSidebar();
+      await loadRaps(); // Supabase'den raporları yükle
       showPage(CU.role === 'yetkisiz' ? 'rapor-yaz' : 'tum-raporlar');
       document.getElementById('init-loading').style.display = 'none';
       document.getElementById('main-screen').classList.add('active');
@@ -1538,9 +1565,10 @@
       const el = document.getElementById('nav-' + id); if (el) el.classList.add('active');
     }
 
-    function showPage(id) {
+    async function showPage(id) {
       VF = null; imgs = []; tsc = 0; setNav(id);
       const ca = document.getElementById('ca');
+      if (id !== 'rapor-yaz') await loadRaps(); // Supabase'den güncel veriyi çek
       if (id === 'rapor-yaz') ca.innerHTML = bRaporYaz();
       else if (id === 'raporlarim') ca.innerHTML = bRaporlarim();
       else if (id === 'tum-raporlar') ca.innerHTML = bTumRaporlar();
@@ -1649,7 +1677,7 @@
     }
     function rmImg(i) { imgs.splice(i, 1); renderImgs() }
 
-    function gonder() {
+    async function gonder() {
       // Tüm hataları temizle
       ['r-scd', 'r-scp', 'r-sor', 'r-rutbe', 'r-zb', 'r-ze', 'r-sd', 'r-amac', 'r-sonuc'].forEach(id => {
         const el = document.getElementById(id); if (el) el.classList.remove('field-err');
@@ -1694,22 +1722,35 @@
       const rutbe = document.getElementById('r-rutbe').value;
       const amac = document.getElementById('r-amac').value.trim();
       const sonuc = document.getElementById('r-sonuc').value.trim();
-
-      const raps = getRaps();
       const no = fmtNo(userRapCount(CU.username) + 1);
-      raps.push({
-        id: Date.now(), username: CU.username, displayName: CU.displayName,
-        scd, scp, dNo: no, sorumlu: sor, rutbe,
+
+      // Supabase'e kaydet
+      const { error } = await _supabase.from('raporlar').insert({
+        user_id: _VERIFIED_USER_ID,
+        username: CU.username,
+        display_name: CU.displayName,
+        scd, scp, d_no: no, sorumlu: sor, rutbe,
         zb: document.getElementById('r-zb').value,
         ze: document.getElementById('r-ze').value,
         sd: document.getElementById('r-sd').value,
         amac, sonuc,
         ano: document.getElementById('r-ano').value.trim(),
         ek: document.getElementById('r-ek').value.trim(),
-        timestamps: getTs(), images: [...imgs],
+        timestamps: getTs(),
+        images: [...imgs],
         tarih: new Date().toLocaleString('tr-TR')
       });
-      saveRaps(raps);
+
+      if (error) {
+        console.error('[DB] Rapor kayıt hatası:', error);
+        const box = document.getElementById('form-err');
+        box.innerHTML = '• Rapor kaydedilirken bir hata oluştu: ' + escapeHtml(error.message);
+        box.classList.add('show');
+        return;
+      }
+
+      // Cache'i güncelle
+      await loadRaps();
 
       ['r-scd', 'r-scp', 'r-sor', 'r-rutbe', 'r-zb', 'r-ze', 'r-sd', 'r-amac', 'r-sonuc', 'r-ano', 'r-ek'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '' });
       document.getElementById('tsl').innerHTML = ''; imgs = []; tsc = 0; renderImgs();
@@ -1851,13 +1892,13 @@
       // GÜVENLİK: Sunucu tarafından rolü doğrula
       const yetkili = await verifyRole('yetkili');
       if (!yetkili) { alert('[GÜVENLİK] Bu işlem için yetkiniz yok.'); return; }
-      const raps = getRaps();
-      const i = raps.findIndex(x => x.id === id);
-      if (i < 0) return;
-      raps[i].onayDurum = 'onaylandi';
-      raps[i].onayYapan = CU.displayName;
-      raps[i].onayTarih = new Date().toLocaleString('tr-TR');
-      saveRaps(raps);
+      const { error } = await _supabase.from('raporlar').update({
+        onay_durum: 'onaylandi',
+        onay_yapan: CU.displayName,
+        onay_tarih: new Date().toLocaleString('tr-TR')
+      }).eq('id', id);
+      if (error) { console.error('[DB] Onay hatası:', error); return; }
+      await loadRaps();
       openMo(id);
       document.getElementById('ca').innerHTML = CU.role === 'yetkili' ? (document.getElementById('nav-tum-raporlar')?.classList.contains('active') ? bTumRaporlar() : bDosyalar()) : bRaporlarim();
     }
@@ -1866,13 +1907,13 @@
       // GÜVENLİK: Sunucu tarafından rolü doğrula
       const yetkili = await verifyRole('yetkili');
       if (!yetkili) { alert('[GÜVENLİK] Bu işlem için yetkiniz yok.'); return; }
-      const raps = getRaps();
-      const i = raps.findIndex(x => x.id === id);
-      if (i < 0) return;
-      raps[i].onayDurum = 'reddedildi';
-      raps[i].onayYapan = CU.displayName;
-      raps[i].onayTarih = new Date().toLocaleString('tr-TR');
-      saveRaps(raps);
+      const { error } = await _supabase.from('raporlar').update({
+        onay_durum: 'reddedildi',
+        onay_yapan: CU.displayName,
+        onay_tarih: new Date().toLocaleString('tr-TR')
+      }).eq('id', id);
+      if (error) { console.error('[DB] Red hatası:', error); return; }
+      await loadRaps();
       openMo(id);
       document.getElementById('ca').innerHTML = CU.role === 'yetkili' ? (document.getElementById('nav-tum-raporlar')?.classList.contains('active') ? bTumRaporlar() : bDosyalar()) : bRaporlarim();
     }
@@ -1904,8 +1945,10 @@
         document.getElementById('confirm-overlay').classList.remove('active');
         return;
       }
-      const raps = getRaps().filter(x => x.id !== silPendingId);
-      saveRaps(raps);
+      // Supabase'den sil
+      const { error } = await _supabase.from('raporlar').delete().eq('id', silPendingId);
+      if (error) { console.error('[DB] Silme hatası:', error); }
+      await loadRaps(); // Cache'i güncelle
       silPendingId = null;
       document.getElementById('confirm-overlay').classList.remove('active');
       closeMoDirect();
