@@ -1227,6 +1227,45 @@
       color: var(--text-dark);
       letter-spacing: 2px
     }
+    /* DOSYA SEKMELERİ */
+    .dosya-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0;
+      margin-bottom: 0;
+      max-width: 820px
+    }
+    .dosya-tab {
+      background: none;
+      border: 1px solid var(--border);
+      border-bottom: none;
+      color: var(--text-dim);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      padding: 6px 14px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all .12s;
+      position: relative;
+      bottom: -1px
+    }
+    .dosya-tab:hover { color: var(--green); border-color: var(--green-dark) }
+    .dosya-tab.active {
+      background: var(--bg2);
+      color: var(--green);
+      border-color: var(--green);
+      border-bottom-color: var(--bg);
+    }
+    .dosya-tab-count {
+      background: var(--green-dark);
+      color: var(--green);
+      font-size: 9px;
+      padding: 1px 5px;
+      margin-left: 4px;
+      border-radius: 0
+    }
   </style>
 </head>
 
@@ -1324,7 +1363,7 @@
     // =================================================
 
     // ============ VERSİYON ============
-    const BUILD_VERSION = 'v3.3';
+    const BUILD_VERSION = 'v3.4';
     // ====================================
 
     const SCP_LIST = [
@@ -1358,8 +1397,8 @@
     ];
     const RC = { hc: '#9b2335', hr: '#e05252', mr: '#d4a017', lr: '#4caf50' };
 
-    let CU = null, VF = null, imgs = [], tsc = 0, ALL_PROFILES = [];
-    let ALL_RAPS = [], ALL_GRAPS = []; // önbellek
+    let CU = null, VF = null, VF_TAB = 'deney', imgs = [], tsc = 0, ALL_PROFILES = [];
+    let ALL_RAPS = [], ALL_GRAPS = [], ALL_KAZA = [], ALL_MUHAFAZA = [], ALL_ORNEK_TOPLAMA = [], ALL_ORNEK_SAKLAMA = []; // önbellek
 
     // ---- Deney Raporu CRUD ----
     async function fetchRaps() {
@@ -1446,7 +1485,83 @@
       };
     }
 
-    function getRaps() { return ALL_RAPS; }
+    // ---- Kaza Raporu CRUD ----
+    async function fetchKaza() {
+      const { data } = await _supabase.from('kaza_raporlar').select('*').order('created_at', { ascending: false });
+      ALL_KAZA = data || []; return ALL_KAZA;
+    }
+    async function insertKaza(r) {
+      const { data, error } = await _supabase.from('kaza_raporlar').insert([r]).select().single();
+      if (error) { console.error(error); return null; }
+      ALL_KAZA.unshift(data); return data;
+    }
+    async function deleteKaza(id) {
+      const { error } = await _supabase.from('kaza_raporlar').delete().eq('id', id);
+      if (!error) ALL_KAZA = ALL_KAZA.filter(x => x.id !== id);
+    }
+    async function updateKaza(id, fields) {
+      const { error } = await _supabase.from('kaza_raporlar').update(fields).eq('id', id);
+      if (!error) { const i = ALL_KAZA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_KAZA[i], fields); }
+    }
+
+    // ---- Muhafaza Raporu CRUD ----
+    async function fetchMuhafaza() {
+      const { data } = await _supabase.from('muhafaza_raporlar').select('*').order('created_at', { ascending: false });
+      ALL_MUHAFAZA = data || []; return ALL_MUHAFAZA;
+    }
+    async function insertMuhafaza(r) {
+      const { data, error } = await _supabase.from('muhafaza_raporlar').insert([r]).select().single();
+      if (error) { console.error(error); return null; }
+      ALL_MUHAFAZA.unshift(data); return data;
+    }
+    async function deleteMuhafaza(id) {
+      const { error } = await _supabase.from('muhafaza_raporlar').delete().eq('id', id);
+      if (!error) ALL_MUHAFAZA = ALL_MUHAFAZA.filter(x => x.id !== id);
+    }
+    async function updateMuhafaza(id, fields) {
+      const { error } = await _supabase.from('muhafaza_raporlar').update(fields).eq('id', id);
+      if (!error) { const i = ALL_MUHAFAZA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_MUHAFAZA[i], fields); }
+    }
+
+    // ---- Örnek Toplama Raporu CRUD ----
+    async function fetchOrnekToplama() {
+      const { data } = await _supabase.from('ornek_toplama_raporlar').select('*').order('created_at', { ascending: false });
+      ALL_ORNEK_TOPLAMA = data || []; return ALL_ORNEK_TOPLAMA;
+    }
+    async function insertOrnekToplama(r) {
+      const { data, error } = await _supabase.from('ornek_toplama_raporlar').insert([r]).select().single();
+      if (error) { console.error(error); return null; }
+      ALL_ORNEK_TOPLAMA.unshift(data); return data;
+    }
+    async function deleteOrnekToplama(id) {
+      const { error } = await _supabase.from('ornek_toplama_raporlar').delete().eq('id', id);
+      if (!error) ALL_ORNEK_TOPLAMA = ALL_ORNEK_TOPLAMA.filter(x => x.id !== id);
+    }
+    async function updateOrnekToplama(id, fields) {
+      const { error } = await _supabase.from('ornek_toplama_raporlar').update(fields).eq('id', id);
+      if (!error) { const i = ALL_ORNEK_TOPLAMA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_ORNEK_TOPLAMA[i], fields); }
+    }
+
+    // ---- Örnek Saklama Raporu CRUD ----
+    async function fetchOrnekSaklama() {
+      const { data } = await _supabase.from('ornek_saklama_raporlar').select('*').order('created_at', { ascending: false });
+      ALL_ORNEK_SAKLAMA = data || []; return ALL_ORNEK_SAKLAMA;
+    }
+    async function insertOrnekSaklama(r) {
+      const { data, error } = await _supabase.from('ornek_saklama_raporlar').insert([r]).select().single();
+      if (error) { console.error(error); return null; }
+      ALL_ORNEK_SAKLAMA.unshift(data); return data;
+    }
+    async function deleteOrnekSaklama(id) {
+      const { error } = await _supabase.from('ornek_saklama_raporlar').delete().eq('id', id);
+      if (!error) ALL_ORNEK_SAKLAMA = ALL_ORNEK_SAKLAMA.filter(x => x.id !== id);
+    }
+    async function updateOrnekSaklama(id, fields) {
+      const { error } = await _supabase.from('ornek_saklama_raporlar').update(fields).eq('id', id);
+      if (!error) { const i = ALL_ORNEK_SAKLAMA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_ORNEK_SAKLAMA[i], fields); }
+    }
+
+
     function getGRaps() { return ALL_GRAPS; }
     function userRapCount(u) { return ALL_RAPS.filter(r => r.username === u).length; }
     function userGRapCount(u) { return ALL_GRAPS.filter(r => r.username === u).length; }
@@ -1475,7 +1590,7 @@
       const re = document.getElementById('hrutbe');
       re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
       // Verileri Supabase'den çek
-      await Promise.all([fetchRaps(), fetchGRaps()]);
+      await Promise.all([fetchRaps(), fetchGRaps(), fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]);
       buildSidebar();
       if (CU.role === 'yetkisiz') { showPage(isS1() ? 'gunluk-yaz' : 'rapor-yaz'); }
       else { showPage('tum-raporlar'); }
@@ -1547,7 +1662,12 @@
        <button class="sb-item" id="nav-raporlarim" onclick="showPage('raporlarim')">DENEY RAPORLARIM</button>
        <div class="sb-label" style="margin-top:8px">GÜNLÜK</div>
        <button class="sb-item" id="nav-gunluk-yaz" onclick="showPage('gunluk-yaz')">GÜNLÜK RAPOR YAZ</button>
-       <button class="sb-item" id="nav-gunluk-raporlarim" onclick="showPage('gunluk-raporlarim')">GÜNLÜK RAPORLARIM</button>`
+       <button class="sb-item" id="nav-gunluk-raporlarim" onclick="showPage('gunluk-raporlarim')">GÜNLÜK RAPORLARIM</button>
+       <div class="sb-label" style="margin-top:8px">ÖZEL RAPORLAR</div>
+       <button class="sb-item" id="nav-kaza-yaz" onclick="showPage('kaza-yaz')">KAZA RAPORU YAZ</button>
+       <button class="sb-item" id="nav-muhafaza-yaz" onclick="showPage('muhafaza-yaz')">MUHAFAZA RAPORU YAZ</button>
+       <button class="sb-item" id="nav-ornek-toplama-yaz" onclick="showPage('ornek-toplama-yaz')">ÖRNEK TOPLAMA RAPORU</button>
+       <button class="sb-item" id="nav-ornek-saklama-yaz" onclick="showPage('ornek-saklama-yaz')">ÖRNEK SAKLAMA RAPORU</button>`
         : `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
        <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
        <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>
@@ -1561,7 +1681,7 @@
     }
 
     function showPage(id) {
-      VF = null; imgs = []; tsc = 0; setNav(id);
+      VF = null; VF_TAB = 'deney'; imgs = []; tsc = 0; setNav(id);
       const ca = document.getElementById('ca');
       if (id === 'rapor-yaz') ca.innerHTML = bRaporYaz();
       else if (id === 'raporlarim') ca.innerHTML = bRaporlarim();
@@ -1570,6 +1690,10 @@
       else if (id === 'gunluk-yaz') ca.innerHTML = bGunlukYaz();
       else if (id === 'gunluk-raporlarim') ca.innerHTML = bGunlukRaporlarim();
       else if (id === 'tum-gunluk') ca.innerHTML = bTumGunluk();
+      else if (id === 'kaza-yaz') ca.innerHTML = bKazaYaz();
+      else if (id === 'muhafaza-yaz') ca.innerHTML = bMuhafazaYaz();
+      else if (id === 'ornek-toplama-yaz') ca.innerHTML = bOrnekToplamaYaz();
+      else if (id === 'ornek-saklama-yaz') ca.innerHTML = bOrnekSaklamaYaz();
     }
 
     // S2 rütbesi kontrolü: Araştırmacı Adayı-S2, Uzman Stajyer-S2, Stajyer-S2
@@ -1826,7 +1950,502 @@
       return h + `</div></div>`;
     }
 
-    function openFolder(u) { VF = u; document.getElementById('ca').innerHTML = bDosyalar() }
+    function bDosyalar() {
+      const raps = getRaps();
+      const yetk = ALL_PROFILES.filter(u => u.role === 'yetkisiz');
+      if (VF) {
+        const u = ALL_PROFILES.find(x => x.username === VF);
+        const ur = raps.filter(r => r.username === VF);
+        const uk = ALL_KAZA.filter(r => r.username === VF);
+        const um = ALL_MUHAFAZA.filter(r => r.username === VF);
+        const uot = ALL_ORNEK_TOPLAMA.filter(r => r.username === VF);
+        const uos = ALL_ORNEK_SAKLAMA.filter(r => r.username === VF);
+        const tabs = [
+          { id: 'deney', label: 'DENEY', count: ur.length },
+          { id: 'kaza', label: 'KAZA', count: uk.length },
+          { id: 'muhafaza', label: 'MUHAFAZA', count: um.length },
+          { id: 'ornek-toplama', label: 'ÖRNEK TOPLAMA', count: uot.length },
+          { id: 'ornek-saklama', label: 'ÖRNEK SAKLAMA', count: uos.length },
+        ];
+        let tabsHtml = `<div class="dosya-tabs">` + tabs.map(t =>
+          `<button class="dosya-tab${VF_TAB === t.id ? ' active' : ''}" onclick="switchDosyaTab('${t.id}')">${t.label} <span class="dosya-tab-count">${t.count}</span></button>`
+        ).join('') + `</div>`;
+
+        let contentHtml = '';
+        if (VF_TAB === 'deney') {
+          contentHtml = `<div class="rlist">`;
+          if (!ur.length) contentHtml += `<div class="empty">VERİ BULUNAMADI.</div>`;
+          else ur.slice().reverse().forEach(r => contentHtml += rCard(r, false));
+          contentHtml += `</div>`;
+        } else if (VF_TAB === 'kaza') {
+          contentHtml = buildKazaList(uk, false);
+        } else if (VF_TAB === 'muhafaza') {
+          contentHtml = buildMuhafazaList(um, false);
+        } else if (VF_TAB === 'ornek-toplama') {
+          contentHtml = buildOrnekToplamaList(uot, false);
+        } else if (VF_TAB === 'ornek-saklama') {
+          contentHtml = buildOrnekSaklamaList(uos, false);
+        }
+
+        return `<div>
+  <button class="back-btn" onclick="VF=null;VF_TAB='deney';setNav('dosyalar');document.getElementById('ca').innerHTML=bDosyalar()">PERSONEL DOSYALARINA DÖN</button>
+  <div class="ph"><h2>${u ? u.displayName.toUpperCase() : VF} // DOSYA</h2><p>// TÜZEL KAYITLAR — DENEY · KAZA · MUHAFAZA · ÖRNEK</p></div>
+  ${tabsHtml}
+  <div id="dosya-tab-content" style="margin-top:14px">${contentHtml}</div>
+</div>`;
+      }
+      let h = `<div><div class="ph"><h2>PERSONEL DOSYALARI</h2><p>// YETKİSİZ PERSONEL ARŞİVLERİ</p></div><div class="fgrid">`;
+      yetk.forEach(u => {
+        const c = raps.filter(r => r.username === u.username).length
+          + ALL_KAZA.filter(r => r.username === u.username).length
+          + ALL_MUHAFAZA.filter(r => r.username === u.username).length
+          + ALL_ORNEK_TOPLAMA.filter(r => r.username === u.username).length
+          + ALL_ORNEK_SAKLAMA.filter(r => r.username === u.username).length;
+        h += `<div class="fi" onclick="openFolder('${u.username}')"><span class="fi-icon">[DIR]</span><div class="fi-name">${u.displayName}</div><div class="fi-count">${c} RAPOR KAYDI</div></div>`;
+      });
+      return h + `</div></div>`;
+    }
+
+    function switchDosyaTab(tabId) {
+      VF_TAB = tabId;
+      document.getElementById('ca').innerHTML = bDosyalar();
+    }
+
+    function openFolder(u) { VF = u; VF_TAB = 'deney'; document.getElementById('ca').innerHTML = bDosyalar() }
+
+    // ---- Kaza list & card ----
+    function buildKazaList(list, showUser) {
+      let h = `<div class="rlist">`;
+      if (!list.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`;
+      else list.slice().reverse().forEach(r => h += kazaCard(r, showUser));
+      return h + `</div>`;
+    }
+    function kazaCard(r, su) {
+      return `<div class="rc" style="border-left-color:#e05252">
+    <div class="rc-hdr">
+      <div>
+        <div class="rc-id" style="color:#e05252">KAZA-${String(r.id).padStart(3,'0')}</div>
+        <div class="rc-meta">${su ? `<span style="color:var(--green)">${r.display_name}</span> · ` : ''}${r.olay_tarihi || '—'}</div>
+      </div>
+      <div>${onayDurumBadge(r.onay_durum || 'bekliyor')}</div>
+    </div>
+    <div class="rc-body">${r.olay_ozeti ? r.olay_ozeti.substring(0,120)+'…' : '—'}</div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="exp-btn" onclick="openKazaMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>
+      ${(CU.role === 'yetkili' || CU.username === r.username) ? `<button class="sil-btn" onclick="silKaza(${r.id})">[ SİL ]</button>` : ''}
+    </div>
+  </div>`;
+    }
+
+    // ---- Muhafaza list & card ----
+    function buildMuhafazaList(list, showUser) {
+      let h = `<div class="rlist">`;
+      if (!list.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`;
+      else list.slice().reverse().forEach(r => h += muhafazaCard(r, showUser));
+      return h + `</div>`;
+    }
+    function muhafazaCard(r, su) {
+      return `<div class="rc" style="border-left-color:var(--amber)">
+    <div class="rc-hdr">
+      <div>
+        <div class="rc-id" style="color:var(--amber)">MUHAFAZA-${String(r.id).padStart(3,'0')}</div>
+        <div class="rc-meta">${su ? `<span style="color:var(--green)">${r.display_name}</span> · ` : ''}${r.operasyon_tarihi || '—'} · <span style="color:var(--amber)">${r.degisen_scp || '—'}</span></div>
+      </div>
+      <div>${onayDurumBadge(r.onay_durum || 'bekliyor')}</div>
+    </div>
+    <div class="rc-body">${r.operasyon_nedeni ? r.operasyon_nedeni.substring(0,120)+'…' : '—'}</div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="exp-btn" onclick="openMuhafazaMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>
+      ${(CU.role === 'yetkili' || CU.username === r.username) ? `<button class="sil-btn" onclick="silMuhafaza(${r.id})">[ SİL ]</button>` : ''}
+    </div>
+  </div>`;
+    }
+
+    // ---- Örnek Toplama list & card ----
+    function buildOrnekToplamaList(list, showUser) {
+      let h = `<div class="rlist">`;
+      if (!list.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`;
+      else list.slice().reverse().forEach(r => h += ornekToplamaCard(r, showUser));
+      return h + `</div>`;
+    }
+    function ornekToplamaCard(r, su) {
+      return `<div class="rc" style="border-left-color:#4caf50">
+    <div class="rc-hdr">
+      <div>
+        <div class="rc-id" style="color:#4caf50">ÖRNEK-TOPLAMA-${String(r.id).padStart(3,'0')}</div>
+        <div class="rc-meta">${su ? `<span style="color:var(--green)">${r.display_name}</span> · ` : ''}${r.ornek_tarihi || '—'} · <span style="color:#4caf50">${r.ornek_scp || '—'}</span></div>
+      </div>
+      <div>${onayDurumBadge(r.onay_durum || 'bekliyor')}</div>
+    </div>
+    <div class="rc-body">${r.ne_yapilacak ? r.ne_yapilacak.substring(0,120)+'…' : '—'}</div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="exp-btn" onclick="openOrnekToplamaMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>
+      ${(CU.role === 'yetkili' || CU.username === r.username) ? `<button class="sil-btn" onclick="silOrnekToplama(${r.id})">[ SİL ]</button>` : ''}
+    </div>
+  </div>`;
+    }
+
+    // ---- Örnek Saklama list & card ----
+    function buildOrnekSaklamaList(list, showUser) {
+      let h = `<div class="rlist">`;
+      if (!list.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`;
+      else list.slice().reverse().forEach(r => h += ornekSaklamaCard(r, showUser));
+      return h + `</div>`;
+    }
+    function ornekSaklamaCard(r, su) {
+      return `<div class="rc" style="border-left-color:#607d8b">
+    <div class="rc-hdr">
+      <div>
+        <div class="rc-id" style="color:#90a4ae">ÖRNEK-SAKLAMA-${String(r.id).padStart(3,'0')}</div>
+        <div class="rc-meta">${su ? `<span style="color:var(--green)">${r.display_name}</span> · ` : ''}${r.ornek_tarih_saat || '—'} · <span style="color:#90a4ae">${r.ornek_scp || '—'}</span></div>
+      </div>
+      <div>${onayDurumBadge(r.onay_durum || 'bekliyor')}</div>
+    </div>
+    <div class="rc-body">${r.saklama_yeri ? r.saklama_yeri.substring(0,120)+'…' : '—'}</div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="exp-btn" onclick="openOrnekSaklamaMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>
+      ${(CU.role === 'yetkili' || CU.username === r.username) ? `<button class="sil-btn" onclick="silOrnekSaklama(${r.id})">[ SİL ]</button>` : ''}
+    </div>
+  </div>`;
+    }
+
+    // ---- Modal açıcılar - Kaza ----
+    function openKazaMo(id) {
+      const r = ALL_KAZA.find(x => x.id === id); if (!r) return;
+      openModalId = id; openGModalId = null;
+      const silBtn = document.getElementById('mo-sil-btn');
+      if (silBtn) { silBtn.onclick = () => silKaza(id); silBtn.style.display = (CU.role === 'yetkili' || CU.username === r.username) ? 'block' : 'none'; }
+      document.getElementById('mt').textContent = `KAZA RAPORU — ${r.display_name}`;
+      let b = `
+    <div class="mf"><div class="mfl">PERSONEL KOD ADI</div><div class="mfv" style="color:#e05252">${r.display_name || '—'}</div></div>
+    <div class="mf"><div class="mfl">OLAY TARİHİ</div><div class="mfv">${r.olay_tarihi || '—'}</div></div>
+    <div class="mf"><div class="mfl">// OLAY ÖZETİ</div><div class="mfp">${r.olay_ozeti || '—'}</div></div>
+    <div class="mf"><div class="mfl">// OLAY SEBEBİ</div><div class="mfp">${r.olay_sebebi || '—'}</div></div>
+    <div class="mf"><div class="mfl">// KAYIPLAR</div><div class="mfp">${r.kayiplar || '—'}</div></div>
+    <div class="mf"><div class="mfl">// NOTLAR</div><div class="mfp">${r.notlar || 'Kayıt yok.'}</div></div>
+    <div class="mf"><div class="mfl">// ONAY DURUMU</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
+        ${onayDurumBadge(r.onay_durum || 'bekliyor')}
+        ${r.onay_yapan ? `<span style="font-size:10px;color:var(--text-dim)">— ${r.onay_yapan} · ${r.onay_tarih}</span>` : ''}
+      </div>
+      ${CU.role === 'yetkili' ? `<div class="onay-btn-grp">
+        <button class="onay-btn onayla" onclick="onaylaKaza(${r.id})">[ ✓ ONAYLA ]</button>
+        <button class="onay-btn reddet" onclick="reddetKaza(${r.id})">[ ✕ REDDET ]</button>
+      </div>` : ''}
+    </div>`;
+      document.getElementById('mbody').innerHTML = b;
+      document.getElementById('mo').classList.add('active');
+    }
+    async function onaylaKaza(id) { await updateKaza(id, {onay_durum:'onaylandi',onay_yapan:CU.displayName,onay_tarih:new Date().toLocaleString('tr-TR')}); openKazaMo(id); }
+    async function reddetKaza(id) { await updateKaza(id, {onay_durum:'reddedildi',onay_yapan:CU.displayName,onay_tarih:new Date().toLocaleString('tr-TR')}); openKazaMo(id); }
+    function silKaza(id) { const r = ALL_KAZA.find(x=>x.id===id); if(!r) return; silPendingId='kaza_'+id; document.getElementById('confirm-target').textContent=`KAZA RAPORU — ${r.display_name}`; document.getElementById('confirm-overlay').classList.add('active'); }
+
+    // ---- Modal açıcılar - Muhafaza ----
+    function openMuhafazaMo(id) {
+      const r = ALL_MUHAFAZA.find(x => x.id === id); if (!r) return;
+      openModalId = id; openGModalId = null;
+      const silBtn = document.getElementById('mo-sil-btn');
+      if (silBtn) { silBtn.onclick = () => silMuhafaza(id); silBtn.style.display = (CU.role === 'yetkili' || CU.username === r.username) ? 'block' : 'none'; }
+      document.getElementById('mt').textContent = `MUHAFAZA RAPORU — ${r.display_name}`;
+      let b = `
+    <div class="mf"><div class="mfl">PERSONEL KOD ADI</div><div class="mfv" style="color:var(--amber)">${r.display_name || '—'}</div></div>
+    <div class="mf"><div class="mfl">DEĞİŞİKLİK YAPILAN SCP</div><div class="mfv">${r.degisen_scp || '—'}</div></div>
+    <div class="mf"><div class="mfl">OPERASYON TARİHİ</div><div class="mfv">${r.operasyon_tarihi || '—'}</div></div>
+    <div class="mf"><div class="mfl">// OPERASYON NEDENİ</div><div class="mfp">${r.operasyon_nedeni || '—'}</div></div>
+    <div class="mf"><div class="mfl">// MUHAFAZADA YAPILAN DEĞİŞİKLİKLER</div><div class="mfp">${r.muhafaza_degisiklikler || '—'}</div></div>
+    <div class="mf"><div class="mfl">// DENEYDEN GÖRSELLER</div><div class="mfp">${r.deney_goruntular || 'Kayıt yok.'}</div></div>
+    <div class="mf"><div class="mfl">// ONAY DURUMU</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
+        ${onayDurumBadge(r.onay_durum || 'bekliyor')}
+        ${r.onay_yapan ? `<span style="font-size:10px;color:var(--text-dim)">— ${r.onay_yapan} · ${r.onay_tarih}</span>` : ''}
+      </div>
+      ${CU.role === 'yetkili' ? `<div class="onay-btn-grp">
+        <button class="onay-btn onayla" onclick="onayla_Muhafaza(${r.id})">[ ✓ ONAYLA ]</button>
+        <button class="onay-btn reddet" onclick="reddet_Muhafaza(${r.id})">[ ✕ REDDET ]</button>
+      </div>` : ''}
+    </div>`;
+      document.getElementById('mbody').innerHTML = b;
+      document.getElementById('mo').classList.add('active');
+    }
+    async function onayla_Muhafaza(id) { await updateMuhafaza(id, {onay_durum:'onaylandi',onay_yapan:CU.displayName,onay_tarih:new Date().toLocaleString('tr-TR')}); openMuhafazaMo(id); }
+    async function reddet_Muhafaza(id) { await updateMuhafaza(id, {onay_durum:'reddedildi',onay_yapan:CU.displayName,onay_tarih:new Date().toLocaleString('tr-TR')}); openMuhafazaMo(id); }
+    function silMuhafaza(id) { const r = ALL_MUHAFAZA.find(x=>x.id===id); if(!r) return; silPendingId='muh_'+id; document.getElementById('confirm-target').textContent=`MUHAFAZA RAPORU — ${r.display_name}`; document.getElementById('confirm-overlay').classList.add('active'); }
+
+    // ---- Modal açıcılar - Örnek Toplama ----
+    function openOrnekToplamaMo(id) {
+      const r = ALL_ORNEK_TOPLAMA.find(x => x.id === id); if (!r) return;
+      openModalId = id; openGModalId = null;
+      const silBtn = document.getElementById('mo-sil-btn');
+      if (silBtn) { silBtn.onclick = () => silOrnekToplama(id); silBtn.style.display = (CU.role === 'yetkili' || CU.username === r.username) ? 'block' : 'none'; }
+      document.getElementById('mt').textContent = `ÖRNEK TOPLAMA RAPORU — ${r.display_name}`;
+      let b = `
+    <div class="mf"><div class="mfl">PERSONEL KOD ADI</div><div class="mfv" style="color:#4caf50">${r.display_name || '—'}</div></div>
+    <div class="mf"><div class="mfl">ÖRNEĞİN ALINDIĞI SCP</div><div class="mfv">${r.ornek_scp || '—'}</div></div>
+    <div class="mf"><div class="mfl">ÖRNEĞİN ALINDIĞI TARİH</div><div class="mfv">${r.ornek_tarihi || '—'}</div></div>
+    <div class="mf"><div class="mfl">// ÖRNEKLE NE YAPILACAK</div><div class="mfp">${r.ne_yapilacak || '—'}</div></div>
+    <div class="mf"><div class="mfl">// BULGULAR (İncelendiyse)</div><div class="mfp">${r.bulgular || 'Henüz incelenmedi / Kayıt yok.'}</div></div>
+    <div class="mf"><div class="mfl">// ONAY DURUMU</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
+        ${onayDurumBadge(r.onay_durum || 'bekliyor')}
+        ${r.onay_yapan ? `<span style="font-size:10px;color:var(--text-dim)">— ${r.onay_yapan} · ${r.onay_tarih}</span>` : ''}
+      </div>
+      ${CU.role === 'yetkili' ? `<div class="onay-btn-grp">
+        <button class="onay-btn onayla" onclick="onayla_OT(${r.id})">[ ✓ ONAYLA ]</button>
+        <button class="onay-btn reddet" onclick="reddet_OT(${r.id})">[ ✕ REDDET ]</button>
+      </div>` : ''}
+    </div>`;
+      document.getElementById('mbody').innerHTML = b;
+      document.getElementById('mo').classList.add('active');
+    }
+    async function onayla_OT(id) { await updateOrnekToplama(id, {onay_durum:'onaylandi',onay_yapan:CU.displayName,onay_tarih:new Date().toLocaleString('tr-TR')}); openOrnekToplamaMo(id); }
+    async function reddet_OT(id) { await updateOrnekToplama(id, {onay_durum:'reddedildi',onay_yapan:CU.displayName,onay_tarih:new Date().toLocaleString('tr-TR')}); openOrnekToplamaMo(id); }
+    function silOrnekToplama(id) { const r = ALL_ORNEK_TOPLAMA.find(x=>x.id===id); if(!r) return; silPendingId='ot_'+id; document.getElementById('confirm-target').textContent=`ÖRNEK TOPLAMA — ${r.display_name}`; document.getElementById('confirm-overlay').classList.add('active'); }
+
+    // ---- Modal açıcılar - Örnek Saklama ----
+    function openOrnekSaklamaMo(id) {
+      const r = ALL_ORNEK_SAKLAMA.find(x => x.id === id); if (!r) return;
+      openModalId = id; openGModalId = null;
+      const silBtn = document.getElementById('mo-sil-btn');
+      if (silBtn) { silBtn.onclick = () => silOrnekSaklama(id); silBtn.style.display = (CU.role === 'yetkili' || CU.username === r.username) ? 'block' : 'none'; }
+      document.getElementById('mt').textContent = `ÖRNEK SAKLAMA RAPORU — ${r.display_name}`;
+      let b = `
+    <div class="mf"><div class="mfl">PERSONEL KOD ADI</div><div class="mfv" style="color:#90a4ae">${r.display_name || '—'}</div></div>
+    <div class="mf"><div class="mfl">ÖRNEĞİN ALINDIĞI SCP</div><div class="mfv">${r.ornek_scp || '—'}</div></div>
+    <div class="mf"><div class="mfl">ÖRNEĞİN ALINDIĞI TARİH/SAAT</div><div class="mfv">${r.ornek_tarih_saat || '—'}</div></div>
+    <div class="mf"><div class="mfl">// ÖRNEKLE NE YAPILACAK</div><div class="mfp">${r.ne_yapilacak || '—'}</div></div>
+    <div class="mf"><div class="mfl">// SAKLANACAĞI SÜRE</div><div class="mfv">${r.saklama_suresi || '—'}</div></div>
+    <div class="mf"><div class="mfl">// NEREDE TUTULACAK</div><div class="mfp">${r.saklama_yeri || '—'}</div></div>
+    <div class="mf"><div class="mfl">// ONAY DURUMU</div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
+        ${onayDurumBadge(r.onay_durum || 'bekliyor')}
+        ${r.onay_yapan ? `<span style="font-size:10px;color:var(--text-dim)">— ${r.onay_yapan} · ${r.onay_tarih}</span>` : ''}
+      </div>
+      ${CU.role === 'yetkili' ? `<div class="onay-btn-grp">
+        <button class="onay-btn onayla" onclick="onayla_OS(${r.id})">[ ✓ ONAYLA ]</button>
+        <button class="onay-btn reddet" onclick="reddet_OS(${r.id})">[ ✕ REDDET ]</button>
+      </div>` : ''}
+    </div>`;
+      document.getElementById('mbody').innerHTML = b;
+      document.getElementById('mo').classList.add('active');
+    }
+    async function onayla_OS(id) { await updateOrnekSaklama(id, {onay_durum:'onaylandi',onay_yapan:CU.displayName,onay_tarih:new Date().toLocaleString('tr-TR')}); openOrnekSaklamaMo(id); }
+    async function reddet_OS(id) { await updateOrnekSaklama(id, {onay_durum:'reddedildi',onay_yapan:CU.displayName,onay_tarih:new Date().toLocaleString('tr-TR')}); openOrnekSaklamaMo(id); }
+    function silOrnekSaklama(id) { const r = ALL_ORNEK_SAKLAMA.find(x=>x.id===id); if(!r) return; silPendingId='os_'+id; document.getElementById('confirm-target').textContent=`ÖRNEK SAKLAMA — ${r.display_name}`; document.getElementById('confirm-overlay').classList.add('active'); }
+
+    // ---- Form oluşturucu - Kaza Raporu ----
+    function bKazaYaz() {
+      const rutbeColor = CU.rutbeKat ? (RC[CU.rutbeKat] || 'var(--green)') : 'var(--green)';
+      return `<div>
+  <div class="ph"><h2>YENİ KAZA RAPORU</h2><p>// OLAY VE KAZA BİLDİRİM KAYDI</p></div>
+  <div class="suc" id="kaza-suc">KAZA RAPORU BAŞARIYLA SİSTEME İLETİLDİ.</div>
+  <div class="form-err-box" id="kaza-form-err"></div>
+  <div class="rf">
+    <div class="fs">
+      <div class="fs-title">// PERSONEL BİLGİLERİ</div>
+      <div class="fg"><label>PERSONEL KOD ADI</label><input type="text" class="tin" value="${CU.displayName}" readonly style="color:var(--green);opacity:.85"/></div>
+      <div class="fg"><label>PERSONEL RÜTBESİ</label><input type="text" class="tin" value="${CU.rutbe || ''}" readonly style="color:${rutbeColor};opacity:.85"/></div>
+    </div>
+    <div class="fs">
+      <div class="fs-title">// OLAY BİLGİLERİ</div>
+      <div class="fg"><label>OLAY TARİHİ</label><input type="text" class="tin" id="kaza-tarih" placeholder="GG.AA.YYYY veya tarih açıklaması"/><span class="val-msg" id="kerr-tarih">Olay tarihi girilmelidir.</span></div>
+      <div class="fg"><label>OLAY ÖZETİ</label><textarea class="ta" id="kaza-ozet" placeholder="Olayı kısaca özetleyin..."></textarea><span class="val-msg" id="kerr-ozet">Olay özeti girilmelidir.</span></div>
+      <div class="fg"><label>OLAY SEBEBİ</label><textarea class="ta" id="kaza-sebep" placeholder="Olayın sebebini açıklayın..."></textarea><span class="val-msg" id="kerr-sebep">Olay sebebi girilmelidir.</span></div>
+      <div class="fg"><label>KAYIPLAR</label><textarea class="ta" id="kaza-kayip" placeholder="Personel, ekipman veya diğer kayıplar..."></textarea><span class="val-msg" id="kerr-kayip">Kayıplar alanı girilmelidir.</span></div>
+      <div class="fg"><label>NOTLAR</label><textarea class="ta" id="kaza-not" placeholder="Eklemek istediğiniz ek bilgiler..."></textarea></div>
+    </div>
+    <button class="sub-btn" style="border-color:#e05252;color:#e05252;background:rgba(139,0,0,.18)" onclick="gonderKaza()">[ KAZA RAPORUNU GÖNDER ]</button>
+  </div></div>`;
+    }
+
+    async function gonderKaza() {
+      const alanlar = [
+        {id:'kaza-tarih',errId:'kerr-tarih',label:'Olay Tarihi'},
+        {id:'kaza-ozet',errId:'kerr-ozet',label:'Olay Özeti'},
+        {id:'kaza-sebep',errId:'kerr-sebep',label:'Olay Sebebi'},
+        {id:'kaza-kayip',errId:'kerr-kayip',label:'Kayıplar'},
+      ];
+      document.querySelectorAll('[id^="kerr-"]').forEach(e => e.classList.remove('show'));
+      document.getElementById('kaza-form-err').classList.remove('show');
+      const eksikler = [];
+      alanlar.forEach(a => { const el = document.getElementById(a.id); if(!el) return; if(!el.value.trim()) { el.classList.add('field-err'); const em = document.getElementById(a.errId); if(em) em.classList.add('show'); eksikler.push(a.label); } });
+      if (eksikler.length) { const b = document.getElementById('kaza-form-err'); b.innerHTML = eksikler.map(l=>`• ${l}`).join('<br>'); b.classList.add('show'); b.scrollIntoView({behavior:'smooth',block:'center'}); return; }
+      const btn = document.querySelector('#ca .sub-btn'); if(btn){btn.disabled=true;btn.textContent='[ GÖNDERİLİYOR... ]';}
+      const saved = await insertKaza({
+        user_id: CU.userId, username: CU.username, display_name: CU.displayName,
+        rutbe: CU.rutbe || '', rutbe_kat: CU.rutbeKat || '',
+        olay_tarihi: document.getElementById('kaza-tarih').value.trim(),
+        olay_ozeti: document.getElementById('kaza-ozet').value.trim(),
+        olay_sebebi: document.getElementById('kaza-sebep').value.trim(),
+        kayiplar: document.getElementById('kaza-kayip').value.trim(),
+        notlar: document.getElementById('kaza-not').value.trim(),
+        onay_durum: 'bekliyor'
+      });
+      if(btn){btn.disabled=false;btn.textContent='[ KAZA RAPORUNU GÖNDER ]';}
+      if(!saved){alert('Kayıt hatası, lütfen tekrar deneyin.');return;}
+      ['kaza-tarih','kaza-ozet','kaza-sebep','kaza-kayip','kaza-not'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      const s = document.getElementById('kaza-suc'); s.style.display='block'; setTimeout(()=>s.style.display='none',4000);
+    }
+
+    // ---- Form oluşturucu - Muhafaza Raporu ----
+    function bMuhafazaYaz() {
+      const rutbeColor = CU.rutbeKat ? (RC[CU.rutbeKat] || 'var(--green)') : 'var(--green)';
+      return `<div>
+  <div class="ph"><h2>YENİ MUHAFAZA RAPORU</h2><p>// SCP MUHAFAZA VE OPERASYON KAYDI</p></div>
+  <div class="suc" id="muh-suc">MUHAFAZA RAPORU BAŞARIYLA SİSTEME İLETİLDİ.</div>
+  <div class="form-err-box" id="muh-form-err"></div>
+  <div class="rf">
+    <div class="fs">
+      <div class="fs-title">// PERSONEL BİLGİLERİ</div>
+      <div class="fg"><label>PERSONEL KOD ADI</label><input type="text" class="tin" value="${CU.displayName}" readonly style="color:var(--amber);opacity:.85"/></div>
+    </div>
+    <div class="fs">
+      <div class="fs-title">// OPERASYON BİLGİLERİ</div>
+      <div class="fg"><label>DEĞİŞİKLİK YAPILAN SCP</label><select class="ts" id="muh-scp">${scpOpts()}</select><span class="val-msg" id="merr-scp">SCP seçilmelidir.</span></div>
+      <div class="fg"><label>OPERASYON TARİHİ</label><input type="text" class="tin" id="muh-tarih" placeholder="GG.AA.YYYY veya tarih açıklaması"/><span class="val-msg" id="merr-tarih">Operasyon tarihi girilmelidir.</span></div>
+      <div class="fg"><label>OPERASYON NEDENİ</label><textarea class="ta" id="muh-neden" placeholder="Neden muhafaza değişikliği yapıldığını açıklayın..."></textarea><span class="val-msg" id="merr-neden">Operasyon nedeni girilmelidir.</span></div>
+      <div class="fg"><label>MUHAFAZADA YAPILAN DEĞİŞİKLİKLER</label><textarea class="ta" id="muh-degisiklik" placeholder="Yapılan değişiklikleri detaylıca belirtin..."></textarea><span class="val-msg" id="merr-degisiklik">Değişiklikler alanı girilmelidir.</span></div>
+      <div class="fg"><label>DENEYDEN GÖRSELLER / NOTLAR</label><textarea class="ta" id="muh-goruntu" placeholder="Görsel açıklamaları veya ek notlar..."></textarea></div>
+    </div>
+    <button class="sub-btn" style="border-color:var(--amber);color:var(--amber);background:rgba(122,82,0,.18)" onclick="gonderMuhafaza()">[ MUHAFAZA RAPORUNU GÖNDER ]</button>
+  </div></div>`;
+    }
+
+    async function gonderMuhafaza() {
+      const alanlar = [
+        {id:'muh-scp',errId:'merr-scp',label:'SCP'},
+        {id:'muh-tarih',errId:'merr-tarih',label:'Operasyon Tarihi'},
+        {id:'muh-neden',errId:'merr-neden',label:'Operasyon Nedeni'},
+        {id:'muh-degisiklik',errId:'merr-degisiklik',label:'Değişiklikler'},
+      ];
+      document.querySelectorAll('[id^="merr-"]').forEach(e=>e.classList.remove('show'));
+      document.getElementById('muh-form-err').classList.remove('show');
+      const eksikler = [];
+      alanlar.forEach(a=>{const el=document.getElementById(a.id);if(!el)return;if(!el.value.trim()){el.classList.add('field-err');const em=document.getElementById(a.errId);if(em)em.classList.add('show');eksikler.push(a.label);}});
+      if(eksikler.length){const b=document.getElementById('muh-form-err');b.innerHTML=eksikler.map(l=>`• ${l}`).join('<br>');b.classList.add('show');b.scrollIntoView({behavior:'smooth',block:'center'});return;}
+      const btn=document.querySelector('#ca .sub-btn');if(btn){btn.disabled=true;btn.textContent='[ GÖNDERİLİYOR... ]';}
+      const saved = await insertMuhafaza({
+        user_id:CU.userId,username:CU.username,display_name:CU.displayName,
+        rutbe:CU.rutbe||'',rutbe_kat:CU.rutbeKat||'',
+        degisen_scp:document.getElementById('muh-scp').value,
+        operasyon_tarihi:document.getElementById('muh-tarih').value.trim(),
+        operasyon_nedeni:document.getElementById('muh-neden').value.trim(),
+        muhafaza_degisiklikler:document.getElementById('muh-degisiklik').value.trim(),
+        deney_goruntular:document.getElementById('muh-goruntu').value.trim(),
+        onay_durum:'bekliyor'
+      });
+      if(btn){btn.disabled=false;btn.textContent='[ MUHAFAZA RAPORUNU GÖNDER ]';}
+      if(!saved){alert('Kayıt hatası, lütfen tekrar deneyin.');return;}
+      ['muh-tarih','muh-neden','muh-degisiklik','muh-goruntu'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      document.getElementById('muh-scp').selectedIndex=0;
+      const s=document.getElementById('muh-suc');s.style.display='block';setTimeout(()=>s.style.display='none',4000);
+    }
+
+    // ---- Form oluşturucu - Örnek Toplama Raporu ----
+    function bOrnekToplamaYaz() {
+      const rutbeColor = CU.rutbeKat ? (RC[CU.rutbeKat] || 'var(--green)') : 'var(--green)';
+      return `<div>
+  <div class="ph"><h2>YENİ ÖRNEK TOPLAMA RAPORU</h2><p>// SCP ÖRNEK TOPLAMA VE ANALİZ KAYDI</p></div>
+  <div class="suc" id="ot-suc">ÖRNEK TOPLAMA RAPORU BAŞARIYLA SİSTEME İLETİLDİ.</div>
+  <div class="form-err-box" id="ot-form-err"></div>
+  <div class="rf">
+    <div class="fs">
+      <div class="fs-title">// PERSONEL BİLGİLERİ</div>
+      <div class="fg"><label>PERSONEL KOD ADI</label><input type="text" class="tin" value="${CU.displayName}" readonly style="color:#4caf50;opacity:.85"/></div>
+    </div>
+    <div class="fs">
+      <div class="fs-title">// ÖRNEK BİLGİLERİ</div>
+      <div class="fg"><label>ÖRNEĞİN ALINDIĞI SCP</label><select class="ts" id="ot-scp">${scpOpts()}</select><span class="val-msg" id="oterr-scp">SCP seçilmelidir.</span></div>
+      <div class="fg"><label>ÖRNEĞİN ALINDIĞI TARİH</label><input type="text" class="tin" id="ot-tarih" placeholder="GG.AA.YYYY"/><span class="val-msg" id="oterr-tarih">Tarih girilmelidir.</span></div>
+      <div class="fg"><label>ÖRNEKLE NE YAPILACAK</label><textarea class="ta" id="ot-ne" placeholder="Örneğin amacını ve kullanım planını açıklayın..."></textarea><span class="val-msg" id="oterr-ne">Bu alan girilmelidir.</span></div>
+      <div class="fg"><label>BULGULAR (İncelendiyse)</label><textarea class="ta" id="ot-bulgu" placeholder="Örnek incelendiyse bulguları yazın, incelenmediyse boş bırakın..."></textarea></div>
+    </div>
+    <button class="sub-btn" style="border-color:#4caf50;color:#4caf50;background:rgba(27,94,32,.18)" onclick="gonderOrnekToplama()">[ ÖRNEK TOPLAMA RAPORUNU GÖNDER ]</button>
+  </div></div>`;
+    }
+
+    async function gonderOrnekToplama() {
+      const alanlar = [
+        {id:'ot-scp',errId:'oterr-scp',label:'SCP'},
+        {id:'ot-tarih',errId:'oterr-tarih',label:'Örnek Tarihi'},
+        {id:'ot-ne',errId:'oterr-ne',label:'Ne Yapılacak'},
+      ];
+      document.querySelectorAll('[id^="oterr-"]').forEach(e=>e.classList.remove('show'));
+      document.getElementById('ot-form-err').classList.remove('show');
+      const eksikler=[];
+      alanlar.forEach(a=>{const el=document.getElementById(a.id);if(!el)return;if(!el.value.trim()){el.classList.add('field-err');const em=document.getElementById(a.errId);if(em)em.classList.add('show');eksikler.push(a.label);}});
+      if(eksikler.length){const b=document.getElementById('ot-form-err');b.innerHTML=eksikler.map(l=>`• ${l}`).join('<br>');b.classList.add('show');b.scrollIntoView({behavior:'smooth',block:'center'});return;}
+      const btn=document.querySelector('#ca .sub-btn');if(btn){btn.disabled=true;btn.textContent='[ GÖNDERİLİYOR... ]';}
+      const saved = await insertOrnekToplama({
+        user_id:CU.userId,username:CU.username,display_name:CU.displayName,
+        rutbe:CU.rutbe||'',rutbe_kat:CU.rutbeKat||'',
+        ornek_scp:document.getElementById('ot-scp').value,
+        ornek_tarihi:document.getElementById('ot-tarih').value.trim(),
+        ne_yapilacak:document.getElementById('ot-ne').value.trim(),
+        bulgular:document.getElementById('ot-bulgu').value.trim(),
+        onay_durum:'bekliyor'
+      });
+      if(btn){btn.disabled=false;btn.textContent='[ ÖRNEK TOPLAMA RAPORUNU GÖNDER ]';}
+      if(!saved){alert('Kayıt hatası, lütfen tekrar deneyin.');return;}
+      ['ot-tarih','ot-ne','ot-bulgu'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      document.getElementById('ot-scp').selectedIndex=0;
+      const s=document.getElementById('ot-suc');s.style.display='block';setTimeout(()=>s.style.display='none',4000);
+    }
+
+    // ---- Form oluşturucu - Örnek Saklama Raporu ----
+    function bOrnekSaklamaYaz() {
+      return `<div>
+  <div class="ph"><h2>YENİ ÖRNEK SAKLAMA RAPORU</h2><p>// SCP ÖRNEK SAKLAMA VE MUHAFAZA KAYDI</p></div>
+  <div class="suc" id="os-suc">ÖRNEK SAKLAMA RAPORU BAŞARIYLA SİSTEME İLETİLDİ.</div>
+  <div class="form-err-box" id="os-form-err"></div>
+  <div class="rf">
+    <div class="fs">
+      <div class="fs-title">// PERSONEL BİLGİLERİ</div>
+      <div class="fg"><label>PERSONEL KOD ADI</label><input type="text" class="tin" value="${CU.displayName}" readonly style="color:#90a4ae;opacity:.85"/></div>
+    </div>
+    <div class="fs">
+      <div class="fs-title">// ÖRNEK SAKLAMA BİLGİLERİ</div>
+      <div class="fg"><label>ÖRNEĞİN ALINDIĞI SCP</label><select class="ts" id="os-scp">${scpOpts()}</select><span class="val-msg" id="oserr-scp">SCP seçilmelidir.</span></div>
+      <div class="fg"><label>ÖRNEĞİN ALINDIĞI TARİH/SAAT</label><input type="text" class="tin" id="os-tarih" placeholder="GG.AA.YYYY SS:DD"/><span class="val-msg" id="oserr-tarih">Tarih/Saat girilmelidir.</span></div>
+      <div class="fg"><label>ÖRNEKLE NE YAPILACAK</label><textarea class="ta" id="os-ne" placeholder="Örneğin kullanım amacını yazın..."></textarea><span class="val-msg" id="oserr-ne">Bu alan girilmelidir.</span></div>
+      <div class="fg"><label>ÖRNEĞİN SAKLANACAĞI SÜRE</label><input type="text" class="tin" id="os-sure" placeholder="Örn: 7 gün, 1 ay, belirsiz"/><span class="val-msg" id="oserr-sure">Saklama süresi girilmelidir.</span></div>
+      <div class="fg"><label>ÖRNEK NEREDE TUTULACAK?</label><textarea class="ta" id="os-yer" placeholder="Laboratuvar, dolap, konteyner numarası vb..."></textarea><span class="val-msg" id="oserr-yer">Saklama yeri girilmelidir.</span></div>
+    </div>
+    <button class="sub-btn" style="border-color:#90a4ae;color:#90a4ae;background:rgba(55,71,79,.25)" onclick="gonderOrnekSaklama()">[ ÖRNEK SAKLAMA RAPORUNU GÖNDER ]</button>
+  </div></div>`;
+    }
+
+    async function gonderOrnekSaklama() {
+      const alanlar = [
+        {id:'os-scp',errId:'oserr-scp',label:'SCP'},
+        {id:'os-tarih',errId:'oserr-tarih',label:'Tarih/Saat'},
+        {id:'os-ne',errId:'oserr-ne',label:'Ne Yapılacak'},
+        {id:'os-sure',errId:'oserr-sure',label:'Saklama Süresi'},
+        {id:'os-yer',errId:'oserr-yer',label:'Saklama Yeri'},
+      ];
+      document.querySelectorAll('[id^="oserr-"]').forEach(e=>e.classList.remove('show'));
+      document.getElementById('os-form-err').classList.remove('show');
+      const eksikler=[];
+      alanlar.forEach(a=>{const el=document.getElementById(a.id);if(!el)return;if(!el.value.trim()){el.classList.add('field-err');const em=document.getElementById(a.errId);if(em)em.classList.add('show');eksikler.push(a.label);}});
+      if(eksikler.length){const b=document.getElementById('os-form-err');b.innerHTML=eksikler.map(l=>`• ${l}`).join('<br>');b.classList.add('show');b.scrollIntoView({behavior:'smooth',block:'center'});return;}
+      const btn=document.querySelector('#ca .sub-btn');if(btn){btn.disabled=true;btn.textContent='[ GÖNDERİLİYOR... ]';}
+      const saved = await insertOrnekSaklama({
+        user_id:CU.userId,username:CU.username,display_name:CU.displayName,
+        rutbe:CU.rutbe||'',rutbe_kat:CU.rutbeKat||'',
+        ornek_scp:document.getElementById('os-scp').value,
+        ornek_tarih_saat:document.getElementById('os-tarih').value.trim(),
+        ne_yapilacak:document.getElementById('os-ne').value.trim(),
+        saklama_suresi:document.getElementById('os-sure').value.trim(),
+        saklama_yeri:document.getElementById('os-yer').value.trim(),
+        onay_durum:'bekliyor'
+      });
+      if(btn){btn.disabled=false;btn.textContent='[ ÖRNEK SAKLAMA RAPORUNU GÖNDER ]';}
+      if(!saved){alert('Kayıt hatası, lütfen tekrar deneyin.');return;}
+      ['os-tarih','os-ne','os-sure','os-yer'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+      document.getElementById('os-scp').selectedIndex=0;
+      const s=document.getElementById('os-suc');s.style.display='block';setTimeout(()=>s.style.display='none',4000);
+    }
+
+
 
     function openMo(id) {
       const r = getRaps().find(x => x.id === id); if (!r) return;
@@ -2167,6 +2786,14 @@
       if (!silPendingId) return;
       if (typeof silPendingId === 'string' && silPendingId.startsWith('g_')) {
         await deleteGRap(parseInt(silPendingId.replace('g_', '')));
+      } else if (typeof silPendingId === 'string' && silPendingId.startsWith('kaza_')) {
+        await deleteKaza(parseInt(silPendingId.replace('kaza_', '')));
+      } else if (typeof silPendingId === 'string' && silPendingId.startsWith('muh_')) {
+        await deleteMuhafaza(parseInt(silPendingId.replace('muh_', '')));
+      } else if (typeof silPendingId === 'string' && silPendingId.startsWith('ot_')) {
+        await deleteOrnekToplama(parseInt(silPendingId.replace('ot_', '')));
+      } else if (typeof silPendingId === 'string' && silPendingId.startsWith('os_')) {
+        await deleteOrnekSaklama(parseInt(silPendingId.replace('os_', '')));
       } else {
         await deleteRap(silPendingId);
       }
