@@ -1266,6 +1266,69 @@
       margin-left: 4px;
       border-radius: 0
     }
+
+    /* AĞAÇ MENÜ */
+    .sb-tree-group { width: 100% }
+    .sb-tree-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 14px;
+      cursor: pointer;
+      font-size: 11px;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+      border: none;
+      background: none;
+      text-align: left;
+      width: 100%;
+      border-left: 2px solid transparent;
+      transition: all .12s;
+      font-family: 'Share Tech Mono', monospace;
+      justify-content: space-between;
+    }
+    .sb-tree-toggle::before {
+      content: '// ';
+      color: var(--text-dark)
+    }
+    .sb-tree-toggle:hover {
+      background: var(--green-glow);
+      color: var(--green);
+      border-left-color: var(--green-dim)
+    }
+    .sb-tree-toggle.open {
+      color: var(--green);
+      border-left-color: var(--green-dim);
+      background: var(--green-glow)
+    }
+    .sb-tree-arrow {
+      font-size: 9px;
+      color: var(--text-dark);
+      transition: transform .2s;
+      margin-left: auto;
+      flex-shrink: 0
+    }
+    .sb-tree-toggle.open .sb-tree-arrow { transform: rotate(90deg); color: var(--green-dim) }
+    .sb-tree-children {
+      display: none;
+      border-left: 1px solid var(--green-dark);
+      margin-left: 18px
+    }
+    .sb-tree-children.open { display: block }
+    .sb-tree-children .sb-item {
+      font-size: 10px;
+      padding: 7px 14px;
+      color: var(--text-dark);
+      letter-spacing: 1px
+    }
+    .sb-tree-children .sb-item::before { content: '└ '; color: var(--green-dark) }
+    .sb-tree-children .sb-item:hover,
+    .sb-tree-children .sb-item.active {
+      color: var(--green);
+      background: var(--green-glow);
+      border-left-color: var(--green)
+    }
+    .sb-tree-children .sb-item.active::before { color: var(--green) }
   </style>
 </head>
 
@@ -1363,7 +1426,7 @@
     // =================================================
 
     // ============ VERSİYON ============
-    const BUILD_VERSION = 'v3.7';
+    const BUILD_VERSION = 'v3.8';
     // ====================================
 
     const SCP_LIST = [
@@ -1664,19 +1727,47 @@
       const sb = document.getElementById('sidebar');
       sb.innerHTML = CU.role === 'yetkisiz'
         ? `<div class="sb-label">PERSONEL ERİŞİMİ</div>
-       ${!isS1() ? `<button class="sb-item" id="nav-rapor-yaz" onclick="showPage('rapor-yaz')">DENEY RAPORU YAZ</button>` : ''}
-       <button class="sb-item" id="nav-raporlarim" onclick="showPage('raporlarim')">DENEY RAPORLARIM</button>
-       <div class="sb-label" style="margin-top:8px">GÜNLÜK</div>
-       <button class="sb-item" id="nav-gunluk-yaz" onclick="showPage('gunluk-yaz')">GÜNLÜK RAPOR YAZ</button>
-       <button class="sb-item" id="nav-gunluk-raporlarim" onclick="showPage('gunluk-raporlarim')">GÜNLÜK RAPORLARIM</button>
-       <div class="sb-label" style="margin-top:8px">ÖZEL RAPORLAR</div>
-       <button class="sb-item" id="nav-kaza-yaz" onclick="showPage('kaza-yaz')">KAZA RAPORU YAZ</button>
-       <button class="sb-item" id="nav-muhafaza-yaz" onclick="showPage('muhafaza-yaz')">MUHAFAZA RAPORU YAZ</button>
-       <button class="sb-item" id="nav-ornek-toplama-yaz" onclick="showPage('ornek-toplama-yaz')">ÖRNEK TOPLAMA RAPORU</button>
-       <button class="sb-item" id="nav-ornek-saklama-yaz" onclick="showPage('ornek-saklama-yaz')">ÖRNEK SAKLAMA RAPORU</button>`
+       <div class="sb-tree-group">
+         <button class="sb-tree-toggle open" id="tree-deney" onclick="toggleTree('deney')">
+           <span>DENEY RAPORLARI</span><span class="sb-tree-arrow">▶</span>
+         </button>
+         <div class="sb-tree-children open" id="tree-deney-children">
+           ${!isS1() ? `<button class="sb-item" id="nav-rapor-yaz" onclick="showPage('rapor-yaz')">RAPOR YAZ</button>` : ''}
+           <button class="sb-item" id="nav-raporlarim" onclick="showPage('raporlarim')">RAPORLARIM</button>
+         </div>
+       </div>
+       <div class="sb-tree-group">
+         <button class="sb-tree-toggle" id="tree-gunluk" onclick="toggleTree('gunluk')">
+           <span>GÜNLÜK RAPORLAR</span><span class="sb-tree-arrow">▶</span>
+         </button>
+         <div class="sb-tree-children" id="tree-gunluk-children">
+           <button class="sb-item" id="nav-gunluk-yaz" onclick="showPage('gunluk-yaz')">RAPOR YAZ</button>
+           <button class="sb-item" id="nav-gunluk-raporlarim" onclick="showPage('gunluk-raporlarim')">RAPORLARIM</button>
+         </div>
+       </div>
+       <div class="sb-tree-group">
+         <button class="sb-tree-toggle" id="tree-ozel" onclick="toggleTree('ozel')">
+           <span>ÖZEL RAPORLAR</span><span class="sb-tree-arrow">▶</span>
+         </button>
+         <div class="sb-tree-children" id="tree-ozel-children">
+           <button class="sb-item" id="nav-kaza-yaz" onclick="showPage('kaza-yaz')">KAZA RAPORU</button>
+           <button class="sb-item" id="nav-muhafaza-yaz" onclick="showPage('muhafaza-yaz')">MUHAFAZA RAPORU</button>
+           <button class="sb-item" id="nav-ornek-toplama-yaz" onclick="showPage('ornek-toplama-yaz')">ÖRNEK TOPLAMA</button>
+           <button class="sb-item" id="nav-ornek-saklama-yaz" onclick="showPage('ornek-saklama-yaz')">ÖRNEK SAKLAMA</button>
+         </div>
+       </div>`
         : `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
        <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
        <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>`;
+    }
+
+    function toggleTree(id) {
+      const toggle = document.getElementById('tree-' + id);
+      const children = document.getElementById('tree-' + id + '-children');
+      if (!toggle || !children) return;
+      const isOpen = toggle.classList.contains('open');
+      toggle.classList.toggle('open', !isOpen);
+      children.classList.toggle('open', !isOpen);
     }
 
     function setNav(id) {
@@ -1686,6 +1777,23 @@
 
     function showPage(id) {
       VF = null; VF_TAB = 'deney'; imgs = []; tsc = 0; setNav(id);
+      // Ağaç menüde ilgili grubu aç
+      if (CU.role === 'yetkisiz') {
+        const groupMap = {
+          'rapor-yaz': 'deney', 'raporlarim': 'deney',
+          'gunluk-yaz': 'gunluk', 'gunluk-raporlarim': 'gunluk',
+          'kaza-yaz': 'ozel', 'muhafaza-yaz': 'ozel',
+          'ornek-toplama-yaz': 'ozel', 'ornek-saklama-yaz': 'ozel'
+        };
+        const group = groupMap[id];
+        if (group) {
+          ['deney','gunluk','ozel'].forEach(g => {
+            const t = document.getElementById('tree-' + g);
+            const c = document.getElementById('tree-' + g + '-children');
+            if (t && c) { t.classList.toggle('open', g === group); c.classList.toggle('open', g === group); }
+          });
+        }
+      }
       const ca = document.getElementById('ca');
       if (id === 'rapor-yaz') ca.innerHTML = bRaporYaz();
       else if (id === 'raporlarim') ca.innerHTML = bRaporlarim();
