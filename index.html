@@ -1548,7 +1548,7 @@
     // =================================================
 
     // ============ VERSİYON ============
-    const BUILD_VERSION = 'v3.9';
+    const BUILD_VERSION = 'v4.0';
     // ====================================
 
     const SCP_LIST = [
@@ -1872,14 +1872,16 @@
            <span>ÖZEL RAPORLAR</span><span class="sb-tree-arrow">▶</span>
          </button>
          <div class="sb-tree-children" id="tree-ozel-children">
-           <button class="sb-item" id="nav-kaza-yaz" onclick="showPage('kaza-yaz')">KAZA RAPORU</button>
-           <button class="sb-item" id="nav-muhafaza-yaz" onclick="showPage('muhafaza-yaz')">MUHAFAZA RAPORU</button>
-           <button class="sb-item" id="nav-ornek-toplama-yaz" onclick="showPage('ornek-toplama-yaz')">ÖRNEK TOPLAMA</button>
-           <button class="sb-item" id="nav-ornek-saklama-yaz" onclick="showPage('ornek-saklama-yaz')">ÖRNEK SAKLAMA</button>
+           <button class="sb-item" id="nav-ozel-raporlarim" onclick="showPage('ozel-raporlarim')">RAPORLARIM</button>
+           <button class="sb-item" id="nav-kaza-yaz" onclick="showPage('kaza-yaz')">KAZA RAPORU YAZ</button>
+           <button class="sb-item" id="nav-muhafaza-yaz" onclick="showPage('muhafaza-yaz')">MUHAFAZA RAPORU YAZ</button>
+           <button class="sb-item" id="nav-ornek-toplama-yaz" onclick="showPage('ornek-toplama-yaz')">ÖRNEK TOPLAMA YAZ</button>
+           <button class="sb-item" id="nav-ornek-saklama-yaz" onclick="showPage('ornek-saklama-yaz')">ÖRNEK SAKLAMA YAZ</button>
          </div>
        </div>`
         : `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
        <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
+       <button class="sb-item" id="nav-tum-ozel-raporlar" onclick="showPage('tum-ozel-raporlar')">TÜM ÖZEL RAPORLAR</button>
        <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>`;
     }
 
@@ -1904,7 +1906,7 @@
         const groupMap = {
           'rapor-yaz': 'deney', 'raporlarim': 'deney',
           'gunluk-yaz': 'gunluk', 'gunluk-raporlarim': 'gunluk',
-          'kaza-yaz': 'ozel', 'muhafaza-yaz': 'ozel',
+          'ozel-raporlarim': 'ozel', 'kaza-yaz': 'ozel', 'muhafaza-yaz': 'ozel',
           'ornek-toplama-yaz': 'ozel', 'ornek-saklama-yaz': 'ozel'
         };
         const group = groupMap[id];
@@ -1928,6 +1930,8 @@
       else if (id === 'muhafaza-yaz') ca.innerHTML = bMuhafazaYaz();
       else if (id === 'ornek-toplama-yaz') ca.innerHTML = bOrnekToplamaYaz();
       else if (id === 'ornek-saklama-yaz') ca.innerHTML = bOrnekSaklamaYaz();
+      else if (id === 'ozel-raporlarim') ca.innerHTML = bOzelRaporlarim();
+      else if (id === 'tum-ozel-raporlar') ca.innerHTML = bTumOzelRaporlar();
     }
 
     // S2 rütbesi kontrolü: Araştırmacı Adayı-S2, Uzman Stajyer-S2, Stajyer-S2
@@ -2036,7 +2040,7 @@
       const id = 'ts' + Date.now(); tsc++;
       const div = document.createElement('div');
       div.className = 'ts-row'; div.id = id;
-      div.innerHTML = `<input type="text" class="ts-t" placeholder="00:00:00" maxlength="8"/><input type="text" class="ts-n" placeholder="Olay açıklaması..."/><button class="ts-rm" onclick="rmTs('${id}')">✕</button>`;
+      div.innerHTML = `<input type="time" class="ts-t" step="1"/><input type="text" class="ts-n" placeholder="Olay açıklaması..."/><button class="ts-rm" onclick="rmTs('${id}')">✕</button>`;
       list.appendChild(div);
     }
     function rmTs(id) { const el = document.getElementById(id); if (el) { el.remove(); tsc-- } }
@@ -2248,6 +2252,65 @@
     function switchDosyaTab(tabId) {
       VF_TAB = tabId;
       document.getElementById('ca').innerHTML = bDosyalar();
+    }
+
+    function switchOzelTab(tabId, ctxId) {
+      const wrap = document.getElementById('ozel-tab-wrap-' + ctxId);
+      if (!wrap) return;
+      wrap.querySelectorAll('.dosya-tab').forEach(b => b.classList.remove('active'));
+      const btn = wrap.querySelector('[data-tab="' + tabId + '"]');
+      if (btn) btn.classList.add('active');
+      const content = document.getElementById('ozel-tab-content-' + ctxId);
+      if (!content) return;
+      const u = ctxId === 'mine' ? CU.username : null;
+      const kList  = u ? ALL_KAZA.filter(r => r.username === u)           : ALL_KAZA;
+      const mList  = u ? ALL_MUHAFAZA.filter(r => r.username === u)       : ALL_MUHAFAZA;
+      const otList = u ? ALL_ORNEK_TOPLAMA.filter(r => r.username === u)  : ALL_ORNEK_TOPLAMA;
+      const osList = u ? ALL_ORNEK_SAKLAMA.filter(r => r.username === u)  : ALL_ORNEK_SAKLAMA;
+      const su = ctxId !== 'mine';
+      if (tabId === 'kaza')          content.innerHTML = buildKazaList(kList, su);
+      else if (tabId === 'muhafaza') content.innerHTML = buildMuhafazaList(mList, su);
+      else if (tabId === 'ornek-toplama') content.innerHTML = buildOrnekToplamaList(otList, su);
+      else if (tabId === 'ornek-saklama') content.innerHTML = buildOrnekSaklamaList(osList, su);
+    }
+
+    function buildOzelTabs(ctxId, defaultTab, counts) {
+      const tabs = [
+        { id: 'kaza',          label: 'KAZA',          count: counts.kaza },
+        { id: 'muhafaza',      label: 'MUHAFAZA',       count: counts.muhafaza },
+        { id: 'ornek-toplama', label: 'ÖRNEK TOPLAMA',  count: counts.ot },
+        { id: 'ornek-saklama', label: 'ÖRNEK SAKLAMA',  count: counts.os },
+      ];
+      return `<div class="dosya-tabs" id="ozel-tab-wrap-${ctxId}">` +
+        tabs.map(t => `<button class="dosya-tab${t.id === defaultTab ? ' active' : ''}" data-tab="${t.id}" onclick="switchOzelTab('${t.id}','${ctxId}')">${t.label} <span class="dosya-tab-count">${t.count}</span></button>`).join('') +
+        `</div>`;
+    }
+
+    function bOzelRaporlarim() {
+      const u = CU.username;
+      const kList  = ALL_KAZA.filter(r => r.username === u);
+      const mList  = ALL_MUHAFAZA.filter(r => r.username === u);
+      const otList = ALL_ORNEK_TOPLAMA.filter(r => r.username === u);
+      const osList = ALL_ORNEK_SAKLAMA.filter(r => r.username === u);
+      const total  = kList.length + mList.length + otList.length + osList.length;
+      const tabs = buildOzelTabs('mine', 'kaza', { kaza: kList.length, muhafaza: mList.length, ot: otList.length, os: osList.length });
+      const content = buildKazaList(kList, false);
+      return `<div>
+  <div class="ph"><h2>ÖZEL RAPORLARIM</h2><p>// TOPLAM ${total} KAYIT</p></div>
+  ${tabs}
+  <div id="ozel-tab-content-mine" style="margin-top:14px">${content}</div>
+</div>`;
+    }
+
+    function bTumOzelRaporlar() {
+      const total = ALL_KAZA.length + ALL_MUHAFAZA.length + ALL_ORNEK_TOPLAMA.length + ALL_ORNEK_SAKLAMA.length;
+      const tabs = buildOzelTabs('all', 'kaza', { kaza: ALL_KAZA.length, muhafaza: ALL_MUHAFAZA.length, ot: ALL_ORNEK_TOPLAMA.length, os: ALL_ORNEK_SAKLAMA.length });
+      const content = buildKazaList(ALL_KAZA, true);
+      return `<div>
+  <div class="ph"><h2>TÜM ÖZEL RAPORLAR</h2><p>// SİSTEMDEKİ TÜM ÖZEL KAYITLAR — TOPLAM ${total}</p></div>
+  ${tabs}
+  <div id="ozel-tab-content-all" style="margin-top:14px">${content}</div>
+</div>`;
     }
 
     function openFolder(u) { VF = u; VF_TAB = 'deney'; document.getElementById('ca').innerHTML = bDosyalar() }
