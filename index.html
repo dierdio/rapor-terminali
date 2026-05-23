@@ -1363,7 +1363,7 @@
     // =================================================
 
     // ============ VERSİYON ============
-    const BUILD_VERSION = 'v3.5';
+    const BUILD_VERSION = 'v3.6';
     // ====================================
 
     const SCP_LIST = [
@@ -1676,9 +1676,7 @@
        <button class="sb-item" id="nav-ornek-saklama-yaz" onclick="showPage('ornek-saklama-yaz')">ÖRNEK SAKLAMA RAPORU</button>`
         : `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
        <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
-       <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>
-       <div class="sb-label" style="margin-top:8px">GÜNLÜK</div>
-       <button class="sb-item" id="nav-tum-gunluk" onclick="showPage('tum-gunluk')">TÜM GÜNLÜK RAPORLAR</button>`;
+       <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>`;
     }
 
     function setNav(id) {
@@ -1966,12 +1964,14 @@
         const um = ALL_MUHAFAZA.filter(r => r.username === VF);
         const uot = ALL_ORNEK_TOPLAMA.filter(r => r.username === VF);
         const uos = ALL_ORNEK_SAKLAMA.filter(r => r.username === VF);
+        const ug = ALL_GRAPS.filter(r => r.username === VF);
         const tabs = [
           { id: 'deney', label: 'DENEY', count: ur.length },
           { id: 'kaza', label: 'KAZA', count: uk.length },
           { id: 'muhafaza', label: 'MUHAFAZA', count: um.length },
           { id: 'ornek-toplama', label: 'ÖRNEK TOPLAMA', count: uot.length },
           { id: 'ornek-saklama', label: 'ÖRNEK SAKLAMA', count: uos.length },
+          { id: 'gunluk', label: 'GÜNLÜK', count: ug.length },
         ];
         let tabsHtml = `<div class="dosya-tabs">` + tabs.map(t =>
           `<button class="dosya-tab${VF_TAB === t.id ? ' active' : ''}" onclick="switchDosyaTab('${t.id}')">${t.label} <span class="dosya-tab-count">${t.count}</span></button>`
@@ -1991,6 +1991,8 @@
           contentHtml = buildOrnekToplamaList(uot, false);
         } else if (VF_TAB === 'ornek-saklama') {
           contentHtml = buildOrnekSaklamaList(uos, false);
+        } else if (VF_TAB === 'gunluk') {
+          contentHtml = buildGunlukList(ug, false);
         }
 
         return `<div>
@@ -2006,7 +2008,8 @@
           + ALL_KAZA.filter(r => r.username === u.username).length
           + ALL_MUHAFAZA.filter(r => r.username === u.username).length
           + ALL_ORNEK_TOPLAMA.filter(r => r.username === u.username).length
-          + ALL_ORNEK_SAKLAMA.filter(r => r.username === u.username).length;
+          + ALL_ORNEK_SAKLAMA.filter(r => r.username === u.username).length
+          + ALL_GRAPS.filter(r => r.username === u.username).length;
         h += `<div class="fi" onclick="openFolder('${u.username}')"><span class="fi-icon">[DIR]</span><div class="fi-name">${u.displayName}</div><div class="fi-count">${c} RAPOR KAYDI</div></div>`;
       });
       return h + `</div></div>`;
@@ -2089,6 +2092,14 @@
       ${(CU.role === 'yetkili' || CU.username === r.username) ? `<button class="sil-btn" onclick="silOrnekToplama(${r.id})">[ SİL ]</button>` : ''}
     </div>
   </div>`;
+    }
+
+    // ---- Günlük list (dosya içinde) ----
+    function buildGunlukList(list, showUser) {
+      let h = `<div class="rlist">`;
+      if (!list.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`;
+      else list.slice().reverse().forEach(r => h += gCard(r, showUser));
+      return h + `</div>`;
     }
 
     // ---- Örnek Saklama list & card ----
