@@ -1330,6 +1330,128 @@
     }
     .sb-tree-children .sb-item.active::before { color: var(--green) }
   </style>
+
+  <style>
+    /* ============ MOBİL OPTİMİZASYON ============ */
+    @media (max-width: 768px) {
+
+      /* Header */
+      .hdr { padding: 8px 12px }
+      .hdr-top { flex-wrap: wrap; gap: 6px }
+      .hdr-logo { gap: 8px }
+      .scp-badge { font-size: 22px }
+      .hdr-main { font-size: 14px }
+      .hdr-t { font-size: 8px }
+      .hdr-right { gap: 2px }
+      .hdr-clock { font-size: 9px }
+      .hdr-user { font-size: 9px; gap: 5px }
+      .logout-btn { font-size: 9px; padding: 2px 7px }
+      .hdr-status { font-size: 8px; gap: 10px }
+
+      /* Layout: sidebar üstte, içerik altta */
+      .main-body { flex-direction: column }
+
+      .sidebar {
+        width: 100%;
+        min-width: unset;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 6px 0
+      }
+
+      .sb-label { font-size: 8px; padding: 6px 12px 4px }
+      .sb-item { font-size: 10px; padding: 8px 12px }
+      .sb-tree-toggle { font-size: 10px; padding: 8px 12px }
+      .sb-tree-children .sb-item { font-size: 9px; padding: 6px 12px }
+      .sb-tree-children { margin-left: 12px }
+
+      /* İçerik alanı */
+      .content { padding: 14px 12px }
+
+      /* Sayfa başlığı */
+      .ph h2 { font-size: 20px }
+      .ph p { font-size: 9px }
+
+      /* İstatistik kutuları */
+      .stats { grid-template-columns: repeat(2, 1fr) }
+      .sn { font-size: 22px }
+      .sl { font-size: 8px }
+
+      /* Form */
+      .rf { padding: 14px 12px }
+      .frow { grid-template-columns: 1fr }
+      .fs { padding-left: 10px }
+      .fs-title { font-size: 8px }
+      .ts, .ta, .tn, .tin, .ttm { font-size: 11px; padding: 6px 8px }
+      .ta { min-height: 80px }
+
+      /* Timestamp satırı */
+      .ts-row { grid-template-columns: 100px 1fr 26px }
+
+      /* Rapor kartları */
+      .rc { padding: 12px }
+      .rc-hdr { flex-wrap: wrap; gap: 6px }
+      .rc-id { font-size: 12px }
+      .rc-meta { font-size: 9px }
+      .rc-scp { font-size: 9px; padding: 2px 6px }
+      .rc-body { font-size: 10px; margin-top: 8px }
+      .exp-btn, .sil-btn { font-size: 9px; padding: 5px 8px }
+
+      /* Modal */
+      .mb { width: 96vw; max-height: 92vh; margin: 4vh auto }
+      .mh { padding: 10px 12px }
+      .mt { font-size: 13px }
+      .mc, #mo-sil-btn { font-size: 10px; padding: 4px 10px }
+      .mbody { padding: 12px }
+      .mf { margin-bottom: 12px }
+      .mfl { font-size: 8px }
+      .mfv { font-size: 11px }
+      .mfp { font-size: 10px }
+      .mimgs { gap: 6px }
+      .mimg { max-width: 100%; max-height: 160px }
+
+      /* Onay butonu grubu */
+      .onay-btn-grp { flex-wrap: wrap; gap: 6px }
+      .onay-btn { font-size: 14px; padding: 6px 12px }
+
+      /* Dosya grid */
+      .fgrid { grid-template-columns: repeat(2, 1fr); gap: 8px }
+      .fi { padding: 12px }
+      .fi-name { font-size: 10px }
+      .fi-count { font-size: 8px }
+
+      /* Dosya sekmeleri */
+      .dosya-tabs { gap: 3px }
+      .dosya-tab { font-size: 9px; padding: 5px 8px }
+      .dosya-tab-count { font-size: 8px; padding: 1px 4px }
+
+      /* Geri butonu */
+      .back-btn { font-size: 9px; padding: 5px 10px; margin-bottom: 12px }
+
+      /* Gönder butonu */
+      .sub-btn { font-size: 16px; padding: 10px }
+
+      /* Görsel upload */
+      .img-th { width: 70px; height: 52px }
+
+      /* Confirm overlay */
+      .confirm-box { width: 92vw }
+      .confirm-body { padding: 14px }
+      .confirm-warn { font-size: 10px }
+      .confirm-target { font-size: 14px }
+      .confirm-evet, .confirm-hayir { font-size: 16px; padding: 6px 16px }
+
+      /* Build version badge */
+      .build-ver { font-size: 8px; bottom: 6px; right: 8px }
+    }
+
+    @media (max-width: 400px) {
+      .fgrid { grid-template-columns: 1fr }
+      .hdr-main { font-size: 12px }
+      .dosya-tab { font-size: 8px; padding: 4px 6px }
+    }
+    /* ============ MOBİL OPTİMİZASYON SONU ============ */
+  </style>
 </head>
 
 <body>
@@ -1426,7 +1548,7 @@
     // =================================================
 
     // ============ VERSİYON ============
-    const BUILD_VERSION = 'v3.8';
+    const BUILD_VERSION = 'v3.9';
     // ====================================
 
     const SCP_LIST = [
@@ -1465,7 +1587,7 @@
 
     // ---- Deney Raporu CRUD ----
     async function fetchRaps() {
-      const { data, error } = await _supabase.from('raporlar').select('*').order('created_at', { ascending: false });
+      const { data, error } = await _supabase.from('raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false });
       ALL_RAPS = (data || []).map(dbToRap);
       return ALL_RAPS;
     }
@@ -1482,13 +1604,13 @@
       if (!error) { const i = ALL_RAPS.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_RAPS[i], fields); }
     }
     async function deleteRap(id) {
-      const { error } = await _supabase.from('raporlar').delete().eq('id', id);
+      const { error } = await _supabase.from('raporlar').update({ is_deleted: true }).eq('id', id);
       if (!error) ALL_RAPS = ALL_RAPS.filter(x => x.id !== id);
     }
 
     // ---- Günlük Rapor CRUD ----
     async function fetchGRaps() {
-      const { data, error } = await _supabase.from('gunluk_raporlar').select('*').order('created_at', { ascending: false });
+      const { data, error } = await _supabase.from('gunluk_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false });
       ALL_GRAPS = (data || []).map(dbToGRap);
       return ALL_GRAPS;
     }
@@ -1504,7 +1626,7 @@
       if (!error) { const i = ALL_GRAPS.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_GRAPS[i], fields); }
     }
     async function deleteGRap(id) {
-      const { error } = await _supabase.from('gunluk_raporlar').delete().eq('id', id);
+      const { error } = await _supabase.from('gunluk_raporlar').update({ is_deleted: true }).eq('id', id);
       if (!error) ALL_GRAPS = ALL_GRAPS.filter(x => x.id !== id);
     }
 
@@ -1556,7 +1678,7 @@
 
     // ---- Kaza Raporu CRUD ----
     async function fetchKaza() {
-      const { data } = await _supabase.from('kaza_raporlar').select('*').order('created_at', { ascending: false });
+      const { data } = await _supabase.from('kaza_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false });
       ALL_KAZA = data || []; return ALL_KAZA;
     }
     async function insertKaza(r) {
@@ -1565,7 +1687,7 @@
       ALL_KAZA.unshift(data); return data;
     }
     async function deleteKaza(id) {
-      const { error } = await _supabase.from('kaza_raporlar').delete().eq('id', id);
+      const { error } = await _supabase.from('kaza_raporlar').update({ is_deleted: true }).eq('id', id);
       if (!error) ALL_KAZA = ALL_KAZA.filter(x => x.id !== id);
     }
     async function updateKaza(id, fields) {
@@ -1575,7 +1697,7 @@
 
     // ---- Muhafaza Raporu CRUD ----
     async function fetchMuhafaza() {
-      const { data } = await _supabase.from('muhafaza_raporlar').select('*').order('created_at', { ascending: false });
+      const { data } = await _supabase.from('muhafaza_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false });
       ALL_MUHAFAZA = data || []; return ALL_MUHAFAZA;
     }
     async function insertMuhafaza(r) {
@@ -1584,7 +1706,7 @@
       ALL_MUHAFAZA.unshift(data); return data;
     }
     async function deleteMuhafaza(id) {
-      const { error } = await _supabase.from('muhafaza_raporlar').delete().eq('id', id);
+      const { error } = await _supabase.from('muhafaza_raporlar').update({ is_deleted: true }).eq('id', id);
       if (!error) ALL_MUHAFAZA = ALL_MUHAFAZA.filter(x => x.id !== id);
     }
     async function updateMuhafaza(id, fields) {
@@ -1594,7 +1716,7 @@
 
     // ---- Örnek Toplama Raporu CRUD ----
     async function fetchOrnekToplama() {
-      const { data } = await _supabase.from('ornek_toplama_raporlar').select('*').order('created_at', { ascending: false });
+      const { data } = await _supabase.from('ornek_toplama_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false });
       ALL_ORNEK_TOPLAMA = data || []; return ALL_ORNEK_TOPLAMA;
     }
     async function insertOrnekToplama(r) {
@@ -1603,7 +1725,7 @@
       ALL_ORNEK_TOPLAMA.unshift(data); return data;
     }
     async function deleteOrnekToplama(id) {
-      const { error } = await _supabase.from('ornek_toplama_raporlar').delete().eq('id', id);
+      const { error } = await _supabase.from('ornek_toplama_raporlar').update({ is_deleted: true }).eq('id', id);
       if (!error) ALL_ORNEK_TOPLAMA = ALL_ORNEK_TOPLAMA.filter(x => x.id !== id);
     }
     async function updateOrnekToplama(id, fields) {
@@ -1613,7 +1735,7 @@
 
     // ---- Örnek Saklama Raporu CRUD ----
     async function fetchOrnekSaklama() {
-      const { data } = await _supabase.from('ornek_saklama_raporlar').select('*').order('created_at', { ascending: false });
+      const { data } = await _supabase.from('ornek_saklama_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false });
       ALL_ORNEK_SAKLAMA = data || []; return ALL_ORNEK_SAKLAMA;
     }
     async function insertOrnekSaklama(r) {
@@ -1622,7 +1744,7 @@
       ALL_ORNEK_SAKLAMA.unshift(data); return data;
     }
     async function deleteOrnekSaklama(id) {
-      const { error } = await _supabase.from('ornek_saklama_raporlar').delete().eq('id', id);
+      const { error } = await _supabase.from('ornek_saklama_raporlar').update({ is_deleted: true }).eq('id', id);
       if (!error) ALL_ORNEK_SAKLAMA = ALL_ORNEK_SAKLAMA.filter(x => x.id !== id);
     }
     async function updateOrnekSaklama(id, fields) {
