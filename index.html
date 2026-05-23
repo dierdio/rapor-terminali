@@ -1324,7 +1324,7 @@
     // =================================================
 
     // ============ VERSİYON ============
-    const BUILD_VERSION = 'v2.7';
+    const BUILD_VERSION = 'v3.3';
     // ====================================
 
     const SCP_LIST = [
@@ -1359,46 +1359,126 @@
     const RC = { hc: '#9b2335', hr: '#e05252', mr: '#d4a017', lr: '#4caf50' };
 
     let CU = null, VF = null, imgs = [], tsc = 0, ALL_PROFILES = [];
+    let ALL_RAPS = [], ALL_GRAPS = []; // önbellek
 
-    function getRaps() { try { return JSON.parse(localStorage.getItem('scp62_raps') || '[]') } catch { return [] } }
-    function saveRaps(r) { localStorage.setItem('scp62_raps', JSON.stringify(r)) }
-    function userRapCount(u) { return getRaps().filter(r => r.username === u).length }
+    // ---- Deney Raporu CRUD ----
+    async function fetchRaps() {
+      const { data, error } = await _supabase.from('raporlar').select('*').order('created_at', { ascending: false });
+      ALL_RAPS = (data || []).map(dbToRap);
+      return ALL_RAPS;
+    }
+    async function insertRap(rap) {
+      const row = rapToDb(rap);
+      const { data, error } = await _supabase.from('raporlar').insert([row]).select().single();
+      if (error) { console.error(error); return null; }
+      const mapped = dbToRap(data);
+      ALL_RAPS.unshift(mapped);
+      return mapped;
+    }
+    async function updateRap(id, fields) {
+      const { error } = await _supabase.from('raporlar').update(fields).eq('id', id);
+      if (!error) { const i = ALL_RAPS.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_RAPS[i], fields); }
+    }
+    async function deleteRap(id) {
+      const { error } = await _supabase.from('raporlar').delete().eq('id', id);
+      if (!error) ALL_RAPS = ALL_RAPS.filter(x => x.id !== id);
+    }
+
+    // ---- Günlük Rapor CRUD ----
+    async function fetchGRaps() {
+      const { data, error } = await _supabase.from('gunluk_raporlar').select('*').order('created_at', { ascending: false });
+      ALL_GRAPS = (data || []).map(dbToGRap);
+      return ALL_GRAPS;
+    }
+    async function insertGRap(rap) {
+      const { data, error } = await _supabase.from('gunluk_raporlar').insert([gRapToDb(rap)]).select().single();
+      if (error) { console.error(error); return null; }
+      const mapped = dbToGRap(data);
+      ALL_GRAPS.unshift(mapped);
+      return mapped;
+    }
+    async function updateGRap(id, fields) {
+      const { error } = await _supabase.from('gunluk_raporlar').update(fields).eq('id', id);
+      if (!error) { const i = ALL_GRAPS.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_GRAPS[i], fields); }
+    }
+    async function deleteGRap(id) {
+      const { error } = await _supabase.from('gunluk_raporlar').delete().eq('id', id);
+      if (!error) ALL_GRAPS = ALL_GRAPS.filter(x => x.id !== id);
+    }
+
+    // ---- DB <-> JS dönüşüm ----
+    function dbToRap(r) {
+      return {
+        id: r.id, username: r.username, displayName: r.display_name,
+        scd: r.scd, scp: r.scp, dNo: r.d_no, sorumlu: r.sorumlu, rutbe: r.rutbe,
+        zb: r.zb, ze: r.ze, sd: r.sd, amac: r.amac, sonuc: r.sonuc,
+        ano: r.ano, ek: r.ek, timestamps: r.timestamps || [], images: r.images || [],
+        onayDurum: r.onay_durum || 'bekliyor', onayYapan: r.onay_yapan, onayTarih: r.onay_tarih,
+        tarih: r.created_at ? new Date(r.created_at).toLocaleString('tr-TR') : '—'
+      };
+    }
+    function rapToDb(r) {
+      return {
+        user_id: CU.userId, username: r.username, display_name: r.displayName,
+        scd: r.scd, scp: r.scp, d_no: r.dNo, sorumlu: r.sorumlu, rutbe: r.rutbe,
+        zb: r.zb, ze: r.ze, sd: r.sd, amac: r.amac, sonuc: r.sonuc,
+        ano: r.ano, ek: r.ek, timestamps: r.timestamps, images: r.images,
+        onay_durum: 'bekliyor'
+      };
+    }
+    function dbToGRap(r) {
+      return {
+        id: r.id, username: r.username, displayName: r.display_name,
+        dNo: r.d_no, robloxAdi: r.roblox_adi, rutbe: r.rutbe, rutbeKat: r.rutbe_kat,
+        deneyler: r.deneyler, sure: r.sure, ekler: r.ekler,
+        mesaiImgs: r.mesai_images || [], deneyImgs: r.deney_images || [],
+        onayDurum: r.onay_durum || 'bekliyor', onayYapan: r.onay_yapan, onayTarih: r.onay_tarih,
+        tarih: r.created_at ? new Date(r.created_at).toLocaleString('tr-TR') : '—'
+      };
+    }
+    function gRapToDb(r) {
+      return {
+        user_id: CU.userId, username: r.username, display_name: r.displayName,
+        d_no: r.dNo, roblox_adi: r.robloxAdi, rutbe: r.rutbe, rutbe_kat: r.rutbeKat,
+        deneyler: r.deneyler, sure: r.sure, ekler: r.ekler,
+        mesai_images: r.mesaiImgs, deney_images: r.deneyImgs,
+        onay_durum: 'bekliyor'
+      };
+    }
+
+    function getRaps() { return ALL_RAPS; }
+    function getGRaps() { return ALL_GRAPS; }
+    function userRapCount(u) { return ALL_RAPS.filter(r => r.username === u).length; }
+    function userGRapCount(u) { return ALL_GRAPS.filter(r => r.username === u).length; }
     function fmtNo(n) { return String(n).padStart(3, '0') }
 
     // Sayfa yüklendiğinde Supabase oturumunu doğrula — yoksa login'e at
     (async function initSession() {
       const { data } = await _supabase.auth.getSession();
-      if (!data?.session?.user) {
-        window.location.replace('login');
-        return;
-      }
+      if (!data?.session?.user) { window.location.replace('login'); return; }
       const userId = data.session.user.id;
-      // Tüm profilleri çek (dosyalar sayfası için)
       const { data: allProfiles } = await _supabase.from('profiles').select('*');
       ALL_PROFILES = (allProfiles || []).map(p => ({
         username: p.username, role: p.role, displayName: p.display_name,
         rutbe: p.rutbe, rutbeKat: p.rutbe_kat, robloxId: p.roblox_id
       }));
-      const profileData = ALL_PROFILES.find(p => p.username === (allProfiles||[]).find(x => x.id === userId)?.username);
-      if (!profileData) {
-        await _supabase.auth.signOut();
-        window.location.replace('login');
-        return;
-      }
+      const myRow = (allProfiles || []).find(x => x.id === userId);
+      const profileData = ALL_PROFILES.find(p => p.username === myRow?.username);
+      if (!profileData) { await _supabase.auth.signOut(); window.location.replace('login'); return; }
       CU = Object.freeze({
-        username:    profileData.username,
-        role:        profileData.role,
-        displayName: profileData.displayName,
-        rutbe:       profileData.rutbe,
-        rutbeKat:    profileData.rutbeKat,
-        robloxId:    profileData.robloxId,
-        email:       data.session.user.email
+        userId, username: profileData.username, role: profileData.role,
+        displayName: profileData.displayName, rutbe: profileData.rutbe,
+        rutbeKat: profileData.rutbeKat, robloxId: profileData.robloxId,
+        email: data.session.user.email
       });
       document.getElementById('hun').textContent = CU.displayName;
       const re = document.getElementById('hrutbe');
       re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
+      // Verileri Supabase'den çek
+      await Promise.all([fetchRaps(), fetchGRaps()]);
       buildSidebar();
-      showPage(CU.role === 'yetkisiz' ? 'rapor-yaz' : 'tum-raporlar');
+      if (CU.role === 'yetkisiz') { showPage(isS1() ? 'gunluk-yaz' : 'rapor-yaz'); }
+      else { showPage('tum-raporlar'); }
       document.getElementById('init-loading').style.display = 'none';
       document.getElementById('main-screen').classList.add('active');
       updateClock();
@@ -1463,11 +1543,16 @@
       const sb = document.getElementById('sidebar');
       sb.innerHTML = CU.role === 'yetkisiz'
         ? `<div class="sb-label">PERSONEL ERİŞİMİ</div>
-       <button class="sb-item" id="nav-rapor-yaz" onclick="showPage('rapor-yaz')">RAPOR YAZ</button>
-       <button class="sb-item" id="nav-raporlarim" onclick="showPage('raporlarim')">RAPORLARIM</button>`
+       ${!isS1() ? `<button class="sb-item" id="nav-rapor-yaz" onclick="showPage('rapor-yaz')">DENEY RAPORU YAZ</button>` : ''}
+       <button class="sb-item" id="nav-raporlarim" onclick="showPage('raporlarim')">DENEY RAPORLARIM</button>
+       <div class="sb-label" style="margin-top:8px">GÜNLÜK</div>
+       <button class="sb-item" id="nav-gunluk-yaz" onclick="showPage('gunluk-yaz')">GÜNLÜK RAPOR YAZ</button>
+       <button class="sb-item" id="nav-gunluk-raporlarim" onclick="showPage('gunluk-raporlarim')">GÜNLÜK RAPORLARIM</button>`
         : `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
-       <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM RAPORLAR</button>
-       <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>`;
+       <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
+       <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>
+       <div class="sb-label" style="margin-top:8px">GÜNLÜK</div>
+       <button class="sb-item" id="nav-tum-gunluk" onclick="showPage('tum-gunluk')">TÜM GÜNLÜK RAPORLAR</button>`;
     }
 
     function setNav(id) {
@@ -1482,16 +1567,33 @@
       else if (id === 'raporlarim') ca.innerHTML = bRaporlarim();
       else if (id === 'tum-raporlar') ca.innerHTML = bTumRaporlar();
       else if (id === 'dosyalar') ca.innerHTML = bDosyalar();
+      else if (id === 'gunluk-yaz') ca.innerHTML = bGunlukYaz();
+      else if (id === 'gunluk-raporlarim') ca.innerHTML = bGunlukRaporlarim();
+      else if (id === 'tum-gunluk') ca.innerHTML = bTumGunluk();
     }
+
+    // S2 rütbesi kontrolü: Araştırmacı Adayı-S2, Uzman Stajyer-S2, Stajyer-S2
+    function isS2() { return CU && CU.rutbeKat === 'lr'; }
+    function isS1() { return CU && CU.rutbe && CU.rutbe.includes('S1'); }
 
     function scpOpts() {
       let h = '<option value="">-- SCP SEÇ --</option>';
-      SCP_LIST.forEach(s => { h += `<optgroup label="[ ${s.s} ]">`; s.i.forEach(i => h += `<option value="${i}">${i}</option>`); h += `</optgroup>` });
+      SCP_LIST.forEach(s => {
+        if (isS2() && s.s !== 'Sektör 2') return; // S2 sadece Sektör 2
+        h += `<optgroup label="[ ${s.s} ]">`;
+        s.i.forEach(i => h += `<option value="${i}">${i}</option>`);
+        h += `</optgroup>`;
+      });
       return h;
     }
     function scdOpts() {
       let h = '<option value="">-- DENEY KODU SEÇ --</option>';
-      SCD_LIST.forEach(s => { h += `<optgroup label="[ ${s.s} ]">`; s.i.forEach(i => h += `<option value="${i}">${i}</option>`); h += `</optgroup>` });
+      SCD_LIST.forEach(s => {
+        if (isS2() && s.s !== 'Sektör 2') return; // S2 sadece Sektör 2
+        h += `<optgroup label="[ ${s.s} ]">`;
+        s.i.forEach(i => h += `<option value="${i}">${i}</option>`);
+        h += `</optgroup>`;
+      });
       return h;
     }
     function rutbeOpts() {
@@ -1504,7 +1606,18 @@
     }
 
     function bRaporYaz() {
+      // S1 rütbesi rapor yazamaz
+      if (isS1()) {
+        return `<div><div class="ph"><h2>YENİ DENEY RAPORU</h2><p>// ERİŞİM KISITLAMASI</p></div>
+  <div style="background:rgba(139,0,0,.12);border:1px solid var(--red-dim);padding:20px;max-width:600px;text-align:center">
+    <div style="font-family:'VT323',monospace;font-size:24px;color:var(--red);letter-spacing:3px;margin-bottom:10px">⚠ ERİŞİM REDDEDİLDİ</div>
+    <div style="font-size:11px;color:var(--text-dim);letter-spacing:1px;line-height:1.8">Seviye-1 (S1) personeli deney raporu oluşturma yetkisine sahip değildir.<br>Rapor yazabilmek için en az S2 yetki seviyesi gerekmektedir.</div>
+  </div></div>`;
+      }
       const nextNo = fmtNo(userRapCount(CU.username) + 1);
+      // Rütbeyi profilden otomatik doldur
+      const autoRutbe = CU.rutbe || '';
+      const rutbeColor = CU.rutbeKat ? (RC[CU.rutbeKat] || 'var(--green)') : 'var(--green)';
       return `<div>
   <div class="ph"><h2>YENİ DENEY RAPORU</h2><p>// TÜM ALANLAR GİZLİLİK SEVİYESİ-4 KAPSAMINDADIR</p></div>
   <div class="suc" id="suc">RAPOR BAŞARIYLA SİSTEME İLETİLDİ. KAYIT OLUŞTURULDU.</div>
@@ -1520,7 +1633,7 @@
         <div class="fg"><label>SCP</label><select class="ts" id="r-scp">${scpOpts()}</select><span class="val-msg" id="err-scp">SCP seçilmelidir.</span></div>
         <div class="fg"><label>DENEY SORUMLUSU</label><input type="text" class="tin" id="r-sor" placeholder="Kod Adı"/><span class="val-msg" id="err-sor">Deney sorumlusu girilmelidir.</span></div>
       </div>
-      <div class="fg"><label>PERSONEL RÜTBESİ</label><select class="ts" id="r-rutbe" onchange="upRutbeClr()">${rutbeOpts()}</select><span class="val-msg" id="err-rutbe">Rütbe seçilmelidir.</span></div>
+      <div class="fg"><label>PERSONEL RÜTBESİ</label><input type="text" class="tin" id="r-rutbe" value="${autoRutbe}" readonly style="color:${rutbeColor};border-left-color:${rutbeColor};opacity:.85" title="Rütbeniz profilinizden otomatik alınmaktadır"/><span class="val-msg" id="err-rutbe">Rütbe bulunamadı.</span></div>
       <div class="frow">
         <div class="fg"><label>BAŞLANGIÇ ZAMANI</label><input type="time" class="ttm" id="r-zb"/><span class="val-msg" id="err-zb">Başlangıç zamanı girilmelidir.</span></div>
         <div class="fg"><label>BİTİŞ ZAMANI</label><input type="time" class="ttm" id="r-ze"/><span class="val-msg" id="err-ze">Bitiş zamanı girilmelidir.</span></div>
@@ -1586,9 +1699,8 @@
     }
     function rmImg(i) { imgs.splice(i, 1); renderImgs() }
 
-    function gonder() {
-      // Tüm hataları temizle
-      ['r-scd', 'r-scp', 'r-sor', 'r-rutbe', 'r-zb', 'r-ze', 'r-sd', 'r-amac', 'r-sonuc'].forEach(id => {
+    async function gonder() {
+      ['r-scd', 'r-scp', 'r-sor', 'r-zb', 'r-ze', 'r-sd', 'r-amac', 'r-sonuc'].forEach(id => {
         const el = document.getElementById(id); if (el) el.classList.remove('field-err');
       });
       document.querySelectorAll('.val-msg').forEach(e => e.classList.remove('show'));
@@ -1598,25 +1710,21 @@
         { id: 'r-scd', errId: 'err-scd', label: 'Deney Kodu' },
         { id: 'r-scp', errId: 'err-scp', label: 'SCP' },
         { id: 'r-sor', errId: 'err-sor', label: 'Deney Sorumlusu' },
-        { id: 'r-rutbe', errId: 'err-rutbe', label: 'Personel Rütbesi' },
         { id: 'r-zb', errId: 'err-zb', label: 'Başlangıç Zamanı' },
         { id: 'r-ze', errId: 'err-ze', label: 'Bitiş Zamanı' },
         { id: 'r-sd', errId: 'err-sd', label: 'Sınıf-D Sayısı' },
         { id: 'r-amac', errId: 'err-amac', label: 'Deney Amacı' },
         { id: 'r-sonuc', errId: 'err-sonuc', label: 'Deney Sonucu' },
       ];
-
       const eksikler = [];
       alanlar.forEach(a => {
         const el = document.getElementById(a.id); if (!el) return;
-        const val = el.value.trim();
-        if (!val) {
+        if (!el.value.trim()) {
           el.classList.add('field-err');
           const em = document.getElementById(a.errId); if (em) em.classList.add('show');
           eksikler.push(a.label);
         }
       });
-
       if (eksikler.length) {
         const box = document.getElementById('form-err');
         box.innerHTML = eksikler.map(l => `• ${l}`).join('<br>');
@@ -1625,35 +1733,34 @@
         return;
       }
 
-      const scd = document.getElementById('r-scd').value;
-      const scp = document.getElementById('r-scp').value;
-      const sor = document.getElementById('r-sor').value.trim();
-      const rutbe = document.getElementById('r-rutbe').value;
-      const amac = document.getElementById('r-amac').value.trim();
-      const sonuc = document.getElementById('r-sonuc').value.trim();
+      const btn = document.querySelector('#ca .sub-btn');
+      if (btn) { btn.disabled = true; btn.textContent = '[ GÖNDERİLİYOR... ]'; }
 
-      const raps = getRaps();
-      const no = fmtNo(userRapCount(CU.username) + 1);
-      raps.push({
-        id: Date.now(), username: CU.username, displayName: CU.displayName,
-        scd, scp, dNo: no, sorumlu: sor, rutbe,
+      const saved = await insertRap({
+        username: CU.username, displayName: CU.displayName,
+        dNo: fmtNo(userRapCount(CU.username) + 1),
+        scd: document.getElementById('r-scd').value,
+        scp: document.getElementById('r-scp').value,
+        sorumlu: document.getElementById('r-sor').value.trim(),
+        rutbe: CU.rutbe || '',
         zb: document.getElementById('r-zb').value,
         ze: document.getElementById('r-ze').value,
         sd: document.getElementById('r-sd').value,
-        amac, sonuc,
+        amac: document.getElementById('r-amac').value.trim(),
+        sonuc: document.getElementById('r-sonuc').value.trim(),
         ano: document.getElementById('r-ano').value.trim(),
         ek: document.getElementById('r-ek').value.trim(),
-        timestamps: getTs(), images: [...imgs],
-        tarih: new Date().toLocaleString('tr-TR')
+        timestamps: getTs(), images: [...imgs]
       });
-      saveRaps(raps);
 
-      ['r-scd', 'r-scp', 'r-sor', 'r-rutbe', 'r-zb', 'r-ze', 'r-sd', 'r-amac', 'r-sonuc', 'r-ano', 'r-ek'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '' });
+      if (btn) { btn.disabled = false; btn.textContent = '[ RAPORU GÖNDER ]'; }
+      if (!saved) { alert('Kayıt hatası, lütfen tekrar deneyin.'); return; }
+
+      ['r-scd', 'r-scp', 'r-sor', 'r-zb', 'r-ze', 'r-sd', 'r-amac', 'r-sonuc', 'r-ano', 'r-ek'].forEach(id => { const el = document.getElementById(id); if (el) el.value = '' });
       document.getElementById('tsl').innerHTML = ''; imgs = []; tsc = 0; renderImgs();
       const s = document.getElementById('suc'); s.style.display = 'block';
       setTimeout(() => s.style.display = 'none', 4000);
-      // güncelle no
-      const ro = document.querySelector('.tin[readonly]'); if (ro) ro.value = fmtNo(userRapCount(CU.username) + 1);
+      const ro = document.querySelector('.tin[style*="amber"]'); if (ro) ro.value = fmtNo(userRapCount(CU.username) + 1);
     }
 
     function bRaporlarim() {
@@ -1724,9 +1831,12 @@
     function openMo(id) {
       const r = getRaps().find(x => x.id === id); if (!r) return;
       openModalId = id;
-      // Silme butonunu göster/gizle
+      openGModalId = null; // günlük modal sıfırla
       const silBtn = document.getElementById('mo-sil-btn');
-      if (silBtn) silBtn.style.display = (CU.role === 'yetkili' || CU.username === r.username) ? 'block' : 'none';
+      if (silBtn) {
+        silBtn.onclick = () => silFromModal();
+        silBtn.style.display = (CU.role === 'yetkili' || CU.username === r.username) ? 'block' : 'none';
+      }
       document.getElementById('mt').textContent = `${r.scd || '—'} // DENEY-${r.dNo || '000'}`;
       const rk = RUTBE_LIST.find(x => x.label === r.rutbe);
       const rc = rk ? RC[rk.kat] || 'var(--green)' : 'var(--green)';
@@ -1784,29 +1894,264 @@
       return `<span class="onay-badge onay-bekliyor">◎ ONAY BEKLİYOR</span>`;
     }
 
-    function onaylaRapor(id) {
-      const raps = getRaps();
-      const i = raps.findIndex(x => x.id === id);
-      if (i < 0) return;
-      raps[i].onayDurum = 'onaylandi';
-      raps[i].onayYapan = CU.displayName;
-      raps[i].onayTarih = new Date().toLocaleString('tr-TR');
-      saveRaps(raps);
+    async function onaylaRapor(id) {
+      const fields = { onay_durum: 'onaylandi', onay_yapan: CU.displayName, onay_tarih: new Date().toLocaleString('tr-TR') };
+      await updateRap(id, fields);
       openMo(id);
       document.getElementById('ca').innerHTML = CU.role === 'yetkili' ? (document.getElementById('nav-tum-raporlar')?.classList.contains('active') ? bTumRaporlar() : bDosyalar()) : bRaporlarim();
     }
 
-    function reddetRapor(id) {
-      const raps = getRaps();
-      const i = raps.findIndex(x => x.id === id);
-      if (i < 0) return;
-      raps[i].onayDurum = 'reddedildi';
-      raps[i].onayYapan = CU.displayName;
-      raps[i].onayTarih = new Date().toLocaleString('tr-TR');
-      saveRaps(raps);
+    async function reddetRapor(id) {
+      const fields = { onay_durum: 'reddedildi', onay_yapan: CU.displayName, onay_tarih: new Date().toLocaleString('tr-TR') };
+      await updateRap(id, fields);
       openMo(id);
       document.getElementById('ca').innerHTML = CU.role === 'yetkili' ? (document.getElementById('nav-tum-raporlar')?.classList.contains('active') ? bTumRaporlar() : bDosyalar()) : bRaporlarim();
     }
+
+    // ============ GÜNLÜK RAPOR SİSTEMİ ============
+    let gimgs = []; // günlük rapor görselleri
+
+    // getGRaps ve saveGRaps → CRUD fonksiyonları yukarıda tanımlandı
+    function userGRapCount(u) { return getGRaps().filter(r => r.username === u).length }
+
+    function bGunlukYaz() {
+      const nextNo = fmtNo(userGRapCount(CU.username) + 1);
+      const autoRutbe = CU.rutbe || '';
+      const rutbeColor = CU.rutbeKat ? (RC[CU.rutbeKat] || 'var(--green)') : 'var(--green)';
+      return `<div>
+  <div class="ph"><h2>YENİ GÜNLÜK RAPOR</h2><p>// GÜNLÜK MESAİ VE AKTİVİTE KAYDI</p></div>
+  <div class="suc" id="gsuc">GÜNLÜK RAPOR BAŞARIYLA SİSTEME İLETİLDİ.</div>
+  <div class="form-err-box" id="gform-err"></div>
+  <div class="rf">
+    <div class="fs">
+      <div class="fs-title">// PERSONEL BİLGİLERİ</div>
+      <div class="frow">
+        <div class="fg"><label>ROBLOX TAKMA ADIM</label><input type="text" class="tin" id="g-roblox" placeholder="Roblox kullanıcı adınız"/><span class="val-msg" id="gerr-roblox">Roblox takma adı girilmelidir.</span></div>
+        <div class="fg"><label>GÜNLÜK RAPOR NO</label><input type="text" class="tin" value="${nextNo}" readonly style="color:var(--amber);border-left-color:var(--amber-dim)"/></div>
+      </div>
+      <div class="fg"><label>MEVCUT RÜTBEMم</label><input type="text" class="tin" id="g-rutbe" value="${autoRutbe}" readonly style="color:${rutbeColor};border-left-color:${rutbeColor};opacity:.85" title="Rütbeniz profilinizden otomatik alınmaktadır"/></div>
+    </div>
+    <div class="fs">
+      <div class="fs-title">// AKTİVİTE KAYDI</div>
+      <div class="fg"><label>YAPTIĞIM DENEYLER</label><textarea class="ta" id="g-deneyler" placeholder="- SCP-xxx ile deney&#10;- SCP-yyy ile deney"></textarea><span class="val-msg" id="gerr-deneyler">Yapılan deneyler girilmelidir.</span></div>
+      <div class="fg"><label>MESAİDE GEÇİRDİĞİM SÜRE</label><input type="text" class="tin" id="g-sure" placeholder="Örn: 45 dakika, 1 saat 30 dk"/><span class="val-msg" id="gerr-sure">Mesai süresi girilmelidir.</span></div>
+    </div>
+    <div class="fs">
+      <div class="fs-title">// GÖRSELLER</div>
+      <div class="fg">
+        <label>MESAİDEN GÖRSELLER</label>
+        <div class="img-area" onclick="document.getElementById('g-mesai-in').click()" style="margin-bottom:8px">
+          <input type="file" id="g-mesai-in" accept="image/*" multiple onchange="handleGImgs(event,'mesai')"/>
+          <label class="img-lbl">MESAİ GÖRSELLERİ YÜKLEYİN</label>
+          <div class="img-prev" id="gmesaiprev"></div>
+        </div>
+      </div>
+      <div class="fg">
+        <label>DENEY İÇİNDEN GÖRSELLER</label>
+        <div class="img-area" onclick="document.getElementById('g-deney-in').click()">
+          <input type="file" id="g-deney-in" accept="image/*" multiple onchange="handleGImgs(event,'deney')"/>
+          <label class="img-lbl">DENEY GÖRSELLERİ YÜKLEYİN</label>
+          <div class="img-prev" id="gdeneyprev"></div>
+        </div>
+      </div>
+    </div>
+    <div class="fs">
+      <div class="fs-title">// EK BİLGİLER</div>
+      <div class="fg"><label>EKLEMEK İSTEDİKLERİM</label><textarea class="ta" id="g-ekler" placeholder="Eklemek istediğiniz notlar, yorumlar..."></textarea></div>
+    </div>
+    <button class="sub-btn" onclick="gonderGunluk()">[ GÜNLÜK RAPORU GÖNDER ]</button>
+  </div></div>`;
+    }
+
+    let gMesaiImgs = [], gDeneyImgs = [];
+
+    function handleGImgs(e, tip) {
+      Array.from(e.target.files).forEach(f => {
+        const r = new FileReader();
+        r.onload = ev => {
+          if (tip === 'mesai') { gMesaiImgs.push(ev.target.result); renderGImgs('mesai'); }
+          else { gDeneyImgs.push(ev.target.result); renderGImgs('deney'); }
+        };
+        r.readAsDataURL(f);
+      });
+    }
+    function renderGImgs(tip) {
+      if (tip === 'mesai') {
+        const p = document.getElementById('gmesaiprev'); if (!p) return;
+        p.innerHTML = gMesaiImgs.map((s,i) => `<div class="img-th"><img src="${s}"/><button class="img-th-rm" onclick="rmGImg('mesai',${i})">✕</button></div>`).join('');
+      } else {
+        const p = document.getElementById('gdeneyprev'); if (!p) return;
+        p.innerHTML = gDeneyImgs.map((s,i) => `<div class="img-th"><img src="${s}"/><button class="img-th-rm" onclick="rmGImg('deney',${i})">✕</button></div>`).join('');
+      }
+    }
+    function rmGImg(tip, i) {
+      if (tip === 'mesai') { gMesaiImgs.splice(i,1); renderGImgs('mesai'); }
+      else { gDeneyImgs.splice(i,1); renderGImgs('deney'); }
+    }
+
+    async function gonderGunluk() {
+      const alanlar = [
+        { id: 'g-roblox', errId: 'gerr-roblox', label: 'Roblox Takma Adı' },
+        { id: 'g-deneyler', errId: 'gerr-deneyler', label: 'Yapılan Deneyler' },
+        { id: 'g-sure', errId: 'gerr-sure', label: 'Mesai Süresi' },
+      ];
+      document.querySelectorAll('[id^="gerr-"]').forEach(e => e.classList.remove('show'));
+      document.getElementById('gform-err').classList.remove('show');
+      alanlar.forEach(a => { const el = document.getElementById(a.id); if (el) el.classList.remove('field-err'); });
+
+      const eksikler = [];
+      alanlar.forEach(a => {
+        const el = document.getElementById(a.id); if (!el) return;
+        if (!el.value.trim()) {
+          el.classList.add('field-err');
+          const em = document.getElementById(a.errId); if (em) em.classList.add('show');
+          eksikler.push(a.label);
+        }
+      });
+      if (eksikler.length) {
+        const box = document.getElementById('gform-err');
+        box.innerHTML = eksikler.map(l => `• ${l}`).join('<br>');
+        box.classList.add('show');
+        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const btn2 = document.querySelector('#ca .sub-btn');
+      if (btn2) { btn2.disabled = true; btn2.textContent = '[ GÖNDERİLİYOR... ]'; }
+
+      const saved = await insertGRap({
+        username: CU.username, displayName: CU.displayName,
+        dNo: fmtNo(userGRapCount(CU.username) + 1),
+        robloxAdi: document.getElementById('g-roblox').value.trim(),
+        rutbe: CU.rutbe || '', rutbeKat: CU.rutbeKat || '',
+        deneyler: document.getElementById('g-deneyler').value.trim(),
+        sure: document.getElementById('g-sure').value.trim(),
+        ekler: document.getElementById('g-ekler').value.trim(),
+        mesaiImgs: [...gMesaiImgs], deneyImgs: [...gDeneyImgs]
+      });
+
+      if (btn2) { btn2.disabled = false; btn2.textContent = '[ GÜNLÜK RAPORU GÖNDER ]'; }
+      if (!saved) { alert('Kayıt hatası, lütfen tekrar deneyin.'); return; }
+
+      ['g-roblox', 'g-deneyler', 'g-sure', 'g-ekler'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      gMesaiImgs = []; gDeneyImgs = [];
+      const s = document.getElementById('gsuc'); s.style.display = 'block';
+      setTimeout(() => s.style.display = 'none', 4000);
+    }
+
+    function bGunlukRaporlarim() {
+      const graps = getGRaps().filter(r => r.username === CU.username);
+      let h = `<div><div class="ph"><h2>GÜNLÜK RAPORLARIM</h2><p>// ${graps.length} KAYIT BULUNDU</p></div><div class="rlist">`;
+      if (!graps.length) h += `<div class="empty">VERİ BULUNAMADI. GÜNLÜK RAPOR GÖNDERİLMEMİŞ.</div>`;
+      else graps.slice().reverse().forEach(r => h += gCard(r, false));
+      return h + `</div></div>`;
+    }
+
+    function bTumGunluk() {
+      const graps = getGRaps();
+      const users = [...new Set(graps.map(r => r.username))].length;
+      const bek = graps.filter(r => r.onayDurum === 'bekliyor').length;
+      let h = `<div><div class="ph"><h2>TÜM GÜNLÜK RAPORLAR</h2><p>// SİSTEMDEKİ TÜM GÜNLÜK KAYITLAR</p></div>
+  <div class="stats">
+    <div class="sc"><div class="sn">${graps.length}</div><div class="sl">TOPLAM RAPOR</div></div>
+    <div class="sc"><div class="sn">${users}</div><div class="sl">PERSONEL</div></div>
+    <div class="sc"><div class="sn">${bek}</div><div class="sl">ONAY BEKLİYOR</div></div>
+    <div class="sc"><div class="sn">${graps.filter(r=>r.onayDurum==='onaylandi').length}</div><div class="sl">ONAYLANDI</div></div>
+  </div><div class="rlist">`;
+      if (!graps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`;
+      else graps.slice().reverse().forEach(r => h += gCard(r, true));
+      return h + `</div></div>`;
+    }
+
+    function gCard(r, su) {
+      const rutbeColor = r.rutbeKat ? (RC[r.rutbeKat] || 'var(--text-dim)') : 'var(--text-dim)';
+      return `<div class="rc" style="border-left-color:var(--amber-dim)">
+    <div class="rc-hdr">
+      <div>
+        <div class="rc-id" style="color:var(--amber)">GÜNLÜK-${r.dNo || '000'}</div>
+        <div class="rc-meta">${su ? `<span style="color:var(--green)">${r.displayName}</span> · ` : ''}<span style="color:${rutbeColor}">${r.rutbe || '—'}</span> · ${r.tarih}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span class="rc-scp" style="color:var(--green-dim);border-color:#1a3a1a">${r.sure || '—'}</span>
+        ${onayDurumBadge(r.onayDurum)}
+      </div>
+    </div>
+    <div class="rc-body">${r.deneyler ? r.deneyler.substring(0,120)+'…' : ''}</div>
+    <div style="display:flex;gap:6px;margin-top:8px">
+      <button class="exp-btn" onclick="openGMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>
+      ${(CU.role === 'yetkili' || CU.username === r.username) ? `<button class="sil-btn" onclick="silGRapor(${r.id})">[ SİL ]</button>` : ''}
+    </div>
+  </div>`;
+    }
+
+    let openGModalId = null;
+    function openGMo(id) {
+      const r = getGRaps().find(x => x.id === id); if (!r) return;
+      openGModalId = id;
+      const silBtn = document.getElementById('mo-sil-btn');
+      if (silBtn) silBtn.style.display = (CU.role === 'yetkili' || CU.username === r.username) ? 'block' : 'none';
+      document.getElementById('mt').textContent = `GÜNLÜK RAPOR — ${r.dNo || '000'} // ${r.displayName}`;
+      const rutbeColor = r.rutbeKat ? (RC[r.rutbeKat] || 'var(--green)') : 'var(--green)';
+      let b = `
+    <div class="mf"><div class="mfl">RAPOR NO</div><div class="mfv" style="color:var(--amber)">GÜNLÜK-${r.dNo || '000'}</div></div>
+    <div class="mf"><div class="mfl">ROBLOX TAKMA ADI</div><div class="mfv">${r.robloxAdi || '—'}</div></div>
+    <div class="mf"><div class="mfl">MEVCUT RÜTBE</div><div class="mfv" style="color:${rutbeColor}">${r.rutbe || '—'}</div></div>
+    <div class="mf"><div class="mfl">YAPILAN DENEYLER</div><div class="mfp">${r.deneyler || '—'}</div></div>
+    <div class="mf"><div class="mfl">MESAİDE GEÇİRİLEN SÜRE</div><div class="mfv">${r.sure || '—'}</div></div>
+    <div class="mf"><div class="mfl">RAPOR TARİHİ</div><div class="mfv">${r.tarih}</div></div>`;
+      if (r.ekler) b += `<div class="mf"><div class="mfl">// EKLEMEK İSTEDİKLERİM</div><div class="mfp">${r.ekler}</div></div>`;
+      // Onay durumu
+      b += `<div class="mf"><div class="mfl">// ONAY DURUMU</div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
+      ${onayDurumBadge(r.onayDurum)}
+      ${r.onayYapan ? `<span style="font-size:10px;color:var(--text-dim)">— ${r.onayYapan} · ${r.onayTarih}</span>` : ''}
+    </div>
+    ${CU.role === 'yetkili' ? `<div class="onay-btn-grp">
+      <button class="onay-btn onayla" onclick="onaylaGRapor(${r.id})">[ ✓ ONAYLA ]</button>
+      <button class="onay-btn reddet" onclick="reddetGRapor(${r.id})">[ ✕ REDDET ]</button>
+    </div>` : ''}
+  </div>`;
+      if (r.mesaiImgs?.length) {
+        b += `<div class="mf"><div class="mfl">// MESAİDEN GÖRSELLER</div><div class="mimgs">`;
+        r.mesaiImgs.forEach(s => b += `<img src="${s}" class="mimg" onclick="openLb('${s}')" title="Büyütmek için tıkla"/>`);
+        b += `</div></div>`;
+      }
+      if (r.deneyImgs?.length) {
+        b += `<div class="mf"><div class="mfl">// DENEY İÇİNDEN GÖRSELLER</div><div class="mimgs">`;
+        r.deneyImgs.forEach(s => b += `<img src="${s}" class="mimg" onclick="openLb('${s}')" title="Büyütmek için tıkla"/>`);
+        b += `</div></div>`;
+      }
+      document.getElementById('mbody').innerHTML = b;
+      // Modal silme butonunu günlük moda ayarla
+      const silBtnEl = document.getElementById('mo-sil-btn');
+      if (silBtnEl) {
+        silBtnEl.onclick = () => silGRaporFromModal();
+        silBtnEl.style.display = (CU.role === 'yetkili' || CU.username === r.username) ? 'block' : 'none';
+      }
+      document.getElementById('mo').classList.add('active');
+    }
+
+    async function onaylaGRapor(id) {
+      const fields = { onay_durum: 'onaylandi', onay_yapan: CU.displayName, onay_tarih: new Date().toLocaleString('tr-TR') };
+      await updateGRap(id, fields);
+      openGMo(id);
+      document.getElementById('ca').innerHTML = bTumGunluk();
+    }
+    async function reddetGRapor(id) {
+      const fields = { onay_durum: 'reddedildi', onay_yapan: CU.displayName, onay_tarih: new Date().toLocaleString('tr-TR') };
+      await updateGRap(id, fields);
+      openGMo(id);
+      document.getElementById('ca').innerHTML = bTumGunluk();
+    }
+
+    function silGRaporFromModal() { if (openGModalId) silGRapor(openGModalId); }
+    function silGRapor(id) {
+      const r = getGRaps().find(x => x.id === id); if (!r) return;
+      silPendingId = 'g_' + id;
+      document.getElementById('confirm-target').textContent = `GÜNLÜK-${r.dNo || '000'} — ${r.displayName}`;
+      document.getElementById('confirm-overlay').classList.add('active');
+    }
+    // ============ GÜNLÜK RAPOR SİSTEMİ SONU ============
 
     let silPendingId = null, openModalId = null;
 
@@ -1818,14 +2163,16 @@
       document.getElementById('confirm-target').textContent = `${r.scd || '—'} // DENEY-${r.dNo || '000'} — ${r.displayName}`;
       document.getElementById('confirm-overlay').classList.add('active');
     }
-    function confirmSil() {
+    async function confirmSil() {
       if (!silPendingId) return;
-      const raps = getRaps().filter(x => x.id !== silPendingId);
-      saveRaps(raps);
+      if (typeof silPendingId === 'string' && silPendingId.startsWith('g_')) {
+        await deleteGRap(parseInt(silPendingId.replace('g_', '')));
+      } else {
+        await deleteRap(silPendingId);
+      }
       silPendingId = null;
       document.getElementById('confirm-overlay').classList.remove('active');
       closeMoDirect();
-      // sayfayı yenile
       const activeNav = document.querySelector('.sb-item.active');
       if (activeNav) {
         const id = activeNav.id.replace('nav-', '');
