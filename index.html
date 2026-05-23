@@ -1363,7 +1363,7 @@
     // =================================================
 
     // ============ VERSİYON ============
-    const BUILD_VERSION = 'v3.4';
+    const BUILD_VERSION = 'v3.5';
     // ====================================
 
     const SCP_LIST = [
@@ -1484,6 +1484,12 @@
         onay_durum: 'bekliyor'
       };
     }
+
+    function getRaps() { return ALL_RAPS; }
+    function getGRaps() { return ALL_GRAPS; }
+    function userRapCount(u) { return ALL_RAPS.filter(r => r.username === u).length; }
+    function userGRapCount(u) { return ALL_GRAPS.filter(r => r.username === u).length; }
+    function fmtNo(n) { return String(n).padStart(3, '0') }
 
     // ---- Kaza Raporu CRUD ----
     async function fetchKaza() {
