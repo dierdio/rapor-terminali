@@ -1332,6 +1332,85 @@
   </style>
 
   <style>
+    /* ============ MESAJLAŞMA SİSTEMİ ============ */
+    .mesaj-bell-btn {
+      position: relative; background: none; border: 1px solid var(--green-dark);
+      color: var(--text-dim); cursor: pointer; padding: 3px 8px; font-size: 14px;
+      font-family: 'Share Tech Mono', monospace; transition: all .15s; line-height: 1;
+    }
+    .mesaj-bell-btn:hover { border-color: var(--green); color: var(--green); box-shadow: 0 0 8px rgba(0,255,65,.2) }
+    .mesaj-badge {
+      position: absolute; top: -5px; right: -5px;
+      background: var(--red); color: #fff; font-size: 9px;
+      min-width: 16px; height: 16px; border-radius: 8px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: 'Share Tech Mono', monospace; padding: 0 3px;
+    }
+    .mesaj-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.6);
+      z-index: 10001; display: none; align-items: center; justify-content: center;
+    }
+    .mesaj-overlay.active { display: flex }
+    .mesaj-panel {
+      background: var(--bg2); border: 1px solid var(--green);
+      box-shadow: 0 0 40px rgba(0,255,65,.12); width: 560px; max-width: 96vw;
+      max-height: 85vh; display: flex; flex-direction: column;
+    }
+    .mesaj-panel-hdr {
+      background: var(--green-dark); border-bottom: 1px solid var(--green-dim);
+      padding: 10px 14px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .mesaj-panel-title { font-family: 'VT323', monospace; font-size: 18px; color: var(--green); letter-spacing: 3px }
+    .mesaj-panel-close {
+      background: none; border: 1px solid var(--green-dim); color: var(--text-dim);
+      cursor: pointer; padding: 2px 8px; font-size: 12px; font-family: 'Share Tech Mono', monospace;
+    }
+    .mesaj-panel-close:hover { background: var(--red-dim); border-color: var(--red); color: var(--red) }
+    .mesaj-panel-body { overflow-y: auto; flex: 1; padding: 12px }
+
+    .mesaj-item {
+      border: 1px solid var(--green-dark); background: var(--bg3);
+      padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: all .12s;
+    }
+    .mesaj-item:hover { border-color: var(--green-dim); background: var(--bg2) }
+    .mesaj-item.okunmamis { border-left: 3px solid var(--green); background: rgba(0,255,65,.04) }
+    .mesaj-item-hdr { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap }
+    .mesaj-item-konu { font-size: 12px; color: var(--green); letter-spacing: 1px }
+    .mesaj-item.okunmamis .mesaj-item-konu::before { content: '● '; font-size: 8px }
+    .mesaj-item-gonderen { font-size: 9px; color: var(--text-dim) }
+    .mesaj-item-tarih { font-size: 9px; color: var(--text-dark) }
+    .mesaj-item-preview { font-size: 10px; color: var(--text-dim); margin-top: 5px; opacity: .7;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+    .mesaj-bos { text-align: center; color: var(--text-dark); font-size: 11px; padding: 30px 0; letter-spacing: 2px }
+
+    .mesaj-detay-meta { display: grid; grid-template-columns: 100px 1fr; gap: 6px 10px; margin-bottom: 14px }
+    .mesaj-detay-ml { font-size: 9px; color: var(--text-dark); letter-spacing: 1px }
+    .mesaj-detay-mv { font-size: 11px; color: var(--green) }
+    .mesaj-detay-icerik {
+      border: 1px solid var(--green-dark); background: var(--bg3);
+      padding: 12px; font-size: 11px; color: var(--text-dim); line-height: 1.7;
+      white-space: pre-wrap; margin-bottom: 12px;
+    }
+    .mesaj-detay-gorsel { max-width: 100%; border: 1px solid var(--green-dark); margin-top: 8px }
+
+    /* Mesaj gönder formu */
+    .mesaj-form-wrap { max-width: 600px }
+    .mesaj-alici-select {
+      width: 100%; background: var(--bg3); border: 1px solid var(--green-dark);
+      border-left: 3px solid var(--green); color: var(--green);
+      font-family: 'Share Tech Mono', monospace; font-size: 12px; padding: 8px 10px; outline: none;
+    }
+    .mesaj-alici-select:focus { border-color: var(--green); box-shadow: 0 0 8px rgba(0,255,65,.15) }
+    .mesaj-alici-select option, .mesaj-alici-select optgroup { background: var(--bg3); color: var(--green) }
+    .mesaj-send-btn {
+      width: 100%; background: var(--green-dark); border: 1px solid var(--green);
+      color: var(--green); font-family: 'VT323', monospace; font-size: 20px;
+      padding: 8px; cursor: pointer; letter-spacing: 3px; transition: all .2s; margin-top: 6px;
+    }
+    .mesaj-send-btn:hover { background: var(--green); color: var(--bg); box-shadow: 0 0 16px rgba(0,255,65,.3) }
+    .mesaj-send-btn:disabled { opacity: .5; cursor: not-allowed }
+    /* ============ MESAJLAŞMA SONU ============ */
+
     /* ============ MOBİL OPTİMİZASYON ============ */
     @media (max-width: 768px) {
 
@@ -1481,6 +1560,10 @@
         </div>
         <div class="hdr-right">
           <div class="hdr-clock" id="hclock">--:--:--</div>
+          <button class="mesaj-bell-btn" onclick="toggleMesajKutusu()" title="Mesaj Kutusu">
+            <span class="mesaj-bell-icon">✉</span>
+            <span class="mesaj-badge" id="mesaj-badge" style="display:none"></span>
+          </button>
           <div class="hdr-user">
             <span><span class="sdot"></span>BAĞLI:</span>
             <span id="hun" style="color:var(--green)">—</span>
@@ -1497,6 +1580,30 @@
     <div class="main-body">
       <div class="sidebar" id="sidebar"></div>
       <div class="content" id="ca"></div>
+    </div>
+  </div>
+
+  <!-- MESAJ KUTUSU OVERLAY -->
+  <div class="mesaj-overlay" id="mesaj-overlay" onclick="closeMesajOnOutside(event)">
+    <div class="mesaj-panel" id="mesaj-panel">
+      <div class="mesaj-panel-hdr">
+        <span class="mesaj-panel-title">◈ MESAJ KUTUSU</span>
+        <button class="mesaj-panel-close" onclick="closeMesajKutusu()">✕</button>
+      </div>
+      <div class="mesaj-panel-body" id="mesaj-panel-body">
+        <!-- JS ile doldurulur -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MESAJ DETAY OVERLAY -->
+  <div class="mesaj-overlay" id="mesaj-detay-overlay" onclick="closeMesajDetayOnOutside(event)">
+    <div class="mesaj-panel" id="mesaj-detay-panel">
+      <div class="mesaj-panel-hdr">
+        <span class="mesaj-panel-title">◈ MESAJ DETAYI</span>
+        <button class="mesaj-panel-close" onclick="closeMesajDetay()">✕</button>
+      </div>
+      <div class="mesaj-panel-body" id="mesaj-detay-body"></div>
     </div>
   </div>
 
@@ -1582,7 +1689,7 @@
     ];
     const RC = { hc: '#9b2335', hr: '#e05252', mr: '#d4a017', lr: '#4caf50' };
 
-    let CU = null, VF = null, VF_TAB = 'deney', imgs = [], tsc = 0, ALL_PROFILES = [];
+    let CU = null, VF = null, VF_TAB = 'deney', imgs = [], tsc = 0, ALL_PROFILES = [], ALL_MESAJLAR = [];
     let ALL_RAPS = [], ALL_GRAPS = [], ALL_KAZA = [], ALL_MUHAFAZA = [], ALL_ORNEK_TOPLAMA = [], ALL_ORNEK_SAKLAMA = []; // önbellek
 
     // ---- Deney Raporu CRUD ----
@@ -1747,6 +1854,56 @@
       const { error } = await _supabase.from('ornek_saklama_raporlar').update({ is_deleted: true }).eq('id', id);
       if (!error) ALL_ORNEK_SAKLAMA = ALL_ORNEK_SAKLAMA.filter(x => x.id !== id);
     }
+
+    // ============ MESAJLAŞMA ============
+    async function fetchMesajlar() {
+      const { data } = await _supabase.from('mesajlar').select('*').order('created_at', { ascending: false });
+      ALL_MESAJLAR = data || [];
+      updateMesajBadge();
+      return ALL_MESAJLAR;
+    }
+
+    async function sendMesaj(row) {
+      const { data, error } = await _supabase.from('mesajlar').insert([row]).select().single();
+      if (!error && data) ALL_MESAJLAR.unshift(data);
+      return { data, error };
+    }
+
+    async function mesajOkundu(id) {
+      const m = ALL_MESAJLAR.find(x => x.id === id);
+      if (!m) return;
+      const list = Array.isArray(m.okundu_by) ? m.okundu_by : [];
+      if (list.includes(CU.username)) return;
+      const updated = [...list, CU.username];
+      await _supabase.from('mesajlar').update({ okundu_by: updated }).eq('id', id);
+      m.okundu_by = updated;
+      updateMesajBadge();
+    }
+
+    function getGelenMesajlar() {
+      if (!CU) return [];
+      return ALL_MESAJLAR.filter(m =>
+        m.alici_un === CU.username ||
+        m.alici_tip === 'toplu_herkes' ||
+        (m.alici_tip === 'toplu_yetkisiz' && CU.role === 'yetkisiz') ||
+        (m.alici_tip === 'toplu_yetkili'  && CU.role === 'yetkili')
+      );
+    }
+
+    function getOkunmamisSayi() {
+      return getGelenMesajlar().filter(m => {
+        const list = Array.isArray(m.okundu_by) ? m.okundu_by : [];
+        return !list.includes(CU.username);
+      }).length;
+    }
+
+    function updateMesajBadge() {
+      const badge = document.getElementById('mesaj-badge');
+      if (!badge) return;
+      const n = getOkunmamisSayi();
+      badge.textContent = n > 0 ? n : '';
+      badge.style.display = n > 0 ? 'inline-flex' : 'none';
+    }
     async function updateOrnekSaklama(id, fields) {
       const { error } = await _supabase.from('ornek_saklama_raporlar').update(fields).eq('id', id);
       if (!error) { const i = ALL_ORNEK_SAKLAMA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_ORNEK_SAKLAMA[i], fields); }
@@ -1781,7 +1938,7 @@
       const re = document.getElementById('hrutbe');
       re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
       // Verileri Supabase'den çek
-      await Promise.all([fetchRaps(), fetchGRaps(), fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]);
+      await Promise.all([fetchRaps(), fetchGRaps(), fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama(), fetchMesajlar()]);
       buildSidebar();
       if (CU.role === 'yetkisiz') { showPage(isS1() ? 'gunluk-yaz' : 'rapor-yaz'); }
       else { showPage('tum-raporlar'); }
@@ -1893,7 +2050,9 @@
         : `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
        <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
        <button class="sb-item" id="nav-tum-ozel-raporlar" onclick="showPage('tum-ozel-raporlar')">TÜM ÖZEL RAPORLAR</button>
-       <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>`;
+       <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>
+       <div class="sb-label" style="margin-top:8px">İLETİŞİM</div>
+       <button class="sb-item" id="nav-mesaj-gonder" onclick="showPage('mesaj-gonder')">MESAJ GÖNDER</button>`;
     }
 
     function toggleTree(id) {
@@ -1943,6 +2102,7 @@
       else if (id === 'ornek-saklama-yaz') ca.innerHTML = bOrnekSaklamaYaz();
       else if (id === 'ozel-raporlarim') ca.innerHTML = bOzelRaporlarim();
       else if (id === 'tum-ozel-raporlar') ca.innerHTML = bTumOzelRaporlar();
+      else if (id === 'mesaj-gonder') ca.innerHTML = bMesajGonder();
     }
 
     // S2 rütbesi kontrolü: Araştırmacı Adayı-S2, Uzman Stajyer-S2, Stajyer-S2
@@ -3135,6 +3295,157 @@
 
     function closeMo(e) { if (e.target === document.getElementById('mo')) closeMoDirect() }
     function closeMoDirect() { document.getElementById('mo').classList.remove('active') }
+    // ============ MESAJ KUTUSU ============
+    function toggleMesajKutusu() {
+      const ov = document.getElementById('mesaj-overlay');
+      if (ov.classList.contains('active')) { closeMesajKutusu(); return; }
+      renderMesajKutusu();
+      ov.classList.add('active');
+    }
+    function closeMesajKutusu() { document.getElementById('mesaj-overlay').classList.remove('active'); }
+    function closeMesajOnOutside(e) { if (e.target === document.getElementById('mesaj-overlay')) closeMesajKutusu(); }
+    function closeMesajDetay() { document.getElementById('mesaj-detay-overlay').classList.remove('active'); }
+    function closeMesajDetayOnOutside(e) { if (e.target === document.getElementById('mesaj-detay-overlay')) closeMesajDetay(); }
+
+    function fmtMesajTarih(ts) {
+      if (!ts) return '—';
+      const d = new Date(ts);
+      return d.toLocaleDateString('tr-TR') + ' ' + d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function renderMesajKutusu() {
+      const body = document.getElementById('mesaj-panel-body');
+      const liste = getGelenMesajlar();
+      if (!liste.length) { body.innerHTML = `<div class="mesaj-bos">[ GELEN KUTUSU BOŞ ]</div>`; return; }
+      body.innerHTML = liste.map(m => {
+        const okundu = Array.isArray(m.okundu_by) && m.okundu_by.includes(CU.username);
+        const aliciBilgi = m.alici_tip === 'tekil' ? `Sana` :
+          m.alici_tip === 'toplu_yetkisiz' ? 'Toplu (Yetkisiz)' :
+          m.alici_tip === 'toplu_yetkili' ? 'Toplu (Yetkili)' : 'Toplu (Herkes)';
+        return `<div class="mesaj-item${okundu ? '' : ' okunmamis'}" onclick="mesajDetayAc(${m.id})">
+  <div class="mesaj-item-hdr">
+    <span class="mesaj-item-konu">${m.konu}</span>
+    <span class="mesaj-item-tarih">${fmtMesajTarih(m.created_at)}</span>
+  </div>
+  <div class="mesaj-item-gonderen">Gönderen: ${m.gonderen_un} · ${aliciBilgi}</div>
+  <div class="mesaj-item-preview">${m.mesaj}</div>
+</div>`;
+      }).join('');
+    }
+
+    async function mesajDetayAc(id) {
+      const m = ALL_MESAJLAR.find(x => x.id === id);
+      if (!m) return;
+      await mesajOkundu(id);
+      renderMesajKutusu();
+      const aliciLabel = m.alici_tip === 'tekil' ? m.alici_un :
+        m.alici_tip === 'toplu_yetkisiz' ? 'Tüm Yetkisiz Personel' :
+        m.alici_tip === 'toplu_yetkili' ? 'Tüm Yetkili Personel' : 'Tüm Personel';
+      const body = document.getElementById('mesaj-detay-body');
+      body.innerHTML = `
+<div class="mesaj-detay-meta">
+  <span class="mesaj-detay-ml">GÖNDEREN</span><span class="mesaj-detay-mv">${m.gonderen_un}</span>
+  <span class="mesaj-detay-ml">ALICI</span><span class="mesaj-detay-mv">${aliciLabel}</span>
+  <span class="mesaj-detay-ml">KONU</span><span class="mesaj-detay-mv">${m.konu}</span>
+  <span class="mesaj-detay-ml">TARİH</span><span class="mesaj-detay-mv">${fmtMesajTarih(m.created_at)}</span>
+</div>
+<div class="mesaj-detay-icerik">${m.mesaj}</div>
+${m.gorsel_url ? `<img src="${m.gorsel_url}" class="mesaj-detay-gorsel" alt="Görsel"/>` : ''}`;
+      document.getElementById('mesaj-detay-overlay').classList.add('active');
+    }
+
+    // ============ MESAJ GÖNDER SAYFASI ============
+    function bMesajGonder() {
+      const opts = ALL_PROFILES
+        .filter(p => p.username !== CU.username)
+        .sort((a, b) => a.username.localeCompare(b.username))
+        .map(p => `<option value="tekil:${p.username}">${p.username} — ${p.displayName || ''} (${p.role})</option>`)
+        .join('');
+      return `<div class="mesaj-form-wrap">
+  <div class="ph"><h2>MESAJ GÖNDER</h2><p>// PERSONELE BİLDİRİM OLUŞTUR</p></div>
+  <div class="rf" style="margin-top:16px">
+    <div class="fs"><div class="fs-title">// ALICI SEÇİMİ</div>
+      <select class="mesaj-alici-select" id="mg-alici">
+        <optgroup label="── TOPLU MESAJ ──">
+          <option value="toplu_yetkisiz">Toplu Mesaj (Tüm Yetkisiz Personel)</option>
+          <option value="toplu_yetkili">Toplu Mesaj (Tüm Yetkili Personel)</option>
+          <option value="toplu_herkes">Toplu Mesaj (Herkes)</option>
+        </optgroup>
+        <optgroup label="── BİREYSEL PERSONEL ──">
+          ${opts}
+        </optgroup>
+      </select>
+    </div>
+    <div class="fs" style="margin-top:12px"><div class="fs-title">// KONU</div>
+      <input type="text" class="ts" id="mg-konu" placeholder="Mesaj konusu..." maxlength="120" style="width:100%"/>
+    </div>
+    <div class="fs" style="margin-top:12px"><div class="fs-title">// MESAJ İÇERİĞİ</div>
+      <textarea class="ta" id="mg-mesaj" placeholder="Mesaj içeriğini buraya yazın..." rows="7" style="width:100%"></textarea>
+    </div>
+    <div class="fs" style="margin-top:12px"><div class="fs-title">// GÖRSEL EKLE (OPSİYONEL)</div>
+      <input type="file" id="mg-gorsel" accept="image/*" class="ts" style="width:100%;cursor:pointer"/>
+    </div>
+    <button class="mesaj-send-btn" id="mg-send-btn" onclick="mesajGonder()">[ MESAJI GÖNDER ]</button>
+    <div id="mg-result" style="margin-top:10px;font-size:10px;display:none"></div>
+  </div>
+</div>`;
+    }
+
+    async function mesajGonder() {
+      const aliciVal = document.getElementById('mg-alici').value;
+      const konu = document.getElementById('mg-konu').value.trim();
+      const mesajText = document.getElementById('mg-mesaj').value.trim();
+      const gorselFile = document.getElementById('mg-gorsel').files[0];
+      const resultEl = document.getElementById('mg-result');
+      const btn = document.getElementById('mg-send-btn');
+
+      if (!konu || !mesajText) {
+        resultEl.style.display = 'block';
+        resultEl.style.color = 'var(--red)';
+        resultEl.textContent = '[HATA] Konu ve mesaj alanları zorunludur.';
+        return;
+      }
+
+      btn.disabled = true;
+      resultEl.style.display = 'block';
+      resultEl.style.color = 'var(--text-dim)';
+      resultEl.textContent = 'GÖNDERİLİYOR...';
+
+      let gorselUrl = null;
+      if (gorselFile) {
+        const ext = gorselFile.name.split('.').pop();
+        const path = `mesaj_${Date.now()}.${ext}`;
+        const { data: upData, error: upErr } = await _supabase.storage
+          .from('mesaj-gorseller').upload(path, gorselFile, { upsert: true });
+        if (!upErr) {
+          const { data: urlData } = _supabase.storage.from('mesaj-gorseller').getPublicUrl(path);
+          gorselUrl = urlData?.publicUrl || null;
+        }
+      }
+
+      const isTekil = aliciVal.startsWith('tekil:');
+      const row = {
+        gonderen_id: (await _supabase.auth.getUser()).data.user.id,
+        gonderen_un: CU.username,
+        alici_tip: isTekil ? 'tekil' : aliciVal,
+        alici_un: isTekil ? aliciVal.replace('tekil:', '') : null,
+        konu, mesaj: mesajText, gorsel_url: gorselUrl
+      };
+
+      const { error } = await sendMesaj(row);
+      btn.disabled = false;
+      if (error) {
+        resultEl.style.color = 'var(--red)';
+        resultEl.textContent = '[HATA] Mesaj gönderilemedi: ' + error.message;
+      } else {
+        resultEl.style.color = 'var(--green)';
+        resultEl.textContent = '✓ MESAJ BAŞARIYLA GÖNDERİLDİ.';
+        document.getElementById('mg-konu').value = '';
+        document.getElementById('mg-mesaj').value = '';
+        document.getElementById('mg-gorsel').value = '';
+      }
+    }
+
   </script>
 </body>
 
