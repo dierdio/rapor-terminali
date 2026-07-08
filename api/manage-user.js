@@ -1,5 +1,9 @@
 // api/manage-user.js
 export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Yöntem izin verilmedi' });
+  }
+
   const { action, targetUserId, newPassword, newName, newRole, newRutbe, targetUsername } = req.body;
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

@@ -541,6 +541,14 @@
            <button class="sb-item" id="nav-ornek-toplama-yaz" onclick="showPage('ornek-toplama-yaz')">ÖRNEK TOPLAMA</button>
            <button class="sb-item" id="nav-ornek-saklama-yaz" onclick="showPage('ornek-saklama-yaz')">ÖRNEK SAKLAMA</button>
          </div>
+       </div>
+       <div class="sb-tree-group">
+         <button class="sb-tree-toggle" id="tree-dinamik" onclick="toggleTree('dinamik'); yukleDinamikMenu()">
+           <span>DİNAMİK RAPORLAR</span><span class="sb-tree-arrow">▶</span>
+         </button>
+         <div class="sb-tree-children" id="tree-dinamik-children">
+           <div class="sb-item" style="font-size:9px">Yükleniyor...</div>
+         </div>
        </div>`
         : `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
        <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
@@ -716,9 +724,17 @@
         h += `<div class="rc" style="border-left-color:var(--green)">
           <div class="rc-hdr"><div class="rc-id">${f.format_adi}</div><div class="rc-meta">Oluşturan: ${f.olusturan}</div></div>
           <div class="rc-body">Alanlar: ${f.alanlar.map(a => a.isim).join(', ')}</div>
+          <div style="margin-top:8px"><button class="sil-btn" onclick="silFormat(${f.id})">[ SİL ]</button></div>
         </div>`;
       });
       list.innerHTML = h;
+    }
+
+    async function silFormat(id) {
+      if(!confirm("DİKKAT: Bu rapor formatını silmek istediğinize emin misiniz?")) return;
+      const {error} = await _supabase.from('rapor_formatlari').delete().eq('id', id);
+      if(!error) fetchFormatlar();
+      else alert("Silinirken hata oluştu.");
     }
 
     async function saveFormat() {
@@ -871,6 +887,87 @@
     function bMesajGonder() { const opts = ALL_PROFILES.filter(p => p.username !== CU.username).sort((a, b) => a.username.localeCompare(b.username)).map(p => `<option value="tekil:${p.username}">${p.username} — ${p.displayName || ''} (${p.role})</option>`).join(''); return `<div class="mesaj-form-wrap"><div class="ph"><h2>MESAJ GÖNDER</h2></div><div class="rf" style="margin-top:16px"><div class="fs"><div class="fs-title">// ALICI SEÇİMİ</div><select class="mesaj-alici-select" id="mg-alici"><optgroup label="── TOPLU MESAJ ──"><option value="toplu_yetkisiz">Toplu Mesaj (Tüm Yetkisiz Personel)</option><option value="toplu_yetkili">Toplu Mesaj (Tüm Yetkili Personel)</option><option value="toplu_herkes">Toplu Mesaj (Herkes)</option></optgroup><optgroup label="── BİREYSEL PERSONEL ──">${opts}</optgroup></select></div><div class="fs" style="margin-top:12px"><div class="fs-title">// KONU</div><input type="text" class="ts" id="mg-konu" style="width:100%"/></div><div class="fs" style="margin-top:12px"><div class="fs-title">// MESAJ İÇERİĞİ</div><textarea class="ta" id="mg-mesaj" rows="7" style="width:100%"></textarea></div><div class="fs" style="margin-top:12px"><div class="fs-title">// GÖRSEL EKLE (OPSİYONEL)</div><input type="file" id="mg-gorsel" accept="image/*" class="ts" style="width:100%;cursor:pointer"/></div><button class="mesaj-send-btn" id="mg-send-btn" onclick="mesajGonder()">[ MESAJI GÖNDER ]</button><div id="mg-result" style="margin-top:10px;font-size:10px;display:none"></div></div></div>`; }
     async function mesajGonder() { const aliciVal = document.getElementById('mg-alici').value; const konu = document.getElementById('mg-konu').value.trim(); const mesajText = document.getElementById('mg-mesaj').value.trim(); const gorselFile = document.getElementById('mg-gorsel').files[0]; const resultEl = document.getElementById('mg-result'); const btn = document.getElementById('mg-send-btn'); if (!konu || !mesajText) { resultEl.style.display = 'block'; resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Konu ve mesaj zorunludur.'; return; } btn.disabled = true; resultEl.style.display = 'block'; resultEl.style.color = 'var(--text-dim)'; resultEl.textContent = 'GÖNDERİLİYOR...'; let gorselUrl = null; if (gorselFile) { const ext = gorselFile.name.split('.').pop(); const path = `mesaj_${Date.now()}.${ext}`; const { data: upData, error: upErr } = await _supabase.storage.from('mesaj-gorseller').upload(path, gorselFile, { upsert: true }); if (!upErr) { const { data: urlData } = _supabase.storage.from('mesaj-gorseller').getPublicUrl(path); gorselUrl = urlData?.publicUrl || null; } } const isTekil = aliciVal.startsWith('tekil:'); const row = { gonderen_id: (await _supabase.auth.getUser()).data.user.id, gonderen_un: CU.username, alici_tip: isTekil ? 'tekil' : aliciVal, alici_un: isTekil ? aliciVal.replace('tekil:', '') : null, konu, mesaj: mesajText, gorsel_url: gorselUrl }; const { error } = await sendMesaj(row); btn.disabled = false; if (error) { resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Mesaj gönderilemedi: ' + error.message; } else { resultEl.style.color = 'var(--green)'; resultEl.textContent = '✓ MESAJ BAŞARIYLA GÖNDERİLDİ.'; document.getElementById('mg-konu').value = ''; document.getElementById('mg-mesaj').value = ''; document.getElementById('mg-gorsel').value = ''; } }
 
+  async function yukleDinamikMenu() {
+      const container = document.getElementById('tree-dinamik-children');
+      if(!container) return;
+      const {data, error} = await _supabase.from('rapor_formatlari').select('*');
+      if(error || !data || data.length === 0) { 
+        container.innerHTML = '<div class="sb-item" style="font-size:9px">Aktif format bulunamadı.</div>'; 
+        return; 
+      }
+      container.innerHTML = data.map(f => 
+        `<button class="sb-item" onclick="showDinamikForm(${f.id}, '${f.format_adi}')">${f.format_adi.toUpperCase()}</button>`
+      ).join('');
+    }
+
+    let aktifDinamikFormat = null;
+    
+    async function showDinamikForm(formatId, formatAdi) {
+      document.querySelectorAll('.sb-item').forEach(e => e.classList.remove('active'));
+      const {data} = await _supabase.from('rapor_formatlari').select('alanlar').eq('id', formatId).single();
+      if(!data) return;
+      
+      aktifDinamikFormat = formatId;
+      const alanlar = data.alanlar; // [{isim: "Bölge", tip: "textarea"}, ...]
+      
+      let html = `<div>
+        <div class="ph"><h2>${formatAdi.toUpperCase()}</h2><p>// ÖZEL FORMATLI RAPOR GİRİŞİ</p></div>
+        <div class="rf">
+          <div class="fs">
+            <div class="fs-title">// FORM ALANLARI</div>`;
+            
+      alanlar.forEach((alan, index) => {
+        html += `
+          <div class="fg">
+            <label>${alan.isim.toUpperCase()}</label>
+            <textarea class="ta dinamik-input" data-isim="${alan.isim}" id="dinamik-${index}"></textarea>
+          </div>`;
+      });
+
+      html += `</div>
+          <button class="sub-btn" onclick="gonderDinamikRapor('${formatAdi}')">[ RAPORU GÖNDER ]</button>
+        </div>
+      </div>`;
+      
+      document.getElementById('ca').innerHTML = html;
+    }
+
+    async function gonderDinamikRapor(formatAdi) {
+      const inputlar = document.querySelectorAll('.dinamik-input');
+      let icerikJSON = {};
+      let bosVar = false;
+
+      inputlar.forEach(inp => {
+        if(!inp.value.trim()) { inp.classList.add('field-err'); bosVar = true; }
+        else { inp.classList.remove('field-err'); icerikJSON[inp.getAttribute('data-isim')] = inp.value.trim(); }
+      });
+
+      if(bosVar) return alert("Lütfen tüm alanları doldurun.");
+
+      const payload = {
+        format_id: aktifDinamikFormat,
+        format_adi: formatAdi,
+        user_id: CU.userId,
+        username: CU.username,
+        display_name: CU.displayName,
+        rutbe: CU.rutbe,
+        icerik: icerikJSON,
+        onay_durum: 'bekliyor'
+      };
+
+      const btn = document.querySelector('#ca .sub-btn');
+      btn.disabled = true; btn.textContent = "[ GÖNDERİLİYOR... ]";
+
+      const {error} = await _supabase.from('dinamik_raporlar').insert([payload]);
+      
+      if(!error) {
+        alert("Rapor başarıyla gönderildi!");
+        inputlar.forEach(inp => inp.value = '');
+      } else {
+        alert("Gönderim hatası.");
+      }
+      btn.disabled = false; btn.textContent = "[ RAPORU GÖNDER ]";
+    }
   </script>
 </body>
 </html>
