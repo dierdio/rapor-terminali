@@ -800,7 +800,17 @@
     }
 
     function bRaporlarim() { const raps = getRaps().filter(r => r.username === CU.username); let h = `<div><div class="ph"><h2>RAPORLARIM</h2><p>// ${raps.length} KAYIT BULUNDU</p></div><div class="rlist">`; if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else raps.slice().reverse().forEach(r => h += rCard(r, false)); return h + `</div></div>`; }
-    function bTumRaporlar() { const raps = getRaps(); const users = [...new Set(raps.map(r => r.username))].length; let h = `<div><div class="ph"><h2>TÜM RAPORLAR</h2></div><div class="stats"><div class="sc"><div class="sn">${raps.length}</div><div class="sl">TOPLAM</div></div></div><div class="rlist">`; if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else raps.slice().reverse().forEach(r => h += rCard(r, true)); return h + `</div></div>`; }
+    function bTumRaporlar() {
+      const raps = getRaps(); // getRaps zaten Supabase'ten order ile çekiyor
+      const users = [...new Set(raps.map(r => r.username))].length;
+      let h = `<div><div class="ph"><h2>TÜM RAPORLAR</h2><p>// EN YENİ KAYITLAR YUKARIDADIR</p></div>
+  <div class="stats"><div class="sc"><div class="sn">${raps.length}</div><div class="sl">TOPLAM</div></div></div>
+  <div class="rlist">`; 
+      if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`;
+      // .slice().reverse() ile tarihe göre (en yeni yukarı) garantiye alıyoruz
+      else raps.slice().reverse().forEach(r => h += rCard(r, true)); 
+      return h + `</div></div>`;
+    }
 
     function rCard(r, su) {
       return `<div class="rc">
@@ -814,20 +824,62 @@
     </div></div>`;
     }
 
+    // ============ DOSYA SİSTEMİ (TÜM BÖLÜMLERİYLE YENİLENMİŞ) ============
     function bDosyalar() {
-      const raps = getRaps(); const yetk = ALL_PROFILES.filter(u => u.role === 'yetkisiz');
+      const raps = getRaps();
+      const yetk = ALL_PROFILES.filter(u => u.role === 'yetkisiz');
+      
       if (VF) {
-        const u = ALL_PROFILES.find(x => x.username === VF); const ur = raps.filter(r => r.username === VF); const uk = ALL_KAZA.filter(r => r.username === VF); const um = ALL_MUHAFAZA.filter(r => r.username === VF); const uot = ALL_ORNEK_TOPLAMA.filter(r => r.username === VF); const uos = ALL_ORNEK_SAKLAMA.filter(r => r.username === VF); const ug = ALL_GRAPS.filter(r => r.username === VF);
-        const tabs = [{ id: 'deney', label: 'DENEY', count: ur.length }, { id: 'kaza', label: 'KAZA', count: uk.length }, { id: 'muhafaza', label: 'MUHAFAZA', count: um.length }, { id: 'ornek-toplama', label: 'ÖRNEK TOPLAMA', count: uot.length }, { id: 'ornek-saklama', label: 'ÖRNEK SAKLAMA', count: uos.length }, { id: 'gunluk', label: 'GÜNLÜK', count: ug.length }];
-        let tabsHtml = `<div class="dosya-tabs">` + tabs.map(t => `<button class="dosya-tab${VF_TAB === t.id ? ' active' : ''}" onclick="switchDosyaTab('${t.id}')">${t.label} <span class="dosya-tab-count">${t.count}</span></button>`).join('') + `</div>`;
+        const u = ALL_PROFILES.find(x => x.username === VF);
+        const ur = raps.filter(r => r.username === VF);
+        const uk = ALL_KAZA.filter(r => r.username === VF);
+        const um = ALL_MUHAFAZA.filter(r => r.username === VF);
+        const uot = ALL_ORNEK_TOPLAMA.filter(r => r.username === VF);
+        const uos = ALL_ORNEK_SAKLAMA.filter(r => r.username === VF);
+        const ug = ALL_GRAPS.filter(r => r.username === VF);
+        
+        const tabs = [
+          { id: 'deney', label: 'DENEY', count: ur.length },
+          { id: 'kaza', label: 'KAZA', count: uk.length },
+          { id: 'muhafaza', label: 'MUHAFAZA', count: um.length },
+          { id: 'ornek-toplama', label: 'TOPLAMA', count: uot.length },
+          { id: 'ornek-saklama', label: 'SAKLAMA', count: uos.length },
+          { id: 'gunluk', label: 'GÜNLÜK', count: ug.length },
+        ];
+        
+        let tabsHtml = `<div class="dosya-tabs">` + tabs.map(t =>
+          `<button class="dosya-tab${VF_TAB === t.id ? ' active' : ''}" onclick="switchDosyaTab('${t.id}')">${t.label} <span class="dosya-tab-count">${t.count}</span></button>`
+        ).join('') + `</div>`;
+
         let contentHtml = '';
-        if (VF_TAB === 'deney') { contentHtml = `<div class="rlist">`; if (!ur.length) contentHtml += `<div class="empty">VERİ BULUNAMADI.</div>`; else ur.slice().reverse().forEach(r => contentHtml += rCard(r, false)); contentHtml += `</div>`; } else if (VF_TAB === 'kaza') { contentHtml = buildKazaList(uk, false); } else if (VF_TAB === 'muhafaza') { contentHtml = buildMuhafazaList(um, false); } else if (VF_TAB === 'ornek-toplama') { contentHtml = buildOrnekToplamaList(uot, false); } else if (VF_TAB === 'ornek-saklama') { contentHtml = buildOrnekSaklamaList(uos, false); } else if (VF_TAB === 'gunluk') { contentHtml = buildGunlukList(ug, false); }
-        return `<div><button class="back-btn" onclick="VF=null;VF_TAB='deney';setNav('dosyalar');document.getElementById('ca').innerHTML=bDosyalar()">PERSONEL DOSYALARINA DÖN</button><div class="ph"><h2>${u ? u.displayName.toUpperCase() : VF} // DOSYA</h2></div>${tabsHtml}<div id="dosya-tab-content" style="margin-top:14px">${contentHtml}</div></div>`;
+        if (VF_TAB === 'deney') contentHtml = `<div class="rlist">` + (ur.length ? ur.slice().reverse().map(r => rCard(r, false)).join('') : `<div class="empty">VERİ BULUNAMADI.</div>`) + `</div>`;
+        else if (VF_TAB === 'kaza') contentHtml = buildKazaList(uk, false);
+        else if (VF_TAB === 'muhafaza') contentHtml = buildMuhafazaList(um, false);
+        else if (VF_TAB === 'ornek-toplama') contentHtml = buildOrnekToplamaList(uot, false);
+        else if (VF_TAB === 'ornek-saklama') contentHtml = buildOrnekSaklamaList(uos, false);
+        else if (VF_TAB === 'gunluk') contentHtml = buildGunlukList(ug, false);
+
+        return `<div>
+          <button class="back-btn" onclick="VF=null;VF_TAB='deney';setNav('dosyalar');document.getElementById('ca').innerHTML=bDosyalar()">PERSONEL DOSYALARINA DÖN</button>
+          <div class="ph"><h2>${u ? u.displayName.toUpperCase() : VF} // DOSYA</h2></div>
+          ${tabsHtml}
+          <div id="dosya-tab-content" style="margin-top:14px">${contentHtml}</div>
+        </div>`;
       }
-      let h = `<div><div class="ph"><h2>PERSONEL DOSYALARI</h2></div><div class="fgrid">`;
-      yetk.forEach(u => { const c = raps.filter(r => r.username === u.username).length + ALL_KAZA.filter(r => r.username === u.username).length + ALL_MUHAFAZA.filter(r => r.username === u.username).length + ALL_ORNEK_TOPLAMA.filter(r => r.username === u.username).length + ALL_ORNEK_SAKLAMA.filter(r => r.username === u.username).length + ALL_GRAPS.filter(r => r.username === u.username).length; h += `<div class="fi" onclick="openFolder('${u.username}')"><span class="fi-icon">[DIR]</span><div class="fi-name">${u.displayName}</div><div class="fi-count">${c} RAPOR KAYDI</div></div>`; });
+
+      let h = `<div><div class="ph"><h2>PERSONEL DOSYALARI</h2><p>// YETKİSİZ PERSONEL ARŞİVLERİ</p></div><div class="fgrid">`;
+      yetk.forEach(u => {
+        const c = raps.filter(r => r.username === u.username).length + ALL_KAZA.filter(r => r.username === u.username).length + ALL_MUHAFAZA.filter(r => r.username === u.username).length + ALL_ORNEK_TOPLAMA.filter(r => r.username === u.username).length + ALL_ORNEK_SAKLAMA.filter(r => r.username === u.username).length + ALL_GRAPS.filter(r => r.username === u.username).length;
+        h += `<div class="fi" onclick="openFolder('${u.username}')"><span class="fi-icon">[DIR]</span><div class="fi-name">${u.displayName}</div><div class="fi-count">${c} RAPOR KAYDI</div></div>`;
+      });
       return h + `</div></div>`;
     }
+
+    function buildKazaList(list, showUser) { return `<div class="rlist">` + (list.length ? list.slice().reverse().map(r => kazaCard(r, showUser)).join('') : `<div class="empty">VERİ BULUNAMADI.</div>`) + `</div>`; }
+    function buildMuhafazaList(list, showUser) { return `<div class="rlist">` + (list.length ? list.slice().reverse().map(r => muhafazaCard(r, showUser)).join('') : `<div class="empty">VERİ BULUNAMADI.</div>`) + `</div>`; }
+    function buildOrnekToplamaList(list, showUser) { return `<div class="rlist">` + (list.length ? list.slice().reverse().map(r => ornekToplamaCard(r, showUser)).join('') : `<div class="empty">VERİ BULUNAMADI.</div>`) + `</div>`; }
+    function buildOrnekSaklamaList(list, showUser) { return `<div class="rlist">` + (list.length ? list.slice().reverse().map(r => ornekSaklamaCard(r, showUser)).join('') : `<div class="empty">VERİ BULUNAMADI.</div>`) + `</div>`; }
+    // =========================================================================
 
     function switchDosyaTab(tabId) { VF_TAB = tabId; document.getElementById('ca').innerHTML = bDosyalar(); }
     function switchOzelTab(tabId, ctxId) { const wrap = document.getElementById('ozel-tab-wrap-' + ctxId); if (!wrap) return; wrap.querySelectorAll('.dosya-tab').forEach(b => b.classList.remove('active')); const btn = wrap.querySelector('[data-tab="' + tabId + '"]'); if (btn) btn.classList.add('active'); const content = document.getElementById('ozel-tab-content-' + ctxId); if (!content) return; const u = ctxId === 'mine' ? CU.username : null; const kList = u ? ALL_KAZA.filter(r => r.username === u) : ALL_KAZA; const mList = u ? ALL_MUHAFAZA.filter(r => r.username === u) : ALL_MUHAFAZA; const otList = u ? ALL_ORNEK_TOPLAMA.filter(r => r.username === u) : ALL_ORNEK_TOPLAMA; const osList = u ? ALL_ORNEK_SAKLAMA.filter(r => r.username === u) : ALL_ORNEK_SAKLAMA; const su = ctxId !== 'mine'; if (tabId === 'kaza') content.innerHTML = buildKazaList(kList, su); else if (tabId === 'muhafaza') content.innerHTML = buildMuhafazaList(mList, su); else if (tabId === 'ornek-toplama') content.innerHTML = buildOrnekToplamaList(otList, su); else if (tabId === 'ornek-saklama') content.innerHTML = buildOrnekSaklamaList(osList, su); }
@@ -867,11 +919,68 @@
     async function gonderOrnekSaklama() { const saved = await insertOrnekSaklama({ user_id: CU.userId, username: CU.username, display_name: CU.displayName, ornek_scp: document.getElementById('os-scp').value, ornek_tarih_saat: document.getElementById('os-tarih').value, ne_yapilacak: document.getElementById('os-ne').value, saklama_yeri: document.getElementById('os-yer').value, onay_durum: 'bekliyor' }); if (!saved) { alert('Hata'); return; } alert("Başarılı"); }
 
     function openMo(id) {
-      const r = getRaps().find(x => x.id === id); if (!r) return; openModalId = id; const silBtn = document.getElementById('mo-sil-btn');
-      if (silBtn) { silBtn.onclick = () => silFromModal(); silBtn.style.display = (CU.role === 'yetkili') ? 'block' : 'none'; }
+      const r = getRaps().find(x => x.id === id); if (!r) return;
+      openModalId = id;
+      openGModalId = null;
+      
+      const silBtn = document.getElementById('mo-sil-btn');
+      if (silBtn) {
+        silBtn.onclick = () => silFromModal();
+        silBtn.style.display = (CU.role === 'yetkili') ? 'block' : 'none';
+      }
+      
       document.getElementById('mt').textContent = `${r.scd || '—'} // DENEY-${r.dNo || '000'}`;
-      let b = `<div class="mf"><div class="mfl">DENEY KODU / NUMARA</div><div class="mfv">${r.scd || '—'} &nbsp;|&nbsp; DENEY-${r.dNo || '000'}</div></div><div class="mf"><div class="mfl">// DENEY AMACI</div><div class="mfp">${r.amac || '—'}</div></div><div class="mf"><div class="mfl">// DENEY SONUCU</div><div class="mfp">${r.sonuc || '—'}</div></div>`;
-      document.getElementById('mbody').innerHTML = b; document.getElementById('mo').classList.add('active');
+      
+      const rk = RUTBE_LIST.find(x => x.label === r.rutbe);
+      const rc = rk ? RC[rk.kat] || 'var(--green)' : 'var(--green)';
+      
+      let b = `
+        <div class="mf"><div class="mfl">DENEY KODU / NUMARA</div><div class="mfv">${r.scd || '—'} &nbsp;|&nbsp; DENEY-${r.dNo || '000'}</div></div>
+        <div class="mf"><div class="mfl">SCP</div><div class="mfv">${r.scp || '—'}</div></div>
+        <div class="mf"><div class="mfl">DENEY SORUMLUSU</div><div class="mfv">${r.sorumlu || '—'}</div></div>
+        <div class="mf"><div class="mfl">PERSONEL RÜTBESİ</div><div class="mfv" style="color:${rc}">${r.rutbe || '—'}</div></div>
+        <div class="mf"><div class="mfl">ZAMAN</div><div class="mfv">${r.zb || '--:--'} → ${r.ze || '--:--'}</div></div>
+        <div class="mf"><div class="mfl">KULLANILAN SINIF-D</div><div class="mfv">${r.sd || '0'} KİŞİ</div></div>
+        <div class="mf"><div class="mfl">RAPOR TARİHİ</div><div class="mfv">${r.tarih}</div></div>
+        <div class="mf"><div class="mfl">// DENEY AMACI</div><div class="mfp">${r.amac || '—'}</div></div>
+        <div class="mf"><div class="mfl">// DENEY SONUCU</div><div class="mfp">${r.sonuc || '—'}</div></div>`;
+
+      // ZAMAN DAMGALARI
+      if (r.timestamps && r.timestamps.length > 0) {
+        b += `<div class="mf"><div class="mfl">// ZAMAN DAMGALARI</div>`;
+        r.timestamps.forEach(t => {
+          b += `<div class="mts"><span class="mts-t">[${t.time || '--:--:--'}]</span><span>${t.note || ''}</span></div>`;
+        });
+        b += `</div>`;
+      }
+
+      // EK BİLGİLER
+      b += `<div class="mf"><div class="mfl">// ANORMAL DURUMLAR</div><div class="mfp">${r.ano || 'Kayıt yok.'}</div></div>`;
+      b += `<div class="mf"><div class="mfl">// EKLEMELERİM</div><div class="mfp">${r.ek || 'Kayıt yok.'}</div></div>`;
+      
+      // ONAY DURUMU
+      b += `<div class="mf"><div class="mfl">// ONAY DURUMU</div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">
+          ${onayDurumBadge(r.onayDurum)}
+          ${r.onayYapan ? `<span style="font-size:10px;color:var(--text-dim)">— ${r.onayYapan} · ${r.onayTarih}</span>` : ''}
+        </div>
+        ${CU.role === 'yetkili' ? `<div class="onay-btn-grp">
+          <button class="onay-btn onayla" onclick="onaylaRapor(${r.id})">[ ✓ ONAYLA ]</button>
+          <button class="onay-btn reddet" onclick="reddetRapor(${r.id})">[ ✕ REDDET ]</button>
+        </div>`: ''}
+      </div>`;
+
+      // GÖRSELLER
+      if (r.images && r.images.length > 0) {
+        b += `<div class="mf"><div class="mfl">// GÖRSELLER</div><div class="mimgs">`;
+        r.images.forEach(s => {
+          b += `<img src="${s}" class="mimg" onclick="openLb('${s}')" title="Büyütmek için tıkla"/>`;
+        });
+        b += `</div></div>`;
+      }
+      
+      document.getElementById('mbody').innerHTML = b;
+      document.getElementById('mo').classList.add('active');
     }
     function openLb(src) { document.getElementById('lb-img').src = src; document.getElementById('lb').classList.add('active'); document.body.style.overflow = 'hidden'; }
     function closeLb() { document.getElementById('lb').classList.remove('active'); document.getElementById('lb-img').src = ''; document.body.style.overflow = ''; }
