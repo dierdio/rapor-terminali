@@ -590,31 +590,43 @@
       const el = document.getElementById('nav-' + id); if (el) el.classList.add('active');
     }
 
-    function showPage(id) {
+    async function showPage(id) {
       VF = null; VF_TAB = 'deney'; imgs = []; tsc = 0; setNav(id);
-      if (CU.role === 'yetkisiz') {
-        const groupMap = { 'rapor-yaz': 'deney', 'raporlarim': 'deney', 'gunluk-yaz': 'gunluk', 'gunluk-raporlarim': 'gunluk', 'ozel-raporlarim': 'ozel', 'kaza-yaz': 'ozel', 'muhafaza-yaz': 'ozel', 'ornek-toplama-yaz': 'ozel', 'ornek-saklama-yaz': 'ozel' };
-        const group = groupMap[id];
-        if (group) { ['deney', 'gunluk', 'ozel'].forEach(g => { const t = document.getElementById('tree-' + g); const c = document.getElementById('tree-' + g + '-children'); if (t && c) { t.classList.toggle('open', g === group); c.classList.toggle('open', g === group); } }); }
-      }
       const ca = document.getElementById('ca');
-      if (id === 'rapor-yaz') ca.innerHTML = bRaporYaz();
-      else if (id === 'raporlarim') ca.innerHTML = bRaporlarim();
-      else if (id === 'tum-raporlar') ca.innerHTML = bTumRaporlar();
-      else if (id === 'dosyalar') ca.innerHTML = bDosyalar();
-      else if (id === 'gunluk-yaz') ca.innerHTML = bGunlukYaz();
-      else if (id === 'gunluk-raporlarim') ca.innerHTML = bGunlukRaporlarim();
-      else if (id === 'tum-gunluk') ca.innerHTML = bTumGunluk();
-      else if (id === 'kaza-yaz') ca.innerHTML = bKazaYaz();
-      else if (id === 'muhafaza-yaz') ca.innerHTML = bMuhafazaYaz();
-      else if (id === 'ornek-toplama-yaz') ca.innerHTML = bOrnekToplamaYaz();
-      else if (id === 'ornek-saklama-yaz') ca.innerHTML = bOrnekSaklamaYaz();
-      else if (id === 'ozel-raporlarim') ca.innerHTML = bOzelRaporlarim();
-      else if (id === 'tum-ozel-raporlar') ca.innerHTML = bTumOzelRaporlar();
-      else if (id === 'mesaj-gonder') ca.innerHTML = bMesajGonder();
-      else if (id === 'hesap-olustur') ca.innerHTML = bHesapOlustur();
-      else if (id === 'personel-yonetimi') ca.innerHTML = bPersonelYonetimi();
-      else if (id === 'format-yonetimi') { ca.innerHTML = bFormatYonetimi(); fetchFormatlar(); }
+      
+      // Kullanıcıya bir şeyler yapıldığını göster
+      ca.innerHTML = '<div class="empty">YÜKLENİYOR...</div>';
+
+      // 1. Ağaç menü mantığını çalıştır
+      if (CU.role === 'yetkisiz') {
+        const groupMap = { 'rapor-yaz': 'deney', 'raporlarim': 'deney', 'gunluk-yaz': 'gunluk', 'gunluk-raporlarim': 'gunluk', 'ozel-raporlarim': 'ozel', 'kaza-yaz': 'ozel', 'muhafaza-yaz': 'ozel', 'ornek-toplama-yaz': 'ozel', 'ornek-saklama-yaz': 'ozel', 'dinamik': 'dinamik' };
+        const group = groupMap[id];
+        if (group) { ['deney', 'gunluk', 'ozel', 'dinamik'].forEach(g => { const t = document.getElementById('tree-' + g); const c = document.getElementById('tree-' + g + '-children'); if (t && c) { t.classList.toggle('open', g === group); c.classList.toggle('open', g === group); } }); }
+      }
+
+      // 2. Sayfaya göre veriyi çek ve arayüzü çiz
+      try {
+        if (id === 'rapor-yaz') ca.innerHTML = bRaporYaz();
+        else if (id === 'raporlarim') { await fetchRaps(); ca.innerHTML = bRaporlarim(); }
+        else if (id === 'tum-raporlar') { await fetchRaps(); ca.innerHTML = bTumRaporlar(); }
+        else if (id === 'dosyalar') { await Promise.all([fetchRaps(), fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama(), fetchGRaps()]); ca.innerHTML = bDosyalar(); }
+        else if (id === 'gunluk-yaz') ca.innerHTML = bGunlukYaz();
+        else if (id === 'gunluk-raporlarim') { await fetchGRaps(); ca.innerHTML = bGunlukRaporlarim(); }
+        else if (id === 'tum-gunluk') { await fetchGRaps(); ca.innerHTML = bTumGunluk(); }
+        else if (id === 'kaza-yaz') ca.innerHTML = bKazaYaz();
+        else if (id === 'muhafaza-yaz') ca.innerHTML = bMuhafazaYaz();
+        else if (id === 'ornek-toplama-yaz') ca.innerHTML = bOrnekToplamaYaz();
+        else if (id === 'ornek-saklama-yaz') ca.innerHTML = bOrnekSaklamaYaz();
+        else if (id === 'ozel-raporlarim') { await Promise.all([fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]); ca.innerHTML = bOzelRaporlarim(); }
+        else if (id === 'tum-ozel-raporlar') { await Promise.all([fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]); ca.innerHTML = bTumOzelRaporlar(); }
+        else if (id === 'mesaj-gonder') ca.innerHTML = bMesajGonder();
+        else if (id === 'hesap-olustur') ca.innerHTML = bHesapOlustur();
+        else if (id === 'personel-yonetimi') ca.innerHTML = bPersonelYonetimi();
+        else if (id === 'format-yonetimi') { ca.innerHTML = bFormatYonetimi(); fetchFormatlar(); }
+      } catch (err) {
+        ca.innerHTML = '<div class="empty">VERİLER YÜKLENİRKEN BİR HATA OLUŞTU.</div>';
+        console.error(err);
+      }
     }
 
     function isS2() { return CU && CU.rutbeKat === 'lr'; }
