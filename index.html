@@ -1536,11 +1536,8 @@
 <body>
   <div class="scanline"></div>
 
-  <!-- VERSİYON ROZET -->
   <div class="build-ver" id="build-ver-badge"></div>
 
-  <!-- MAIN -->
-  <!-- BAŞLANGIÇ YÜKLENİYOR EKRANI -->
   <div id="init-loading" style="position:fixed;inset:0;background:#050a05;display:flex;align-items:center;justify-content:center;z-index:99999;flex-direction:column;gap:12px">
     <div style="font-family:'VT323',monospace;font-size:28px;color:#00ff41;letter-spacing:4px;text-shadow:0 0 12px #00ff41">◈ TESİS-62 ◈</div>
     <div style="font-size:11px;color:#00a82a;letter-spacing:3px">KİMLİK DOĞRULANIYOR...</div>
@@ -1583,7 +1580,6 @@
     </div>
   </div>
 
-  <!-- MESAJ KUTUSU OVERLAY -->
   <div class="mesaj-overlay" id="mesaj-overlay" onclick="closeMesajOnOutside(event)">
     <div class="mesaj-panel" id="mesaj-panel">
       <div class="mesaj-panel-hdr">
@@ -1591,12 +1587,10 @@
         <button class="mesaj-panel-close" onclick="closeMesajKutusu()">✕</button>
       </div>
       <div class="mesaj-panel-body" id="mesaj-panel-body">
-        <!-- JS ile doldurulur -->
-      </div>
+        </div>
     </div>
   </div>
 
-  <!-- MESAJ DETAY OVERLAY -->
   <div class="mesaj-overlay" id="mesaj-detay-overlay" onclick="closeMesajDetayOnOutside(event)">
     <div class="mesaj-panel" id="mesaj-detay-panel">
       <div class="mesaj-panel-hdr">
@@ -1607,7 +1601,6 @@
     </div>
   </div>
 
-  <!-- SİLME ONAY MODALI -->
   <div class="confirm-overlay" id="confirm-overlay">
     <div class="confirm-box">
       <div class="confirm-hdr">
@@ -1624,14 +1617,12 @@
     </div>
   </div>
 
-  <!-- LIGHTBOX -->
   <div class="lb" id="lb" onclick="closeLb()">
     <button class="lb-close" onclick="closeLb()">[ KAPAT ]</button>
     <img id="lb-img" src="" alt="" />
     <div class="lb-hint">ESC veya tıkla — kapat</div>
   </div>
 
-  <!-- MODAL -->
   <div class="mo" id="mo" onclick="closeMo(event)">
     <div class="mb">
       <div class="mh">
@@ -2051,6 +2042,8 @@
        <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
        <button class="sb-item" id="nav-tum-ozel-raporlar" onclick="showPage('tum-ozel-raporlar')">TÜM ÖZEL RAPORLAR</button>
        <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>
+       <div class="sb-label" style="margin-top:8px">SİSTEM YÖNETİMİ</div>
+       <button class="sb-item" id="nav-hesap-olustur" onclick="showPage('hesap-olustur')">HESAP OLUŞTUR</button>
        <div class="sb-label" style="margin-top:8px">İLETİŞİM</div>
        <button class="sb-item" id="nav-mesaj-gonder" onclick="showPage('mesaj-gonder')">MESAJ GÖNDER</button>`;
     }
@@ -2103,6 +2096,7 @@
       else if (id === 'ozel-raporlarim') ca.innerHTML = bOzelRaporlarim();
       else if (id === 'tum-ozel-raporlar') ca.innerHTML = bTumOzelRaporlar();
       else if (id === 'mesaj-gonder') ca.innerHTML = bMesajGonder();
+      else if (id === 'hesap-olustur') ca.innerHTML = bHesapOlustur();
     }
 
     // S2 rütbesi kontrolü: Araştırmacı Adayı-S2, Uzman Stajyer-S2, Stajyer-S2
@@ -2137,6 +2131,115 @@
       });
       return h;
     }
+
+    // ============ HESAP OLUŞTUR SİSTEMİ ============
+    function bHesapOlustur() {
+      return `<div>
+        <div class="ph"><h2>HESAP OLUŞTUR</h2><p>// SİSTEM YÖNETİMİ - YENİ PERSONEL KAYDI</p></div>
+        <div class="suc" id="ho-suc">PERSONEL HESABI BAŞARIYLA OLUŞTURULDU.</div>
+        <div class="form-err-box" id="ho-form-err"></div>
+        <div class="rf">
+          <div class="fs">
+            <div class="fs-title">// KİMLİK BİLGİLERİ</div>
+            <div class="frow">
+              <div class="fg"><label>KULLANICI ADI (Sisteme Giriş)</label><input type="text" class="tin" id="ho-username" placeholder="örn: personel_62" autocomplete="off"/><span class="val-msg" id="hoerr-username">Kullanıcı adı girilmelidir.</span></div>
+              <div class="fg"><label>ŞİFRE</label><input type="password" class="tin" id="ho-password" placeholder="••••••••"/><span class="val-msg" id="hoerr-password">Şifre girilmelidir.</span></div>
+            </div>
+            <div class="fg"><label>PERSONEL AD SOYAD</label><input type="text" class="tin" id="ho-isim" placeholder="örn: Ahmet Yılmaz"/><span class="val-msg" id="hoerr-isim">İsim girilmelidir.</span></div>
+          </div>
+          <div class="fs">
+            <div class="fs-title">// YETKİ VE RÜTBE BİLGİLERİ</div>
+            <div class="frow">
+              <div class="fg"><label>RÜTBE SEÇİMİ</label><select class="ts" id="ho-rutbe" onchange="upRutbeClrHo()">${rutbeOpts()}</select><span class="val-msg" id="hoerr-rutbe">Rütbe seçilmelidir.</span></div>
+              <div class="fg"><label>HESAP TÜRÜ (YETKİ)</label><select class="ts" id="ho-role">
+                <option value="yetkisiz">Yetkisiz Personel (S1, S2 vb.)</option>
+                <option value="yetkili">Yetkili Sistem Admini</option>
+              </select></div>
+            </div>
+          </div>
+          <button class="sub-btn" onclick="gonderHesapOlustur()" id="ho-btn">[ KAYDI TAMAMLA ]</button>
+        </div>
+      </div>`;
+    }
+
+    function upRutbeClrHo() {
+      const sel = document.getElementById('ho-rutbe'); if (!sel) return;
+      const f = RUTBE_LIST.find(r => r.label === sel.value);
+      sel.style.color = f ? RC[f.kat] || 'var(--green)' : 'var(--green)';
+    }
+
+    async function gonderHesapOlustur() {
+      const alanlar = [
+        { id: 'ho-username', errId: 'hoerr-username', label: 'Kullanıcı Adı' },
+        { id: 'ho-password', errId: 'hoerr-password', label: 'Şifre' },
+        { id: 'ho-isim', errId: 'hoerr-isim', label: 'Personel Ad Soyad' },
+        { id: 'ho-rutbe', errId: 'hoerr-rutbe', label: 'Rütbe' }
+      ];
+
+      document.querySelectorAll('[id^="hoerr-"]').forEach(e => e.classList.remove('show'));
+      document.getElementById('ho-form-err').classList.remove('show');
+      alanlar.forEach(a => { const el = document.getElementById(a.id); if (el) el.classList.remove('field-err'); });
+
+      const eksikler = [];
+      alanlar.forEach(a => {
+        const el = document.getElementById(a.id); if (!el) return;
+        if (!el.value.trim()) {
+          el.classList.add('field-err');
+          const em = document.getElementById(a.errId); if (em) em.classList.add('show');
+          eksikler.push(a.label);
+        }
+      });
+
+      if (eksikler.length) {
+        const box = document.getElementById('ho-form-err');
+        box.innerHTML = eksikler.map(l => `• ${l}`).join('<br>');
+        box.classList.add('show');
+        box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      const btn = document.getElementById('ho-btn');
+      btn.disabled = true;
+      btn.textContent = '[ İŞLENİYOR... ]';
+
+      const username = document.getElementById('ho-username').value.trim();
+      const password = document.getElementById('ho-password').value;
+      const tam_isim = document.getElementById('ho-isim').value.trim();
+      const rutbe = document.getElementById('ho-rutbe').value;
+      const yetkili = document.getElementById('ho-role').value === 'yetkili';
+
+      // Seçilen rütbenin seviyesi (S1, S2, vb.) rütbe isminden alınabilir, API seviye stringi de bekliyor olabilir
+      let seviye = 'Bilinmiyor';
+      if (rutbe.includes('- S')) {
+        seviye = 'S' + rutbe.split('- S')[1].trim();
+      }
+
+      try {
+        const res = await fetch('/api/create-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password, tam_isim, seviye, yetkili })
+        });
+        
+        const data = await res.json();
+
+        if (res.ok) {
+          const s = document.getElementById('ho-suc');
+          s.style.display = 'block';
+          setTimeout(() => s.style.display = 'none', 4000);
+          alanlar.forEach(a => { const el = document.getElementById(a.id); if (el) el.value = ''; });
+          document.getElementById('ho-role').value = 'yetkisiz';
+        } else {
+          alert('[HATA]: ' + (data.error || 'Bilinmeyen bir hata oluştu.'));
+        }
+      } catch (err) {
+        alert('[SİSTEM HATASI]: Sunucuya ulaşılamadı. /api/create-user Vercel API fonksiyonunuzun kurulu olduğundan emin olun.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '[ KAYDI TAMAMLA ]';
+      }
+    }
+    // ============ HESAP OLUŞTUR SİSTEMİ SONU ============
 
     function bRaporYaz() {
       // S1 rütbesi rapor yazamaz
@@ -2337,26 +2440,6 @@
       ${(CU.role === 'yetkili' || CU.username === r.username) ? `<button class="sil-btn" onclick="silRapor(${r.id})">[ SİL ]</button>` : ''}
     </div>
   </div>`;
-    }
-
-    function bDosyalar() {
-      const raps = getRaps();
-      const yetk = ALL_PROFILES.filter(u => u.role === 'yetkisiz');
-      if (VF) {
-        const u = ALL_PROFILES.find(x => x.username === VF);
-        const ur = raps.filter(r => r.username === VF);
-        let h = `<div><button class="back-btn" onclick="VF=null;setNav('dosyalar');document.getElementById('ca').innerHTML=bDosyalar()">PERSONEL DOSYALARINA DÖN</button>
-    <div class="ph"><h2>${u ? u.displayName.toUpperCase() : VF} // DOSYA</h2><p>// ${ur.length} RAPOR KAYDI</p></div><div class="rlist">`;
-        if (!ur.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`;
-        else ur.slice().reverse().forEach(r => h += rCard(r, false));
-        return h + `</div></div>`;
-      }
-      let h = `<div><div class="ph"><h2>PERSONEL DOSYALARI</h2><p>// YETKİSİZ PERSONEL DENEY ARŞİVLERİ</p></div><div class="fgrid">`;
-      yetk.forEach(u => {
-        const c = raps.filter(r => r.username === u.username).length;
-        h += `<div class="fi" onclick="openFolder('${u.username}')"><span class="fi-icon">[DIR]</span><div class="fi-name">${u.displayName}</div><div class="fi-count">${c} RAPOR KAYDI</div></div>`;
-      });
-      return h + `</div></div>`;
     }
 
     function bDosyalar() {
@@ -3029,7 +3112,7 @@
         <div class="fg"><label>ROBLOX TAKMA ADIM</label><input type="text" class="tin" id="g-roblox" placeholder="Roblox kullanıcı adınız"/><span class="val-msg" id="gerr-roblox">Roblox takma adı girilmelidir.</span></div>
         <div class="fg"><label>GÜNLÜK RAPOR NO</label><input type="text" class="tin" value="${nextNo}" readonly style="color:var(--amber);border-left-color:var(--amber-dim)"/></div>
       </div>
-      <div class="fg"><label>MEVCUT RÜTBEMم</label><input type="text" class="tin" id="g-rutbe" value="${autoRutbe}" readonly style="color:${rutbeColor};border-left-color:${rutbeColor};opacity:.85" title="Rütbeniz profilinizden otomatik alınmaktadır"/></div>
+      <div class="fg"><label>MEVCUT RÜTBEM</label><input type="text" class="tin" id="g-rutbe" value="${autoRutbe}" readonly style="color:${rutbeColor};border-left-color:${rutbeColor};opacity:.85" title="Rütbeniz profilinizden otomatik alınmaktadır"/></div>
     </div>
     <div class="fs">
       <div class="fs-title">// AKTİVİTE KAYDI</div>
