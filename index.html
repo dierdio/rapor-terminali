@@ -491,20 +491,34 @@
       const { data } = await _supabase.auth.getSession();
       if (!data?.session?.user) { window.location.replace('login'); return; }
       const userId = data.session.user.id;
+      
+      // Sadece profili çek, diğer verileri çekme (Hızlandırıcı 1)
       const { data: allProfiles } = await _supabase.from('profiles').select('*');
       ALL_PROFILES = (allProfiles || []).map(p => ({ username: p.username, role: p.role, displayName: p.display_name, rutbe: p.rutbe, rutbeKat: p.rutbe_kat, robloxId: p.roblox_id }));
+      
       const myRow = (allProfiles || []).find(x => x.id === userId);
       const profileData = ALL_PROFILES.find(p => p.username === myRow?.username);
       if (!profileData) { await _supabase.auth.signOut(); window.location.replace('login'); return; }
+      
       CU = Object.freeze({ userId, username: profileData.username, role: profileData.role, displayName: profileData.displayName, rutbe: profileData.rutbe, rutbeKat: profileData.rutbeKat, robloxId: profileData.robloxId, email: data.session.user.email });
+      
       document.getElementById('hun').textContent = CU.displayName;
       const re = document.getElementById('hrutbe');
       re.textContent = CU.rutbe; re.style.color = RC[CU.rutbeKat] || 'var(--green)';
-      await Promise.all([fetchRaps(), fetchGRaps(), fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama(), fetchMesajlar()]);
+      
+      // Sadece giriş ekranında olması gerekenleri çek (Hızlandırıcı 2)
+      await Promise.all([fetchMesajlar()]); 
+      
       buildSidebar();
-      if (CU.role === 'yetkisiz') { showPage(isS1() ? 'gunluk-yaz' : 'rapor-yaz'); } else { showPage('tum-raporlar'); }
+      
+      // Başlangıç ekranını hızla kaldır
       document.getElementById('init-loading').style.display = 'none';
       document.getElementById('main-screen').classList.add('active');
+      
+      // Raporları sayfaya girildiğinde yükle (Hızlandırıcı 3)
+      if (CU.role === 'yetkisiz') { showPage(isS1() ? 'gunluk-yaz' : 'rapor-yaz'); }
+      else { showPage('tum-raporlar'); }
+      
       updateClock();
     })();
 
