@@ -7,19 +7,17 @@
   <style>
     body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #050505; font-family: 'Montserrat', sans-serif; }
     
-    /* Fare takip edici Aurora */
     #aurora {
-      position: absolute;
-      width: 100vw; height: 100vh;
-      background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), #4a148c, #050505 60%);
-      transition: background 0.2s ease-out;
+      position: absolute; width: 100vw; height: 100vh;
+      /* Mor ve Yeşil Aurora Tonları */
+      background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), #4a148c, #004d40 40%, #050505 80%);
+      transition: background 0.8s cubic-bezier(0.22, 1, 0.36, 1);
       z-index: 0;
     }
 
     .content {
       position: relative; z-index: 1; display: flex; flex-direction: column; 
-      align-items: center; justify-content: center; height: 100vh;
-      pointer-events: none; /* İçeriğin fare hareketini engellememesi için */
+      align-items: center; justify-content: center; height: 100vh; pointer-events: none;
     }
 
     h1 { 
@@ -29,8 +27,7 @@
     }
 
     .card {
-      pointer-events: auto; /* Butonun tıklanabilir kalması için */
-      padding: 20px 40px; background: rgba(255, 255, 255, 0.05); 
+      pointer-events: auto; padding: 20px 40px; background: rgba(255, 255, 255, 0.05); 
       backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); 
       border-radius: 30px; color: #fff; text-decoration: none; 
       font-size: 1rem; letter-spacing: 3px; transition: 0.4s;
@@ -52,12 +49,31 @@
 
   <script>
     const aurora = document.getElementById('aurora');
+    let targetX = 50, targetY = 50;
+    let currentX = 50, currentY = 50;
+
+    // Fare hareketini dinle
     document.addEventListener('mousemove', (e) => {
-      const x = (e.clientX / window.innerWidth) * 100;
-      const y = (e.clientY / window.innerHeight) * 100;
-      aurora.style.setProperty('--x', `${x}%`);
-      aurora.style.setProperty('--y', `${y}%`);
+      targetX = (e.clientX / window.innerWidth) * 100;
+      targetY = (e.clientY / window.innerHeight) * 100;
     });
+
+    // Hareket etmediğinde de akmasını sağlayan döngü
+    function animate() {
+      // Fare yoksa veya duruyorsa kendi kendine hareket et (sinüs dalgaları ile)
+      const time = Date.now() * 0.0005;
+      const driftX = Math.sin(time) * 10;
+      const driftY = Math.cos(time) * 10;
+      
+      // Mevcut konumu hedefe doğru yumuşakça yaklaştır (Lerp efekti)
+      currentX += (targetX + driftX - currentX) * 0.05;
+      currentY += (targetY + driftY - currentY) * 0.05;
+      
+      aurora.style.setProperty('--x', `${currentX}%`);
+      aurora.style.setProperty('--y', `${currentY}%`);
+      requestAnimationFrame(animate);
+    }
+    animate();
   </script>
 </body>
 </html>
