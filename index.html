@@ -3,40 +3,113 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DIERDIO // Portfolyo</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+  <title>DIERDIO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
-    :root { --gold: #D4AF37; --gold-dim: #AA8B2C; --bg: #0a0a0a; --bg-light: #141414; --text: #FDFBF7; }
+    :root {
+      /* Mor Renk Paleti */
+      --purple: #b026ff;
+      --purple-dim: #6b149b;
+      --bg: #09030e;
+      --bg-light: #150820;
+      --text: #f3e8ff;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background-color: var(--bg); color: var(--text); font-family: 'Montserrat', sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; background-image: linear-gradient(45deg, transparent 49%, rgba(212, 175, 55, 0.03) 49%, rgba(212, 175, 55, 0.03) 51%, transparent 51%), linear-gradient(-45deg, transparent 49%, rgba(212, 175, 55, 0.03) 49%, rgba(212, 175, 55, 0.03) 51%, transparent 51%); background-size: 60px 60px; }
-    .header { text-align: center; margin-bottom: 60px; position: relative; padding: 30px; border-top: 2px solid var(--gold); border-bottom: 2px solid var(--gold); }
-    .header::before, .header::after { content: ''; position: absolute; top: 5px; bottom: 5px; width: 100%; border-top: 1px solid var(--gold-dim); border-bottom: 1px solid var(--gold-dim); left: 0; pointer-events: none; }
-    .header h1 { font-family: 'Cormorant Garamond', serif; font-size: 3.5rem; font-weight: 700; letter-spacing: 12px; color: var(--gold); text-transform: uppercase; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
-    .header p { font-size: 0.9rem; letter-spacing: 6px; color: var(--text); margin-top: 10px; text-transform: uppercase; opacity: 0.8; }
-    .portfolio-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; width: 100%; max-width: 1100px; }
-    .card { background: var(--bg-light); position: relative; padding: 40px 30px; text-align: center; text-decoration: none; color: var(--text); display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid var(--gold-dim); outline: 1px solid var(--gold-dim); outline-offset: -8px; transition: all 0.4s ease; cursor: pointer; min-height: 250px; }
-    .card::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 40px; height: 4px; background: var(--gold); }
-    .card::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 40px; height: 4px; background: var(--gold); }
-    .card:hover { background: var(--gold); color: var(--bg); outline-offset: -12px; outline-color: var(--bg); box-shadow: 0 10px 30px rgba(212, 175, 55, 0.15); }
-    .card:hover .card-title, .card:hover .card-desc, .card:hover .card-status { color: var(--bg); }
-    .card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 600; letter-spacing: 3px; color: var(--gold); margin-bottom: 15px; transition: color 0.4s; }
-    .card-desc { font-size: 0.85rem; letter-spacing: 1px; line-height: 1.6; opacity: 0.8; transition: color 0.4s; }
-    .card-status { margin-top: 20px; font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase; color: var(--gold-dim); border-top: 1px solid currentColor; padding-top: 10px; transition: color 0.4s; }
-    .card.disabled { cursor: not-allowed; opacity: 0.6; }
-    .card.disabled:hover { background: var(--bg-light); color: var(--text); outline-offset: -8px; outline-color: var(--gold-dim); box-shadow: none; }
-    .card.disabled:hover .card-title { color: var(--gold); }
-    .card.disabled:hover .card-desc { color: var(--text); }
-    .card.disabled:hover .card-status { color: var(--gold-dim); }
-    @media (max-width: 768px) { .header h1 { font-size: 2.2rem; letter-spacing: 6px; } .header p { font-size: 0.7rem; letter-spacing: 3px; } .card { padding: 30px 20px; min-height: 200px; } }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      /* Arka Plan Geometrik Deseni (Mor Tonlarda) */
+      background-image: 
+        linear-gradient(45deg, transparent 49%, rgba(176, 38, 255, 0.04) 49%, rgba(176, 38, 255, 0.04) 51%, transparent 51%),
+        linear-gradient(-45deg, transparent 49%, rgba(176, 38, 255, 0.04) 49%, rgba(176, 38, 255, 0.04) 51%, transparent 51%);
+      background-size: 60px 60px;
+    }
+
+    /* Ana Başlık Tasarımı */
+    .header {
+      text-align: center;
+      margin-bottom: 50px;
+      position: relative;
+      padding: 30px;
+      border-top: 2px solid var(--purple);
+      border-bottom: 2px solid var(--purple);
+    }
+
+    .header::before, .header::after {
+      content: ''; position: absolute; top: 5px; bottom: 5px; width: 100%;
+      border-top: 1px solid var(--purple-dim); border-bottom: 1px solid var(--purple-dim);
+      left: 0; pointer-events: none;
+    }
+
+    .header h1 {
+      font-family: 'Cormorant Garamond', serif; font-size: 4rem; font-weight: 700;
+      letter-spacing: 15px; color: var(--purple); text-transform: uppercase;
+      text-shadow: 0 0 15px rgba(176, 38, 255, 0.4);
+    }
+
+    /* Tekli Buton Grid Düzeni */
+    .portfolio-grid {
+      display: flex; justify-content: center; width: 100%; max-width: 600px;
+    }
+
+    /* Minimalist Kart Tasarımı */
+    .card {
+      background: var(--bg-light); position: relative; padding: 50px 40px;
+      text-align: center; text-decoration: none; color: var(--text);
+      display: flex; flex-direction: column; justify-content: center; align-items: center;
+      border: 1px solid var(--purple-dim); outline: 1px solid var(--purple-dim);
+      outline-offset: -8px; transition: all 0.4s ease; cursor: pointer; width: 100%;
+    }
+
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+      width: 40px; height: 4px; background: var(--purple);
+    }
+
+    .card::after {
+      content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 40px; height: 4px; background: var(--purple);
+    }
+
+    .card:hover {
+      background: var(--purple); outline-offset: -12px;
+      outline-color: var(--bg); box-shadow: 0 10px 30px rgba(176, 38, 255, 0.25);
+    }
+
+    .card:hover .card-title { color: var(--bg); }
+
+    .card-title {
+      font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 600;
+      letter-spacing: 5px; color: var(--purple); transition: color 0.4s;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 { font-size: 2.5rem; letter-spacing: 8px; }
+      .card { padding: 40px 20px; }
+      .card-title { font-size: 1.5rem; }
+    }
   </style>
 </head>
 <body>
-  <div class="header"><h1>DIERDIO</h1><p>Dijital Projeler & Sistem Mimarisi</p></div>
-  <div class="portfolio-grid">
-    <a href="/terminal/" class="card"><div class="card-title">RAPOR TERMİNALİ</div><div class="card-desc">Tesis-62 Merkezi Yönetim, Personel Kayıt ve Raporlama Veritabanı</div><div class="card-status">Sistem Aktif</div></a>
-    <div class="card disabled"><div class="card-title">BİYOSFER-K</div><div class="card-desc">Kızılçorak Gezegeni için Deneyap Kart Tabanlı Otonom Yaşam Destek Kapsülü</div><div class="card-status">Yapım Aşamasında</div></div>
-    <div class="card disabled"><div class="card-title">PARALLEL ROOMS</div><div class="card-desc">Nedensellik Mekanikleri Üzerine Kurulu Tek Odalı Konsept Mini Oyun</div><div class="card-status">Geliştiriliyor</div></div>
-    <div class="card disabled"><div class="card-title">İŞARETİ BİL!</div><div class="card-desc">Noktalama İşaretleri Üzerine Tasarlanmış İnteraktif Eğitim Modülü</div><div class="card-status">Erişime Kapalı</div></div>
+
+  <div class="header">
+    <h1>DIERDIO</h1>
   </div>
+
+  <div class="portfolio-grid">
+    <a href="/terminal/" class="card">
+      <div class="card-title">RAPOR TERMİNALİ</div>
+    </a>
+  </div>
+
 </body>
 </html>
