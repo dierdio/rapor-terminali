@@ -5,28 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DIERDIO</title>
   <style>
-    body, html { 
-      margin: 0; padding: 0; width: 100%; height: 100%; 
-      overflow: hidden; background: #050505; 
-      font-family: 'Segoe UI', Tahoma, sans-serif; 
-    }
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #050505; font-family: 'Montserrat', sans-serif; }
     
-    /* Aurora Gradient Efekti */
-    .aurora {
-      position: absolute; inset: 0;
-      background: linear-gradient(125deg, #1a0b2e, #0f1c3f, #0a2322);
+    /* Fare takip edici Aurora */
+    #aurora {
+      position: absolute;
+      width: 100vw; height: 100vh;
+      background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), #4a148c, #050505 60%);
+      transition: background 0.2s ease-out;
       z-index: 0;
-    }
-    .aurora::after {
-      content: ''; position: absolute; inset: 0;
-      background: radial-gradient(circle at 70% 30%, rgba(138, 43, 226, 0.4), transparent 50%),
-                  radial-gradient(circle at 30% 70%, rgba(0, 255, 65, 0.2), transparent 50%);
-      filter: blur(80px);
     }
 
     .content {
       position: relative; z-index: 1; display: flex; flex-direction: column; 
       align-items: center; justify-content: center; height: 100vh;
+      pointer-events: none; /* İçeriğin fare hareketini engellememesi için */
     }
 
     h1 { 
@@ -36,27 +29,35 @@
     }
 
     .card {
-      padding: 20px 40px; 
-      background: rgba(255, 255, 255, 0.05); 
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2); 
-      border-radius: 30px;
-      color: #fff; text-decoration: none; font-size: 1rem; 
-      letter-spacing: 3px; transition: 0.4s;
+      pointer-events: auto; /* Butonun tıklanabilir kalması için */
+      padding: 20px 40px; background: rgba(255, 255, 255, 0.05); 
+      backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); 
+      border-radius: 30px; color: #fff; text-decoration: none; 
+      font-size: 1rem; letter-spacing: 3px; transition: 0.4s;
     }
 
     .card:hover { 
       background: rgba(255, 255, 255, 0.15); 
-      border-color: rgba(0, 255, 65, 0.5);
-      transform: translateY(-5px);
+      border-color: rgba(0, 255, 65, 0.5); transform: translateY(-5px);
     }
   </style>
 </head>
 <body>
-  <div class="aurora"></div>
+  <div id="aurora"></div>
+  
   <div class="content">
     <h1>DIERDIO</h1>
     <a href="/terminal/" class="card">RAPOR TERMİNALİ</a>
   </div>
+
+  <script>
+    const aurora = document.getElementById('aurora');
+    document.addEventListener('mousemove', (e) => {
+      const x = (e.clientX / window.innerWidth) * 100;
+      const y = (e.clientY / window.innerHeight) * 100;
+      aurora.style.setProperty('--x', `${x}%`);
+      aurora.style.setProperty('--y', `${y}%`);
+    });
+  </script>
 </body>
 </html>
