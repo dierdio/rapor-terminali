@@ -49,9 +49,9 @@ const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     async function deleteOrnekSaklama(id) { const { error } = await _supabase.from('ornek_saklama_raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_ORNEK_SAKLAMA = ALL_ORNEK_SAKLAMA.filter(x => x.id !== id); }
     async function updateOrnekSaklama(id, fields) { const { error } = await _supabase.from('ornek_saklama_raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_ORNEK_SAKLAMA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_ORNEK_SAKLAMA[i], fields); } }
 
-    async function fetchMesajlar() { if (window.F_fetchMesajlar) return ALL_MESAJLAR; const { data } = await _supabase.from('mesajlar').select('*').order('created_at', { ascending: false }); ALL_MESAJLAR = data || []; updateMesajBadge(); initRealtime(); logAction('SİSTEME GİRİŞ YAPILDI', 'Başarılı giriş'); window.F_fetchMesajlar = true; return ALL_MESAJLAR; }
+    async function fetchMesajlar() { if (window.F_fetchMesajlar) return ALL_MESAJLAR; const { data } = await _supabase.from('mesajlar').select('*').order('created_at', { ascending: false }); ALL_MESAJLAR = data || []; updateMesajBadge(); window.F_fetchMesajlar = true; return ALL_MESAJLAR; }
     async function sendMesaj(row) { const { data, error } = await _supabase.from('mesajlar').insert([row]).select().single(); if (!error && data) ALL_MESAJLAR.unshift(data); return { data, error }; }
-    async function mesajOkundu(id) { const m = ALL_MESAJLAR.find(x => x.id === id); if (!m) return; const list = Array.isArray(m.okundu_by) ? m.okundu_by : []; if (list.includes(CU.username)) return; const updated = [...list, CU.username]; await _supabase.from('mesajlar').update({ okundu_by: updated }).eq('id', id); m.okundu_by = updated; updateMesajBadge(); initRealtime(); logAction('SİSTEME GİRİŞ YAPILDI', 'Başarılı giriş'); }
+    async function mesajOkundu(id) { const m = ALL_MESAJLAR.find(x => x.id === id); if (!m) return; const list = Array.isArray(m.okundu_by) ? m.okundu_by : []; if (list.includes(CU.username)) return; const updated = [...list, CU.username]; await _supabase.from('mesajlar').update({ okundu_by: updated }).eq('id', id); m.okundu_by = updated; updateMesajBadge(); }
     
 window.MESAJ_TAB = window.MESAJ_TAB || 'gelen';
 window.setMesajTab = function(tab) { window.MESAJ_TAB = tab; renderMesajKutusu(); };
@@ -82,6 +82,7 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
       if (CU.role === 'yetkisiz') { showPage(isS1() ? 'gunluk-yaz' : 'rapor-yaz'); }
       else { showPage('tum-raporlar'); }
       updateClock();
+      initRealtime(); logAction('SİSTEME GİRİŞ YAPILDI', 'Başarılı giriş');
     })();
 
     function updateClock() { const el = document.getElementById('hclock'); if (el) { const n = new Date(); el.textContent = n.toLocaleDateString('tr-TR') + ' ' + n.toTimeString().split(' ')[0] } }
@@ -414,7 +415,7 @@ async function silMesaj(id) {
             return;
         }
         ALL_MESAJLAR = ALL_MESAJLAR.filter(m => m.id !== id);
-        updateMesajBadge(); initRealtime(); logAction('SİSTEME GİRİŞ YAPILDI', 'Başarılı giriş');
+        updateMesajBadge();
         renderMesajKutusu();
         closeMesajDetay();
         logAction('MESAJ SİLİNDİ', `Mesaj ID: ${id}`);
