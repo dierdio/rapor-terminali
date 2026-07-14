@@ -1,0 +1,3 @@
+<div class="onay-btn-grp"><button class="onay-btn onayla" onclick="onaylaRapor(${r.id})">[ ✓ ONAYLA ]</but
+  function onayDurumBadge(durum) { if (durum === 'onaylandi') return `<span class="onay-badge onay-onaylan
+di">✓ ONAYLANDI</span>`; if (durum === 'reddedildi') return `<

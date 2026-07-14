@@ -124,18 +124,18 @@ const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
 
       try {
         if (id === 'rapor-yaz') ca.innerHTML = bRaporYaz();
-        else if (id === 'raporlarim') { await fetchRaps(); ca.innerHTML = bRaporlarim(); }
-        else if (id === 'tum-raporlar') { await fetchRaps(); ca.innerHTML = bTumRaporlar(); }
-        else if (id === 'dosyalar') { await Promise.all([fetchRaps(), fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama(), fetchGRaps()]); ca.innerHTML = bDosyalar(); }
+        else if (id === 'raporlarim') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await fetchRaps() ca.innerHTML = bRaporlarim(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
+        else if (id === 'tum-raporlar') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await fetchRaps() ca.innerHTML = bTumRaporlar(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
+        else if (id === 'dosyalar') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await Promise.all([fetchRaps(), fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama(), fetchGRaps()]) ca.innerHTML = bDosyalar(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
         else if (id === 'gunluk-yaz') ca.innerHTML = bGunlukYaz();
-        else if (id === 'gunluk-raporlarim') { await fetchGRaps(); ca.innerHTML = bGunlukRaporlarim(); }
-        else if (id === 'tum-gunluk') { await fetchGRaps(); ca.innerHTML = bTumGunluk(); }
+        else if (id === 'gunluk-raporlarim') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await fetchGRaps() ca.innerHTML = bGunlukRaporlarim(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
+        else if (id === 'tum-gunluk') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await fetchGRaps() ca.innerHTML = bTumGunluk(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
         else if (id === 'kaza-yaz') ca.innerHTML = bKazaYaz();
         else if (id === 'muhafaza-yaz') ca.innerHTML = bMuhafazaYaz();
         else if (id === 'ornek-toplama-yaz') ca.innerHTML = bOrnekToplamaYaz();
         else if (id === 'ornek-saklama-yaz') ca.innerHTML = bOrnekSaklamaYaz();
-        else if (id === 'ozel-raporlarim') { await Promise.all([fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]); ca.innerHTML = bOzelRaporlarim(); }
-        else if (id === 'tum-ozel-raporlar') { await Promise.all([fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]); ca.innerHTML = bTumOzelRaporlar(); }
+        else if (id === 'ozel-raporlarim') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await Promise.all([fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]) ca.innerHTML = bOzelRaporlarim(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
+        else if (id === 'tum-ozel-raporlar') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await Promise.all([fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]) ca.innerHTML = bTumOzelRaporlar(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
         else if (id === 'mesaj-gonder') ca.innerHTML = bMesajGonder();
         else if (id === 'hesap-olustur') ca.innerHTML = bHesapOlustur();
         else if (id === 'personel-yonetimi') ca.innerHTML = bPersonelYonetimi();
@@ -294,3 +294,50 @@ const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     async function mesajDetayAc(id) { const m = ALL_MESAJLAR.find(x => x.id === id); if (!m) return; await mesajOkundu(id); renderMesajKutusu(); const aliciLabel = m.alici_tip === 'tekil' ? m.alici_un : m.alici_tip === 'toplu_yetkisiz' ? 'Tüm Yetkisiz Personel' : m.alici_tip === 'toplu_yetkili' ? 'Tüm Yetkili Personel' : 'Tüm Personel'; const body = document.getElementById('mesaj-detay-body'); body.innerHTML = `<div class="mesaj-detay-meta"><span class="mesaj-detay-ml">GÖNDEREN</span><span class="mesaj-detay-mv">${m.gonderen_un}</span><span class="mesaj-detay-ml">ALICI</span><span class="mesaj-detay-mv">${aliciLabel}</span><span class="mesaj-detay-ml">KONU</span><span class="mesaj-detay-mv">${m.konu}</span><span class="mesaj-detay-ml">TARİH</span><span class="mesaj-detay-mv">${fmtMesajTarih(m.created_at)}</span></div><div class="mesaj-detay-icerik">${m.mesaj}</div>${m.gorsel_url ? `<img src="${m.gorsel_url}" class="mesaj-detay-gorsel" alt="Görsel"/>` : ''}`; document.getElementById('mesaj-detay-overlay').classList.add('active'); }
     function bMesajGonder() { const opts = ALL_PROFILES.filter(p => p.username !== CU.username).sort((a, b) => a.username.localeCompare(b.username)).map(p => `<option value="tekil:${p.username}">${p.username} — ${p.displayName || ''} (${p.role})</option>`).join(''); return `<div class="mesaj-form-wrap"><div class="ph"><h2>MESAJ GÖNDER</h2></div><div class="rf" style="margin-top:16px"><div class="fs"><div class="fs-title">// ALICI SEÇİMİ</div><select class="mesaj-alici-select" id="mg-alici"><optgroup label="── TOPLU MESAJ ──"><option value="toplu_yetkisiz">Toplu Mesaj (Tüm Yetkisiz Personel)</option><option value="toplu_yetkili">Toplu Mesaj (Tüm Yetkili Personel)</option><option value="toplu_herkes">Toplu Mesaj (Herkes)</option></optgroup><optgroup label="── BİREYSEL PERSONEL ──">${opts}</optgroup></select></div><div class="fs" style="margin-top:12px"><div class="fs-title">// KONU</div><input type="text" class="ts" id="mg-konu" style="width:100%"/></div><div class="fs" style="margin-top:12px"><div class="fs-title">// MESAJ İÇERİĞİ</div><textarea class="ta" id="mg-mesaj" rows="7" style="width:100%"></textarea></div><div class="fs" style="margin-top:12px"><div class="fs-title">// GÖRSEL EKLE (OPSİYONEL)</div><input type="file" id="mg-gorsel" accept="image/*" class="ts" style="width:100%;cursor:pointer"/></div><button class="mesaj-send-btn" id="mg-send-btn" onclick="mesajGonder()">[ MESAJI GÖNDER ]</button><div id="mg-result" style="margin-top:10px;font-size:10px;display:none"></div></div></div>`; }
     async function mesajGonder() { const aliciVal = document.getElementById('mg-alici').value; const konu = document.getElementById('mg-konu').value.trim(); const mesajText = document.getElementById('mg-mesaj').value.trim(); const gorselFile = document.getElementById('mg-gorsel').files[0]; const resultEl = document.getElementById('mg-result'); const btn = document.getElementById('mg-send-btn'); if (!konu || !mesajText) { resultEl.style.display = 'block'; resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Konu ve mesaj zorunludur.'; return; } btn.disabled = true; resultEl.style.display = 'block'; resultEl.style.color = 'var(--text-dim)'; resultEl.textContent = 'GÖNDERİLİYOR...'; let gorselUrl = null; if (gorselFile) { const ext = gorselFile.name.split('.').pop(); const path = `mesaj_${Date.now()}.${ext}`; const { data: upData, error: upErr } = await _supabase.storage.from('mesaj-gorseller').upload(path, gorselFile, { upsert: true }); if (!upErr) { const { data: urlData } = _supabase.storage.from('mesaj-gorseller').getPublicUrl(path); gorselUrl = urlData?.publicUrl || null; } } const isTekil = aliciVal.startsWith('tekil:'); const row = { gonderen_id: (await _supabase.auth.getUser()).data.user.id, gonderen_un: CU.username, alici_tip: isTekil ? 'tekil' : aliciVal, alici_un: isTekil ? aliciVal.replace('tekil:', '') : null, konu, mesaj: mesajText, gorsel_url: gorselUrl }; const { error } = await sendMesaj(row); btn.disabled = false; if (error) { resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Mesaj gönderilemedi: ' + error.message; } else { resultEl.style.color = 'var(--green)'; resultEl.textContent = '✓ MESAJ BAŞARIYLA GÖNDERİLDİ.'; document.getElementById('mg-konu').value = ''; document.getElementById('mg-mesaj').value = ''; document.getElementById('mg-gorsel').value = ''; } }
+async function onaylaRapor(id, type = 'deney') {
+    let table = type === 'gunluk' ? 'gunluk_raporlar' : 'raporlar';
+    let array = type === 'gunluk' ? ALL_GRAPS : ALL_RAPS;
+    
+    const { error } = await _supabase.from(table).update({ onay_durum: 'onaylandi', onay_yapan: CU.displayName, onay_tarih: new Date().toISOString() }).eq('id', id);
+    if (!error) {
+        let r = array.find(x => x.id === id);
+        if (r) {
+            r.onayDurum = 'onaylandi';
+            r.onayYapan = CU.displayName;
+            r.onayTarih = new Date().toISOString();
+        }
+        if (type === 'gunluk') {
+            if (openGModalId) openGMo(openGModalId);
+            showPage(VF ? 'dosyalar' : 'tum-gunluk');
+        } else {
+            if (openModalId) openMo(openModalId);
+            showPage(VF ? 'dosyalar' : 'tum-raporlar');
+        }
+    } else {
+        alert("Bir hata oluştu.");
+    }
+}
+
+async function reddetRapor(id, type = 'deney') {
+    let table = type === 'gunluk' ? 'gunluk_raporlar' : 'raporlar';
+    let array = type === 'gunluk' ? ALL_GRAPS : ALL_RAPS;
+    
+    const { error } = await _supabase.from(table).update({ onay_durum: 'reddedildi', onay_yapan: CU.displayName, onay_tarih: new Date().toISOString() }).eq('id', id);
+    if (!error) {
+        let r = array.find(x => x.id === id);
+        if (r) {
+            r.onayDurum = 'reddedildi';
+            r.onayYapan = CU.displayName;
+            r.onayTarih = new Date().toISOString();
+        }
+        if (type === 'gunluk') {
+            if (openGModalId) openGMo(openGModalId);
+            showPage(VF ? 'dosyalar' : 'tum-gunluk');
+        } else {
+            if (openModalId) openMo(openModalId);
+            showPage(VF ? 'dosyalar' : 'tum-raporlar');
+        }
+    } else {
+        alert("Bir hata oluştu.");
+    }
+}

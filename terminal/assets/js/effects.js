@@ -4,9 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     crtOverlay.id = 'crt-overlay';
     document.body.appendChild(crtOverlay);
 
-    const noiseOverlay = document.createElement('div');
-    noiseOverlay.className = 'noise-overlay';
-    document.body.appendChild(noiseOverlay);
+    
 });
 
 // === DYNAMIC GLOW CURSOR ===
