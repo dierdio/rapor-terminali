@@ -587,40 +587,82 @@ function showToast(title, msg) {
 }
 
 function initRealtime() {
-    // Listen for new messages
-    _supabase.channel('public:mesajlar')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mesajlar' }, payload => {
-            const m = payload.new;
-            if (m.gonderen_un !== CU.username && (m.alici_un === CU.username || m.alici_tip === 'toplu_herkes' || (m.alici_tip === 'toplu_yetkisiz' && CU.role === 'yetkisiz') || (m.alici_tip === 'toplu_yetkili' && CU.role === 'yetkili'))) {
-                ALL_MESAJLAR.unshift(m);
-                updateMesajBadge();
-                renderMesajKutusu();
-                showToast('YENİ MESAJ', `Gönderen: ${m.gonderen_un}<br>Konu: ${m.konu}`);
-            }
-        })
-        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'mesajlar' }, payload => {
-            const deletedId = payload.old.id;
-            const idx = ALL_MESAJLAR.findIndex(m => m.id === deletedId);
-            if (idx !== -1) {
-                ALL_MESAJLAR.splice(idx, 1);
-                updateMesajBadge();
-                renderMesajKutusu();
-            }
-        })
-        .subscribe();
-        
-    // Listen for report approvals
-    _supabase.channel('public:raporlar')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'raporlar' }, payload => {
-            const r = payload.new;
-            if (r.username === CU.username && r.onay_durum !== 'bekliyor') {
-                // Update local state if needed
-                const local = ALL_RAPS.find(x => x.id === r.id);
-                if (local && local.onayDurum === 'bekliyor') {
-                    local.onayDurum = r.onay_durum;
-                    local.onayYapan = r.onay_yapan;
-                    showToast('RAPOR GÜNCELLEMESİ', `Rapor ID: ${r.id}<br>Durum: ${r.onay_durum.toUpperCase()}`);
+    _supabase.channel('public_schema_all')
+        .on('postgres_changes', { event: '*', schema: 'public' }, payload => {
+            const table = payload.table;
+            const ev = payload.eventType;
+            const nw = payload.new;
+            const old = payload.old;
+
+            // Handle mesajlar
+            if (table === 'mesajlar') {
+                if (ev === 'INSERT') {
+                    if (nw.gonderen_un !== CU.username && (nw.alici_un === CU.username || nw.alici_tip === 'toplu_herkes' || (nw.alici_tip === 'toplu_yetkisiz' && CU.role === 'yetkisiz') || (nw.alici_tip === 'toplu_yetkili' && CU.role === 'yetkili'))) {
+                        ALL_MESAJLAR.unshift(nw);
+                        updateMesajBadge();
+                        renderMesajKutusu();
+                        showToast('YENİ MESAJ', `Gönderen: ${nw.gonderen_un}<br>Konu: ${nw.konu}`);
+                    }
+                } else if (ev === 'DELETE') {
+                    const idx = ALL_MESAJLAR.findIndex(m => m.id === old.id);
+                    if (idx !== -1) {
+                        ALL_MESAJLAR.splice(idx, 1);
+                        updateMesajBadge();
+                        renderMesajKutusu();
+                    }
+                } else if (ev === 'UPDATE') {
+                    const idx = ALL_MESAJLAR.findIndex(m => m.id === nw.id);
+                    if (idx !== -1) ALL_MESAJLAR[idx] = nw;
+                    renderMesajKutusu();
                 }
+            }
+            
+            // Handle reports
+            const tMap = {
+                'raporlar': { arr: typeof ALL_RAPS !== 'undefined' ? ALL_RAPS : [], pages: ['tum-raporlar', 'raporlarim'] },
+                'kaza_raporlari': { arr: typeof ALL_KAZA !== 'undefined' ? ALL_KAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
+                'muhafaza_raporlari': { arr: typeof ALL_MUHAFAZA !== 'undefined' ? ALL_MUHAFAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
+                'ornek_toplama': { arr: typeof ALL_ORNEK_TOPLAMA !== 'undefined' ? ALL_ORNEK_TOPLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
+                'ornek_saklama': { arr: typeof ALL_ORNEK_SAKLAMA !== 'undefined' ? ALL_ORNEK_SAKLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
+                'gunluk_raporlar': { arr: typeof ALL_GRAPS !== 'undefined' ? ALL_GRAPS : [], pages: ['tum-gunluk-raporlar', 'gunluk-raporlarim'] }
+            };
+            
+            if (tMap[table]) {
+                const conf = tMap[table];
+                if (ev === 'INSERT') {
+                    if (!conf.arr.find(x => x.id === nw.id)) {
+                        conf.arr.unshift(nw);
+                        if (nw.username !== CU.username && CU.role === 'yetkili' && table === 'raporlar') {
+                            showToast('YENİ RAPOR GİRİŞİ', `Tür: Deney Raporu<br>Personel: ${nw.username}`);
+                        }
+                    }
+                } else if (ev === 'UPDATE') {
+                    const idx = conf.arr.findIndex(x => x.id === nw.id);
+                    if (idx !== -1) {
+                        conf.arr[idx] = nw;
+                        if (nw.username === CU.username && nw.onay_durum !== 'bekliyor') {
+                            showToast('RAPOR GÜNCELLEMESİ', `Rapor ID: ${nw.id}<br>Durum: ${nw.onay_durum.toUpperCase()}`);
+                        }
+                    } else conf.arr.unshift(nw);
+                } else if (ev === 'DELETE') {
+                    const idx = conf.arr.findIndex(x => x.id === old.id);
+                    if (idx !== -1) conf.arr.splice(idx, 1);
+                }
+                
+                if (window.current_page_id && conf.pages.includes(window.current_page_id)) {
+                    showPage(window.current_page_id);
+                }
+            }
+            
+            // Handle sistem_loglari
+            if (table === 'sistem_loglari') {
+                 if (ev === 'INSERT' && typeof ALL_LOGS !== 'undefined') {
+                     if (!ALL_LOGS.find(x => x.id === nw.id)) {
+                         ALL_LOGS.unshift(nw);
+                         if (ALL_LOGS.length > 100) ALL_LOGS.pop();
+                         if (window.current_page_id === 'loglar') showPage('loglar');
+                     }
+                 }
             }
         })
         .subscribe();
