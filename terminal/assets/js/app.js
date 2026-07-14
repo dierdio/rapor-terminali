@@ -11,12 +11,12 @@ const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     let CU = null, VF = null, VF_TAB = 'deney', imgs = [], tsc = 0, ALL_PROFILES = [], ALL_MESAJLAR = [];
     let ALL_RAPS = [], ALL_GRAPS = [], ALL_KAZA = [], ALL_MUHAFAZA = [], ALL_ORNEK_TOPLAMA = [], ALL_ORNEK_SAKLAMA = [];
 
-    async function fetchRaps() { const { data } = await _supabase.from('raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_RAPS = (data || []).map(dbToRap); return ALL_RAPS; }
+    async function fetchRaps() { if (window.F_fetchRaps) return ALL_RAPS; window.F_fetchRaps = true;  const { data } = await _supabase.from('raporlar').select('id, username, display_name, scd, scp, d_no, sorumlu, rutbe, zb, ze, sd, amac, sonuc, ano, ek, timestamps, onay_durum, onay_yapan, onay_tarih, created_at').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_RAPS = (data || []).map(dbToRap); return ALL_RAPS; }
     async function insertRap(rap) { const { data, error } = await _supabase.from('raporlar').insert([rapToDb(rap)]).select().single(); if (error) return null; const mapped = dbToRap(data); ALL_RAPS.unshift(mapped); return mapped; }
     async function updateRap(id, fields) { const { error } = await _supabase.from('raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_RAPS.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_RAPS[i], fields); } }
     async function deleteRap(id) { const { error } = await _supabase.from('raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_RAPS = ALL_RAPS.filter(x => x.id !== id); }
 
-    async function fetchGRaps() { const { data } = await _supabase.from('gunluk_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_GRAPS = (data || []).map(dbToGRap); return ALL_GRAPS; }
+    async function fetchGRaps() { if (window.F_fetchGRaps) return ALL_GRAPS; window.F_fetchGRaps = true;  const { data } = await _supabase.from('gunluk_raporlar').select('id, username, display_name, scd, scp, d_no, sorumlu, rutbe, zb, ze, sd, amac, sonuc, ano, ek, timestamps, onay_durum, onay_yapan, onay_tarih, created_at').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_GRAPS = (data || []).map(dbToGRap); return ALL_GRAPS; }
     async function insertGRap(rap) { const { data, error } = await _supabase.from('gunluk_raporlar').insert([gRapToDb(rap)]).select().single(); if (error) return null; const mapped = dbToGRap(data); ALL_GRAPS.unshift(mapped); return mapped; }
     async function updateGRap(id, fields) { const { error } = await _supabase.from('gunluk_raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_GRAPS.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_GRAPS[i], fields); } }
     async function deleteGRap(id) { const { error } = await _supabase.from('gunluk_raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_GRAPS = ALL_GRAPS.filter(x => x.id !== id); }
@@ -29,22 +29,22 @@ const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     function getRaps() { return ALL_RAPS; } function getGRaps() { return ALL_GRAPS; }
     function userRapCount(u) { return ALL_RAPS.filter(r => r.username === u).length; } function userGRapCount(u) { return ALL_GRAPS.filter(r => r.username === u).length; } function fmtNo(n) { return String(n).padStart(3, '0') }
 
-    async function fetchKaza() { if (window.F_fetchKaza) return ALL_KAZA; const { data } = await _supabase.from('kaza_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_KAZA = data || []; window.F_fetchKaza = true; return ALL_KAZA; }
+    async function fetchKaza() { if (window.F_fetchKaza) return ALL_KAZA; const { data } = await _supabase.from('kaza_raporlar').select('id, username, display_name, scd, scp, d_no, sorumlu, rutbe, zb, ze, sd, amac, sonuc, ano, ek, timestamps, onay_durum, onay_yapan, onay_tarih, created_at').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_KAZA = data || []; window.F_fetchKaza = true; return ALL_KAZA; }
     async function insertKaza(r) { const { data, error } = await _supabase.from('kaza_raporlar').insert([r]).select().single(); if (error) return null; ALL_KAZA.unshift(data); return data; }
     async function deleteKaza(id) { const { error } = await _supabase.from('kaza_raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_KAZA = ALL_KAZA.filter(x => x.id !== id); }
     async function updateKaza(id, fields) { const { error } = await _supabase.from('kaza_raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_KAZA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_KAZA[i], fields); } }
 
-    async function fetchMuhafaza() { if (window.F_fetchMuhafaza) return ALL_MUHAFAZA; const { data } = await _supabase.from('muhafaza_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_MUHAFAZA = data || []; window.F_fetchMuhafaza = true; return ALL_MUHAFAZA; }
+    async function fetchMuhafaza() { if (window.F_fetchMuhafaza) return ALL_MUHAFAZA; const { data } = await _supabase.from('muhafaza_raporlar').select('id, username, display_name, scd, scp, d_no, sorumlu, rutbe, zb, ze, sd, amac, sonuc, ano, ek, timestamps, onay_durum, onay_yapan, onay_tarih, created_at').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_MUHAFAZA = data || []; window.F_fetchMuhafaza = true; return ALL_MUHAFAZA; }
     async function insertMuhafaza(r) { const { data, error } = await _supabase.from('muhafaza_raporlar').insert([r]).select().single(); if (error) return null; ALL_MUHAFAZA.unshift(data); return data; }
     async function deleteMuhafaza(id) { const { error } = await _supabase.from('muhafaza_raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_MUHAFAZA = ALL_MUHAFAZA.filter(x => x.id !== id); }
     async function updateMuhafaza(id, fields) { const { error } = await _supabase.from('muhafaza_raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_MUHAFAZA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_MUHAFAZA[i], fields); } }
 
-    async function fetchOrnekToplama() { if (window.F_fetchOrnekToplama) return ALL_ORNEK_TOPLAMA; const { data } = await _supabase.from('ornek_toplama_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_ORNEK_TOPLAMA = data || []; window.F_fetchOrnekToplama = true; return ALL_ORNEK_TOPLAMA; }
+    async function fetchOrnekToplama() { if (window.F_fetchOrnekToplama) return ALL_ORNEK_TOPLAMA; const { data } = await _supabase.from('ornek_toplama_raporlar').select('id, username, display_name, scd, scp, d_no, sorumlu, rutbe, zb, ze, sd, amac, sonuc, ano, ek, timestamps, onay_durum, onay_yapan, onay_tarih, created_at').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_ORNEK_TOPLAMA = data || []; window.F_fetchOrnekToplama = true; return ALL_ORNEK_TOPLAMA; }
     async function insertOrnekToplama(r) { const { data, error } = await _supabase.from('ornek_toplama_raporlar').insert([r]).select().single(); if (error) return null; ALL_ORNEK_TOPLAMA.unshift(data); return data; }
     async function deleteOrnekToplama(id) { const { error } = await _supabase.from('ornek_toplama_raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_ORNEK_TOPLAMA = ALL_ORNEK_TOPLAMA.filter(x => x.id !== id); }
     async function updateOrnekToplama(id, fields) { const { error } = await _supabase.from('ornek_toplama_raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_ORNEK_TOPLAMA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_ORNEK_TOPLAMA[i], fields); } }
 
-    async function fetchOrnekSaklama() { if (window.F_fetchOrnekSaklama) return ALL_ORNEK_SAKLAMA; const { data } = await _supabase.from('ornek_saklama_raporlar').select('*').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_ORNEK_SAKLAMA = data || []; window.F_fetchOrnekSaklama = true; return ALL_ORNEK_SAKLAMA; }
+    async function fetchOrnekSaklama() { if (window.F_fetchOrnekSaklama) return ALL_ORNEK_SAKLAMA; const { data } = await _supabase.from('ornek_saklama_raporlar').select('id, username, display_name, scd, scp, d_no, sorumlu, rutbe, zb, ze, sd, amac, sonuc, ano, ek, timestamps, onay_durum, onay_yapan, onay_tarih, created_at').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_ORNEK_SAKLAMA = data || []; window.F_fetchOrnekSaklama = true; return ALL_ORNEK_SAKLAMA; }
     async function insertOrnekSaklama(r) { const { data, error } = await _supabase.from('ornek_saklama_raporlar').insert([r]).select().single(); if (error) return null; ALL_ORNEK_SAKLAMA.unshift(data); return data; }
     async function deleteOrnekSaklama(id) { const { error } = await _supabase.from('ornek_saklama_raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_ORNEK_SAKLAMA = ALL_ORNEK_SAKLAMA.filter(x => x.id !== id); }
     async function updateOrnekSaklama(id, fields) { const { error } = await _supabase.from('ornek_saklama_raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_ORNEK_SAKLAMA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_ORNEK_SAKLAMA[i], fields); } }
@@ -248,8 +248,13 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
     function bOrnekSaklamaYaz() { return `<div><div class="ph"><h2>YENİ ÖRNEK SAKLAMA RAPORU</h2></div><div class="rf"><div class="fs"><div class="fg"><label>SCP</label><select class="ts" id="os-scp">${scpOpts()}</select></div><div class="fg"><label>TARİH/SAAT</label><input type="text" class="tin" id="os-tarih"/></div><div class="fg"><label>NE YAPILACAK</label><textarea class="ta" id="os-ne"></textarea></div><div class="fg"><label>YER</label><textarea class="ta" id="os-yer"></textarea></div></div><button class="sub-btn" onclick="gonderOrnekSaklama()">[ GÖNDER ]</button></div></div>`; }
     async function gonderOrnekSaklama() { const saved = await insertOrnekSaklama({ user_id: CU.userId, username: CU.username, display_name: CU.displayName, ornek_scp: document.getElementById('os-scp').value, ornek_tarih_saat: document.getElementById('os-tarih').value, ne_yapilacak: document.getElementById('os-ne').value, saklama_yeri: document.getElementById('os-yer').value, onay_durum: 'bekliyor' }); if (!saved) { alert('Hata'); return; } alert("Başarılı"); }
 
-    function openMo(id) {
+    async function openMo(id) {
       const r = getRaps().find(x => x.id === id); if (!r) return;
+      if (!r.images_loaded) {
+          const { data } = await _supabase.from('raporlar').select('images').eq('id', id).single();
+          r.images = data ? (data.images || []) : [];
+          r.images_loaded = true;
+      }
       openModalId = id; openGModalId = null;
       const silBtn = document.getElementById('mo-sil-btn');
       if (silBtn) { silBtn.onclick = () => silFromModal(); silBtn.style.display = (CU.role === 'yetkili') ? 'block' : 'none'; }

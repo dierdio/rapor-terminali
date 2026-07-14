@@ -48,7 +48,7 @@ function initAudio() {
     bgmOsc.connect(gainNode);
     gainNode.connect(audioCtx.destination);
     
-    bgmOsc.start();
+    // bgmOsc.start();
     isAudioInitialized = true;
 }
 
