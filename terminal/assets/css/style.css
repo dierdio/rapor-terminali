@@ -153,7 +153,7 @@
     .confirm-evet:hover { background: var(--red); box-shadow: 0 0 12px rgba(255, 34, 34, 0.4) }
     .confirm-hayir { background: none; border: 1px solid var(--green-dark); color: var(--text-dim); font-family: 'VT323', monospace; font-size: 18px; padding: 6px 20px; cursor: pointer; letter-spacing: 2px; transition: all .15s }
     .confirm-hayir:hover { border-color: var(--green); color: var(--green) }
-    .lb { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 2000; align-items: center; justify-content: center; cursor: zoom-out }
+    .lb { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.95); z-index: 20000; align-items: center; justify-content: center; cursor: zoom-out }
     .lb.active { display: flex }
     .lb img { max-width: 90vw; max-height: 88vh; border: 1px solid var(--green); box-shadow: 0 0 40px rgba(0, 255, 65, 0.2); object-fit: contain }
     .lb-close { position: fixed; top: 16px; right: 20px; background: none; border: 1px solid var(--red-dim); color: var(--red); font-family: 'Share Tech Mono', monospace; font-size: 11px; padding: 4px 12px; cursor: pointer; letter-spacing: 1px; z-index: 2001 }

@@ -373,8 +373,12 @@ async function reddetRapor(id, type = 'deney') {
 
 async function silMesaj(id) {
     if (!confirm('Bu mesajı silmek istediğinize emin misiniz?')) return;
-    const { error } = await _supabase.from('mesajlar').delete().eq('id', id);
+    const { data, error } = await _supabase.from('mesajlar').delete().eq('id', id).select();
     if (!error) {
+        if (data && data.length === 0) {
+            alert('Mesaj silinemedi: Supabase veritabanında (RLS) "Delete" yetkiniz kapalı olabilir. Lütfen Supabase panelinden mesajlar tablosu için Delete politikasını (policy) açın.');
+            return;
+        }
         ALL_MESAJLAR = ALL_MESAJLAR.filter(m => m.id !== id);
         updateMesajBadge();
         renderMesajKutusu();
