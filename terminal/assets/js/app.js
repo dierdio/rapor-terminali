@@ -77,6 +77,7 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
       await Promise.all([fetchMesajlar()]); 
       buildSidebar();
       document.getElementById('init-loading').style.display = 'none';
+      setTimeout(() => { Promise.all([fetchRaps(), fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama(), fetchGRaps()]).catch(console.error); }, 1000);
       document.getElementById('main-screen').classList.add('active');
       if (CU.role === 'yetkisiz') { showPage(isS1() ? 'gunluk-yaz' : 'rapor-yaz'); }
       else { showPage('tum-raporlar'); }
@@ -300,8 +301,8 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
     let tabHtml = '';
     if (CU && CU.role === 'yetkili') {
         tabHtml = `<div style="display:flex;gap:10px;margin-bottom:15px;">
-            <button class="${window.MESAJ_TAB === 'gelen' ? 'mesaj-tab-btn active' : 'mesaj-tab-btn'}" onclick="setMesajTab('gelen')" style="flex:1;padding:5px;background:var(--bg);color:var(--green);border:1px solid var(--green);cursor:pointer;${window.MESAJ_TAB === 'gelen' ? 'background:var(--green);color:#000;' : ''}">[ GELEN KUTUSU ]</button>
-            <button class="${window.MESAJ_TAB === 'giden' ? 'mesaj-tab-btn active' : 'mesaj-tab-btn'}" onclick="setMesajTab('giden')" style="flex:1;padding:5px;background:var(--bg);color:var(--green);border:1px solid var(--green);cursor:pointer;${window.MESAJ_TAB === 'giden' ? 'background:var(--green);color:#000;' : ''}">[ GÖNDERİLENLER ]</button>
+            <button class="${window.MESAJ_TAB === 'gelen' ? 'mesaj-tab-btn active' : 'mesaj-tab-btn'}" onclick="setMesajTab('gelen')" style="flex:1;padding:5px;background:var(--bg);color:var(--green);border:1px solid var(--green);cursor:pointer;font-family:inherit;font-size:inherit;${window.MESAJ_TAB === 'gelen' ? 'background:var(--green);color:#000;' : ''}">[ GELEN KUTUSU ]</button>
+            <button class="${window.MESAJ_TAB === 'giden' ? 'mesaj-tab-btn active' : 'mesaj-tab-btn'}" onclick="setMesajTab('giden')" style="flex:1;padding:5px;background:var(--bg);color:var(--green);border:1px solid var(--green);cursor:pointer;font-family:inherit;font-size:inherit;${window.MESAJ_TAB === 'giden' ? 'background:var(--green);color:#000;' : ''}">[ GÖNDERİLENLER ]</button>
         </div>`;
     }
     
