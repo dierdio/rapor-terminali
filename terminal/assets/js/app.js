@@ -92,25 +92,37 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
 
     function buildSidebar() {
       const sb = document.getElementById('sidebar');
-      sb.innerHTML = CU.role === 'yetkisiz'
-        ? (isS1()
+      
+      const iletisimHtml = `<div class="sb-label" style="margin-top:8px">İLETİŞİM</div>
+           <button class="sb-item" id="nav-mesaj-kutu" onclick="toggleMesajKutusu()" style="color:var(--green);border-color:var(--green)">[ MESAJ KUTUSU ] <span id="sb-mesaj-badge" style="display:none;color:var(--bg);background:var(--green);padding:0 5px;border-radius:3px;margin-left:5px;"></span></button>
+           <button class="sb-item" id="nav-mesaj-gonder" onclick="showPage('mesaj-gonder')">MESAJ GÖNDER</button>`;
+           
+      const sistemHtml = `<div class="sb-label" style="margin-top:8px">SİSTEM</div>
+           <button class="sb-item" id="nav-ayarlar" onclick="showPage('ayarlar')">AYARLAR</button>
+           ${CU.role !== 'yetkisiz' ? `<button class="sb-item" id="nav-loglar" onclick="showPage('loglar')">GÜVENLİK LOGLARI</button>` : ''}`;
+
+      let content = "";
+      if (CU.role === 'yetkisiz') {
+          content = isS1()
           ? `<div class="sb-label">PERSONEL ERİŞİMİ</div>
              <div class="sb-tree-group"><button class="sb-tree-toggle open" id="tree-gunluk" onclick="toggleTree('gunluk')"><span>GÜNLÜK RAPORLAR</span><span class="sb-tree-arrow">▶</span></button><div class="sb-tree-children open" id="tree-gunluk-children"><button class="sb-item" id="nav-gunluk-yaz" onclick="showPage('gunluk-yaz')">RAPOR YAZ</button><button class="sb-item" id="nav-gunluk-raporlarim" onclick="showPage('gunluk-raporlarim')">RAPORLARIM</button></div></div>`
           : `<div class="sb-label">PERSONEL ERİŞİMİ</div>
              <div class="sb-tree-group"><button class="sb-tree-toggle open" id="tree-deney" onclick="toggleTree('deney')"><span>DENEY RAPORLARI</span><span class="sb-tree-arrow">▶</span></button><div class="sb-tree-children open" id="tree-deney-children"><button class="sb-item" id="nav-rapor-yaz" onclick="showPage('rapor-yaz')">RAPOR YAZ</button><button class="sb-item" id="nav-raporlarim" onclick="showPage('raporlarim')">RAPORLARIM</button></div></div>
              <div class="sb-tree-group"><button class="sb-tree-toggle" id="tree-gunluk" onclick="toggleTree('gunluk')"><span>GÜNLÜK RAPORLAR</span><span class="sb-tree-arrow">▶</span></button><div class="sb-tree-children" id="tree-gunluk-children"><button class="sb-item" id="nav-gunluk-yaz" onclick="showPage('gunluk-yaz')">RAPOR YAZ</button><button class="sb-item" id="nav-gunluk-raporlarim" onclick="showPage('gunluk-raporlarim')">RAPORLARIM</button></div></div>
              <div class="sb-tree-group"><button class="sb-tree-toggle" id="tree-ozel" onclick="toggleTree('ozel')"><span>ÖZEL RAPORLAR</span><span class="sb-tree-arrow">▶</span></button><div class="sb-tree-children" id="tree-ozel-children"><button class="sb-item" id="nav-ozel-raporlarim" onclick="showPage('ozel-raporlarim')">RAPORLARIM</button><button class="sb-item" id="nav-kaza-yaz" onclick="showPage('kaza-yaz')">KAZA YAZ</button><button class="sb-item" id="nav-muhafaza-yaz" onclick="showPage('muhafaza-yaz')">MUHAFAZA YAZ</button><button class="sb-item" id="nav-ornek-toplama-yaz" onclick="showPage('ornek-toplama-yaz')">ÖRNEK TOPLAMA</button><button class="sb-item" id="nav-ornek-saklama-yaz" onclick="showPage('ornek-saklama-yaz')">ÖRNEK SAKLAMA</button></div></div>
-             <div class="sb-tree-group"><button class="sb-tree-toggle" id="tree-dinamik" onclick="toggleTree('dinamik'); yukleDinamikMenu()"><span>DİNAMİK RAPORLAR</span><span class="sb-tree-arrow">▶</span></button><div class="sb-tree-children" id="tree-dinamik-children"><div class="sb-item" style="font-size:9px">Yükleniyor...</div></div></div>`)
-        : `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
+             <div class="sb-tree-group"><button class="sb-tree-toggle" id="tree-dinamik" onclick="toggleTree('dinamik'); yukleDinamikMenu()"><span>DİNAMİK RAPORLAR</span><span class="sb-tree-arrow">▶</span></button><div class="sb-tree-children" id="tree-dinamik-children"><div class="sb-item" style="font-size:9px">Yükleniyor...</div></div></div>`;
+      } else {
+          content = `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
            <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
            <button class="sb-item" id="nav-tum-ozel-raporlar" onclick="showPage('tum-ozel-raporlar')">TÜM ÖZEL RAPORLAR</button>
            <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>
            <div class="sb-label" style="margin-top:8px">SİSTEM YÖNETİMİ</div>
            <button class="sb-item" id="nav-hesap-olustur" onclick="showPage('hesap-olustur')">HESAP OLUŞTUR</button>
            <button class="sb-item" id="nav-personel-yonetimi" onclick="showPage('personel-yonetimi')">PERSONEL YÖNETİMİ</button>
-           <button class="sb-item" id="nav-format-yonetimi" onclick="showPage('format-yonetimi')">RAPOR FORMATLARI</button>
-           <div class="sb-label" style="margin-top:8px">İLETİŞİM</div>
-           <button class="sb-item" id="nav-mesaj-kutu" onclick="toggleMesajKutusu()" style="color:var(--green);border-color:var(--green)">[ MESAJ KUTUSU ] <span id="sb-mesaj-badge" style="display:none;color:var(--bg);background:var(--green);padding:0 5px;border-radius:3px;margin-left:5px;"></span></button><button class="sb-item" id="nav-mesaj-gonder" onclick="showPage('mesaj-gonder')">MESAJ GÖNDER</button>`;
+           <button class="sb-item" id="nav-format-yonetimi" onclick="showPage('format-yonetimi')">RAPOR FORMATLARI</button>`;
+      }
+      
+      sb.innerHTML = content + iletisimHtml + sistemHtml;
     }
 
     function toggleTree(id) { const toggle = document.getElementById('tree-' + id); const children = document.getElementById('tree-' + id + '-children'); if (!toggle || !children) return; const isOpen = toggle.classList.contains('open'); toggle.classList.toggle('open', !isOpen); children.classList.toggle('open', !isOpen); }
