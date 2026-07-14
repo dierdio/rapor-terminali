@@ -419,6 +419,7 @@ function bAyarlar() {
     const theme = s.theme || 'default';
     const sfx = s.sfx !== false;
     const fastBoot = s.fastBoot === true;
+    const cColor = s.customColor || '#00ff41';
     
     return `<div class="ph"><h2>SİSTEM AYARLARI</h2></div>
     <div class="rf" style="margin-top:16px;">
@@ -428,7 +429,14 @@ function bAyarlar() {
                 <option value="default" ${theme === 'default' ? 'selected' : ''}>Klasik Yeşil (Matrix)</option>
                 <option value="amber" ${theme === 'amber' ? 'selected' : ''}>Kehribar (Eski Sistem)</option>
                 <option value="red" ${theme === 'red' ? 'selected' : ''}>Kırmızı Alarm</option>
+                <option value="blue" ${theme === 'blue' ? 'selected' : ''}>Mavi (Kristal)</option>
+                <option value="custom" ${theme === 'custom' ? 'selected' : ''}>Özel Renk Seç...</option>
             </select>
+            <div id="custom-color-container" style="display:${theme === 'custom' ? 'block' : 'none'}; margin-top:12px; background:var(--bg2); padding:10px; border:1px solid var(--border);">
+                <label style="display:flex;align-items:center;gap:10px;font-size:14px;">RENK KODU: 
+                    <input type="color" id="set-custom-color" value="${cColor}" onchange="saveSettings()" style="cursor:pointer;background:none;border:1px solid var(--border);height:30px;width:60px;" />
+                </label>
+            </div>
         </div>
         <div class="fs" style="margin-top:16px;">
             <div class="fs-title">// SES EFEKTLERİ</div>
@@ -449,19 +457,46 @@ function saveSettings() {
     const theme = document.getElementById('set-theme').value;
     const sfx = document.getElementById('set-sfx').checked;
     const fastBoot = document.getElementById('set-boot').checked;
+    const customColor = document.getElementById('set-custom-color') ? document.getElementById('set-custom-color').value : '#00ff41';
     
-    const settings = { theme, sfx, fastBoot };
+    const settings = { theme, sfx, fastBoot, customColor };
     localStorage.setItem('t62_settings', JSON.stringify(settings));
     applySettings();
 }
 
 function applySettings() {
     const s = JSON.parse(localStorage.getItem('t62_settings') || '{}');
-    document.body.classList.remove('theme-amber', 'theme-red');
-    if (s.theme && s.theme !== 'default') {
+    document.body.classList.remove('theme-amber', 'theme-red', 'theme-blue');
+    
+    // Reset custom properties
+    const props = ['--green','--green-dim','--green-dark','--green-glow','--text','--text-dim','--text-dark','--border','--bg','--bg2','--bg3'];
+    props.forEach(p => document.body.style.removeProperty(p));
+    
+    if (s.theme === 'custom' && s.customColor) {
+        const hex = s.customColor;
+        let r = parseInt(hex.slice(1,3), 16) || 0;
+        let g = parseInt(hex.slice(3,5), 16) || 255;
+        let b = parseInt(hex.slice(5,7), 16) || 65;
+        
+        document.body.style.setProperty('--green', hex);
+        document.body.style.setProperty('--text', hex);
+        document.body.style.setProperty('--green-dim', `rgba(${r},${g},${b},0.6)`);
+        document.body.style.setProperty('--text-dim', `rgba(${r},${g},${b},0.6)`);
+        document.body.style.setProperty('--green-dark', `rgba(${r},${g},${b},0.3)`);
+        document.body.style.setProperty('--text-dark', `rgba(${r},${g},${b},0.3)`);
+        document.body.style.setProperty('--green-glow', `rgba(${r},${g},${b},0.12)`);
+        
+        document.body.style.setProperty('--border', `rgba(${r},${g},${b},0.2)`);
+        document.body.style.setProperty('--bg', `rgba(${r},${g},${b},0.03)`);
+        document.body.style.setProperty('--bg2', `rgba(${r},${g},${b},0.06)`);
+        document.body.style.setProperty('--bg3', `rgba(${r},${g},${b},0.09)`);
+    } else if (s.theme && s.theme !== 'default') {
         document.body.classList.add('theme-' + s.theme);
     }
-    // Update global variables for sound if needed
+    
+    const cc = document.getElementById('custom-color-container');
+    if (cc) cc.style.display = (s.theme === 'custom') ? 'block' : 'none';
+    
     window.T62_SFX = s.sfx !== false;
 }
 

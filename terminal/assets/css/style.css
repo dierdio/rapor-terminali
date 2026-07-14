@@ -305,3 +305,9 @@ body.theme-red {
   --bg: #1a0000; --bg2: #260000; --bg3: #330000; --border: #4d0000;
   --text: #ff2222; --text-dim: #cc0000; --text-dark: #660000;
 }
+
+body.theme-blue {
+  --green: #00aaff; --green-dim: #0077cc; --green-dark: #003366; --green-glow: rgba(0, 170, 255, 0.12);
+  --bg: #00081a; --bg2: #001126; --bg3: #001a33; --border: #002b4d;
+  --text: #00aaff; --text-dim: #0077cc; --text-dark: #003366;
+}

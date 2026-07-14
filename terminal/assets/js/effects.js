@@ -54,7 +54,7 @@ function initAudio() {
 
 // Play a short synth 'blip' for typing
 function playTypingSound() {
-    if (!audioCtx) return;
+    if (!audioCtx || window.T62_SFX === false) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     
@@ -73,7 +73,7 @@ function playTypingSound() {
 
 // Play a 'blip' for hover/focus
 function playHoverSound() {
-    if (!audioCtx) return;
+    if (!audioCtx || window.T62_SFX === false) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     
