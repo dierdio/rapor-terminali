@@ -517,12 +517,13 @@ applySettings();
 async function logAction(aksiyon, detay = '') {
     if (!CU || !CU.username) return;
     try {
-        await _supabase.from('sistem_loglari').insert([{
+        const { error } = await _supabase.from('sistem_loglari').insert([{
             kullanici_ad: CU.username,
             aksiyon: aksiyon,
             detay: detay
         }]);
-    } catch(e) {}
+        if (error) console.error("SUPABASE LOG ERROR:", error);
+    } catch(e) { console.error("LOG EXCEPTION:", e); }
 }
 
 let ALL_LOGS = [];
