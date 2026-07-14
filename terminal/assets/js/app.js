@@ -205,8 +205,8 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
     function rmImg(i) { imgs.splice(i, 1); renderImgs() }
     async function gonder() { const btn = document.querySelector('#ca .sub-btn'); if (btn) { btn.disabled = true; } const saved = await insertRap({ username: CU.username, displayName: CU.displayName, dNo: fmtNo(userRapCount(CU.username) + 1), scd: document.getElementById('r-scd').value, scp: document.getElementById('r-scp').value, sorumlu: document.getElementById('r-sor').value.trim(), rutbe: CU.rutbe || '', zb: document.getElementById('r-zb').value, ze: document.getElementById('r-ze').value, sd: document.getElementById('r-sd').value, amac: document.getElementById('r-amac').value.trim(), sonuc: document.getElementById('r-sonuc').value.trim(), ano: document.getElementById('r-ano').value.trim(), ek: document.getElementById('r-ek').value.trim(), timestamps: getTs(), images: [...imgs] }); if (btn) { btn.disabled = false; } if (!saved) { alert('Hata'); return; } alert('Başarılı!'); }
 
-    function bRaporlarim() { const raps = getRaps().filter(r => r.username === CU.username); let h = `<div><div class="ph"><h2>RAPORLARIM</h2></div><div class="rlist">`; if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else raps.slice().reverse().forEach(r => h += rCard(r, false)); return h + `</div></div>`; }
-    function bTumRaporlar() { const raps = getRaps(); let h = `<div><div class="ph"><h2>TÜM RAPORLAR</h2></div><div class="rlist">`; if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else raps.slice().reverse().forEach(r => h += rCard(r, true)); return h + `</div></div>`; }
+    function bRaporlarim() { const raps = getRaps().filter(r => r.username === CU.username); let h = `<div><div class="ph"><h2>RAPORLARIM</h2></div><div class="rlist">`; if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else { h += getSortSelectHtml(); sortRaps(raps.slice()).forEach(r => h += rCard(r, false)); } return h + `</div></div>`; }
+    function bTumRaporlar() { const raps = getRaps(); let h = `<div><div class="ph"><h2>TÜM RAPORLAR</h2></div><div class="rlist">`; if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else { h += getSortSelectHtml(); sortRaps(raps.slice()).forEach(r => h += rCard(r, true)); } return h + `</div></div>`; }
     function rCard(r, su) { return `<div class="rc"><div class="rc-hdr"><div><div class="rc-id">${r.scd || '—'} // DENEY-${r.dNo || '000'}</div><div class="rc-meta">${su ? `<span style="color:var(--green)">${r.displayName}</span> · ` : ''}${r.tarih}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="rc-scp">${r.scp ? r.scp.split('–')[0].trim() : '—'}</span>${onayDurumBadge(r.onayDurum)}</div></div><div class="rc-body">${r.amac ? r.amac.substring(0, 120) + '…' : ''}</div><div style="display:flex;gap:6px;margin-top:8px"><button class="exp-btn" onclick="openMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>${(CU.role === 'yetkili') ? `<button class="sil-btn" onclick="silRapor(${r.id})">[ SİL ]</button>` : ''}</div></div>`; }
 
     function bDosyalar() {
@@ -355,8 +355,13 @@ async function onaylaRapor(id, type = 'deney') {
             r.onayYapan = CU.displayName;
             r.onayTarih = new Date().toISOString();
         }
-        logAction('RAPOR REDDEDİLDİ', `Rapor ID: ${id} (${type})`);
         logAction('RAPOR ONAYLANDI', `Rapor ID: ${id} (${type})`);
+        if (r && r.username) {
+            _supabase.from('mesajlar').insert([{
+                gonderen_un: 'SİSTEM', alici_un: r.username, alici_tip: 'kisi',
+                konu: 'RAPOR ONAYI', mesaj: `Göndermiş olduğunuz ${id} numaralı ${type.toUpperCase()} raporunuz ${CU.displayName} tarafından ONAYLANMIŞTIR.`
+            }]).then(()=>{});
+        }
         if (type === 'gunluk') {
             if (openGModalId) openGMo(openGModalId);
             showPage(VF ? 'dosyalar' : 'tum-gunluk');
@@ -381,8 +386,13 @@ async function reddetRapor(id, type = 'deney') {
             r.onayYapan = CU.displayName;
             r.onayTarih = new Date().toISOString();
         }
-        logAction('RAPOR REDDEDİLDİ', `Rapor ID: ${id} (${type})`);
         logAction('RAPOR ONAYLANDI', `Rapor ID: ${id} (${type})`);
+        if (r && r.username) {
+            _supabase.from('mesajlar').insert([{
+                gonderen_un: 'SİSTEM', alici_un: r.username, alici_tip: 'kisi',
+                konu: 'RAPOR ONAYI', mesaj: `Göndermiş olduğunuz ${id} numaralı ${type.toUpperCase()} raporunuz ${CU.displayName} tarafından ONAYLANMIŞTIR.`
+            }]).then(()=>{});
+        }
         if (type === 'gunluk') {
             if (openGModalId) openGMo(openGModalId);
             showPage(VF ? 'dosyalar' : 'tum-gunluk');
@@ -633,4 +643,38 @@ async function playBootSequence() {
         await new Promise(r => setTimeout(r, Math.random() * 150 + 50));
     }
     await new Promise(r => setTimeout(r, 400));
+}
+
+
+window.currentSort = 'date-desc';
+function changeSort(val) {
+    window.currentSort = val;
+    showPage(window.current_page_id);
+}
+function sortRaps(rapsArray) {
+    return rapsArray.sort((a, b) => {
+        let vA, vB;
+        if (window.currentSort.startsWith('date')) {
+            // For general reports, use id as fallback for date if timestamp is weird, but they are already mostly sorted by id in JS.
+            vA = a.id || 0;
+            vB = b.id || 0;
+            return window.currentSort === 'date-asc' ? (vA - vB) : (vB - vA);
+        } else if (window.currentSort.startsWith('id')) {
+            // Number extract (dNo or id)
+            vA = parseInt(a.dNo || a.id || 0);
+            vB = parseInt(b.dNo || b.id || 0);
+            return window.currentSort === 'id-asc' ? (vA - vB) : (vB - vA);
+        }
+        return 0;
+    });
+}
+function getSortSelectHtml() {
+    return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px;">
+        <select class="ts" style="width:auto;padding:5px;" onchange="changeSort(this.value)">
+            <option value="date-desc" ${window.currentSort==='date-desc'?'selected':''}>Tarihe Göre (En Yeni)</option>
+            <option value="date-asc" ${window.currentSort==='date-asc'?'selected':''}>Tarihe Göre (En Eski)</option>
+            <option value="id-desc" ${window.currentSort==='id-desc'?'selected':''}>Numaraya Göre (En Yüksek)</option>
+            <option value="id-asc" ${window.currentSort==='id-asc'?'selected':''}>Numaraya Göre (En Düşük)</option>
+        </select>
+    </div>`;
 }
