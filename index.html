@@ -3,77 +3,372 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DIERDIO</title>
+  
+  <!-- Temel SEO Optimizasyonu -->
+  <title>DIERDIO | Rapor Terminali</title>
+  <meta name="description" content="DIERDIO Rapor Terminali - Gelişmiş veri analizi, güvenli sistem erişimi ve akıllı raporlama arayüzü.">
+  <meta name="keywords" content="DIERDIO, rapor, terminal, analiz, veri, dashboard">
+  <meta name="author" content="DIERDIO">
+  
+  <!-- Open Graph / Sosyal Medya Meta Etiketleri -->
+  <meta property="og:title" content="DIERDIO | Rapor Terminali">
+  <meta property="og:description" content="Gelişmiş veri analizi ve raporlama arayüzüne güvenli bağlantı sağlayın.">
+  <meta property="og:type" content="website">
+  <!-- <meta property="og:image" content="resim_url_buraya"> Daha sonra eklenebilir -->
+
+  <!-- Yeni Yazı Tipi: Space Grotesk (Premium ve Teknik bir hissiyat için) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+  
   <style>
-    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #050505; font-family: 'Montserrat', sans-serif; }
+    /* Özel İmleç İçin Varsayılanı Gizle */
+    body, html, a, button {
+      cursor: none !important; 
+    }
+
+    body, html { 
+      margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; 
+      background: #050505; 
+      font-family: 'Space Grotesk', sans-serif; 
+    }
     
+    /* Aurora Arka Plan */
     #aurora {
-      position: absolute; width: 100vw; height: 100vh;
-      /* Mor ve Yeşil Aurora Tonları */
+      position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
       background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), #4a148c, #004d40 40%, #050505 80%);
       transition: background 0.8s cubic-bezier(0.22, 1, 0.36, 1);
       z-index: 0;
     }
 
+    /* Partikül Katmanı */
+    #particles {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      z-index: 1; pointer-events: none;
+    }
+
+    /* İçerik ve Açılış Animasyonu (Intro) */
     .content {
-      position: relative; z-index: 1; display: flex; flex-direction: column; 
+      position: relative; z-index: 2; display: flex; flex-direction: column; 
       align-items: center; justify-content: center; height: 100vh; pointer-events: none;
+      opacity: 0;
+      animation: fadeUpIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+    }
+
+    @keyframes fadeUpIn {
+      0% { opacity: 0; transform: translateY(50px); filter: blur(10px); }
+      100% { opacity: 1; transform: translateY(0); filter: blur(0); }
     }
 
     h1 { 
-      color: #fff; font-size: 5rem; letter-spacing: 20px; 
-      text-transform: uppercase; margin-bottom: 60px; font-weight: 200;
-      text-shadow: 0 0 20px rgba(255,255,255,0.2);
+      color: #fff; font-size: 5.5rem; letter-spacing: 24px; 
+      text-transform: uppercase; margin-bottom: 60px; font-weight: 300;
+      text-shadow: 0 0 30px rgba(255,255,255,0.15);
+      margin-left: 24px; /* Harf aralığı dengesi için */
+    }
+
+    /* 3D Tilt Kart Kapsayıcısı */
+    .tilt-wrapper {
+      pointer-events: auto;
+      perspective: 1200px; /* 3D derinlik */
     }
 
     .card {
-      pointer-events: auto; padding: 20px 40px; background: rgba(255, 255, 255, 0.05); 
-      backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); 
-      border-radius: 30px; color: #fff; text-decoration: none; 
-      font-size: 1rem; letter-spacing: 3px; transition: 0.4s;
+      display: inline-block; padding: 22px 50px; background: rgba(255, 255, 255, 0.03); 
+      backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.08); 
+      border-radius: 12px; color: #fff; text-decoration: none; 
+      font-size: 1.1rem; letter-spacing: 5px; font-weight: 400;
+      transition: background 0.4s, border-color 0.4s, box-shadow 0.4s, transform 0.1s ease-out;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+      transform-style: preserve-3d;
     }
 
     .card:hover { 
-      background: rgba(255, 255, 255, 0.15); 
-      border-color: rgba(0, 255, 65, 0.5); transform: translateY(-5px);
+      background: rgba(255, 255, 255, 0.08); 
+      border-color: rgba(0, 255, 100, 0.3); 
+      box-shadow: 0 20px 50px rgba(0, 255, 100, 0.15);
     }
+    
+    .card span {
+      display: inline-block;
+      transform: translateZ(40px); /* Yazıyı 3D olarak öne çıkarma */
+      pointer-events: none; /* Metnin tıklamayı engellememesi için */
+    }
+
+    /* Sosyal Medya İkonları */
+    .socials {
+      position: absolute; bottom: 40px; z-index: 2; width: 100%;
+      display: flex; justify-content: center; gap: 30px; pointer-events: auto;
+      opacity: 0;
+      animation: fadeUpIn 1.5s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards; /* Daha geç belirir */
+    }
+
+    .socials a {
+      color: rgba(255,255,255,0.4); width: 22px; height: 22px;
+      transition: color 0.3s, transform 0.3s, filter 0.3s;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .socials a:hover {
+      color: #fff; transform: translateY(-5px) scale(1.1);
+      filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+    }
+
+    /* Özel İmleç (Artı / Crosshair şekli) */
+    #custom-cursor {
+      position: fixed; top: 0; left: 0; width: 24px; height: 24px;
+      pointer-events: none; z-index: 9999;
+      mix-blend-mode: difference; /* Arka plana göre zıt renk alır */
+      transform: translate(-50%, -50%);
+      transition: width 0.2s cubic-bezier(0.16, 1, 0.3, 1), height 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.05s linear;
+    }
+    
+    #custom-cursor::before, #custom-cursor::after {
+      content: ''; position: absolute; background: #fff;
+    }
+    #custom-cursor::before { top: 50%; left: 0; width: 100%; height: 2px; transform: translateY(-50%); }
+    #custom-cursor::after { top: 0; left: 50%; width: 2px; height: 100%; transform: translateX(-50%); }
+
+    /* Hover durumunda imleç şekli (Çarpı olur ve büyür) */
+    body.hovering #custom-cursor {
+      width: 45px; height: 45px;
+      transform: translate(-50%, -50%) rotate(45deg); 
+    }
+
   </style>
 </head>
 <body>
+  <!-- Özel İmleç Elementi -->
+  <div id="custom-cursor"></div>
+
+  <!-- Arka Planlar -->
   <div id="aurora"></div>
+  <canvas id="particles"></canvas>
   
+  <!-- Ana İçerik -->
   <div class="content">
     <h1>DIERDIO</h1>
-    <a href="/terminal/" class="card">RAPOR TERMİNALİ</a>
+    <div class="tilt-wrapper">
+      <a href="/terminal/" class="card" id="terminal-btn">
+        <span>RAPOR TERMİNALİ</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Sosyal Medya İkonları -->
+  <div class="socials">
+    <a href="https://github.com/dierdio" target="_blank" aria-label="GitHub">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+    </a>
+    <a href="https://www.reddit.com/user/Dierdio/" target="_blank" aria-label="Reddit">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>
+    </a>
+    <a href="https://open.spotify.com/user/319eWJh8J6Mx9DrGXKEv3ojKmqw8Cv9pscK" target="_blank" aria-label="Spotify">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.54.659.301 1.02zm1.44-3.3c-.301.42-.84.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.6.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.56.3z"/></svg>
+    </a>
+    <a href="https://steamcommunity.com/profiles/76561199138026802" target="_blank" aria-label="Steam">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11.979 0C5.361 0 0 5.363 0 11.983c0 2.91 1.036 5.584 2.759 7.669l5.228-3.088c.045-.251.139-.49.281-.705.516-.78 1.439-1.241 2.39-1.127l3.69-5.321c-.015-.121-.023-.243-.023-.368 0-2.222 1.802-4.025 4.025-4.025 2.222 0 4.025 1.803 4.025 4.025 0 2.222-1.803 4.025-4.025 4.025-1.517 0-2.836-.838-3.513-2.072l-3.57 5.147c.231.282.385.626.43.997.108.868-.231 1.705-.883 2.247-1.196 1.002-2.998.84-4.01-.362a2.825 2.825 0 01-.611-1.218L.742 20.26A11.932 11.932 0 0011.979 24c6.618 0 11.979-5.363 11.979-11.983C23.958 5.363 18.597 0 11.979 0zM18.33 6.305c1.514 0 2.742 1.229 2.742 2.743s-1.228 2.742-2.742 2.742-2.742-1.228-2.742-2.742 1.228-2.743 2.742-2.743zm-10.74 8.784a1.868 1.868 0 00.569 1.137c.725.736 1.916.745 2.653.021.737-.724.747-1.905.021-2.642a1.868 1.868 0 00-1.137-.568l.45-1.258c.846.108 1.637.525 2.199 1.173a3.02 3.02 0 01.353 3.652c-.752 1.263-2.316 1.777-3.619 1.15-1.303-.627-1.838-2.21-1.173-3.486l-.316-.179z"/></svg>
+    </a>
+    <a href="https://x.com/dierdio07" target="_blank" aria-label="X (Twitter)">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    </a>
+    <a href="https://www.youtube.com/channel/UCSYOeU6GMmO5jCQgwqmgq-g" target="_blank" aria-label="YouTube">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+    </a>
   </div>
 
   <script>
-    const aurora = document.getElementById('aurora');
-    let targetX = 50, targetY = 50;
-    let currentX = 50, currentY = 50;
+    // --- ÖZEL İMLEÇ (CUSTOM CURSOR) ---
+    const cursor = document.getElementById('custom-cursor');
+    const interactables = document.querySelectorAll('a, button');
+    let cursorX = window.innerWidth / 2;
+    let cursorY = window.innerHeight / 2;
 
-    // Fare hareketini dinle
+    document.addEventListener('mousemove', (e) => {
+      cursorX = e.clientX;
+      cursorY = e.clientY;
+      cursor.style.transform = `translate(calc(${cursorX}px - 50%), calc(${cursorY}px - 50%))`;
+    });
+
+    interactables.forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+    });
+
+    // --- SES EFEKTİ (WEB AUDIO API) ---
+    // Hiçbir harici dosya yüklemeden saf kod ile rahatlatıcı tıklama sesi üretimi
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function playClickSound() {
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      // Ahşap / Tok (Thock) sesi
+      const osc = audioCtx.createOscillator();
+      const oscGain = audioCtx.createGain();
+      
+      // Triangle daha yumuşak ama yine de vurucu bir ton verir
+      osc.type = 'triangle'; 
+      // Düşük frekanstan daha da düşük frekansa hızlı geçiş (tokluk hissi)
+      osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.08);
+      
+      oscGain.gain.setValueAtTime(1.2, audioCtx.currentTime);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+
+      // Hafif bir tıkırtı eklemek için kısa noise (Ahşap çarpışma detayı)
+      const bufferSize = audioCtx.sampleRate * 0.04;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      
+      // Gürültüyü çok tiz olmaması için lowpass veya bandpass filtreden geçiriyoruz
+      const noiseFilter = audioCtx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = 600; // Kulak tırmalamayan, tok bir bant
+      
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(2.0, audioCtx.currentTime); // Hacimli ama kısa
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+
+      osc.connect(oscGain);
+      oscGain.connect(audioCtx.destination);
+      
+      noise.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(audioCtx.destination);
+      
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.08);
+      noise.start();
+      noise.stop(audioCtx.currentTime + 0.04);
+    }
+
+    document.getElementById('terminal-btn').addEventListener('click', (e) => {
+      playClickSound();
+      // Yönlendirmeyi çok hafif geciktirerek sesin duyulmasını garanti altına alabilirsiniz
+      // Ancak varsayılan yönlendirme de gayet hızlı ve iyi çalışacaktır.
+    });
+
+    // --- AURORA ARKA PLAN HAREKETİ ---
+    const aurora = document.getElementById('aurora');
+    let targetX = 50, targetY = 50, currentX = 50, currentY = 50;
+
     document.addEventListener('mousemove', (e) => {
       targetX = (e.clientX / window.innerWidth) * 100;
       targetY = (e.clientY / window.innerHeight) * 100;
     });
 
-    // Hareket etmediğinde de akmasını sağlayan döngü
-    function animate() {
-      // Fare yoksa veya duruyorsa kendi kendine hareket et (sinüs dalgaları ile)
-      const time = Date.now() * 0.0005;
-      const driftX = Math.sin(time) * 10;
-      const driftY = Math.cos(time) * 10;
+    function animateAurora() {
+      const time = Date.now() * 0.0003;
+      const driftX = Math.sin(time) * 15;
+      const driftY = Math.cos(time) * 15;
       
-      // Mevcut konumu hedefe doğru yumuşakça yaklaştır (Lerp efekti)
-      currentX += (targetX + driftX - currentX) * 0.05;
-      currentY += (targetY + driftY - currentY) * 0.05;
+      currentX += (targetX + driftX - currentX) * 0.04;
+      currentY += (targetY + driftY - currentY) * 0.04;
       
       aurora.style.setProperty('--x', `${currentX}%`);
       aurora.style.setProperty('--y', `${currentY}%`);
-      requestAnimationFrame(animate);
+      requestAnimationFrame(animateAurora);
     }
-    animate();
+    animateAurora();
+
+    // --- 3D TILT EFEKTİ ---
+    const card = document.querySelector('.card');
+    const tiltWrapper = document.querySelector('.tilt-wrapper');
+
+    tiltWrapper.addEventListener('mousemove', (e) => {
+      const rect = tiltWrapper.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      
+      // X ve Y rotasyon hesaplamaları. Bölünen sayı büyüdükçe efekt yumuşar.
+      const rotateX = ((y - centerY) / centerY) * -12; 
+      const rotateY = ((x - centerX) / centerX) * 12;
+
+      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+
+    tiltWrapper.addEventListener('mouseleave', () => {
+      // Fare karttan ayrıldığında eski konumuna yumuşak geçiş
+      card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    });
+
+    // --- PARTİCÜL (PARTICLE) EFEKTİ (CANVAS) ---
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    let particlesArray = [];
+    
+    function setCanvasSize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    setCanvasSize();
+    window.addEventListener('resize', () => {
+      setCanvasSize();
+      initParticles();
+    });
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 1.5 + 0.5; // Çok ince, yıldız tozu gibi
+        this.speedX = Math.random() * 0.4 - 0.2;
+        this.speedY = Math.random() * -0.5 - 0.1; // Hafifçe yukarı doğru uçuş
+        this.opacity = Math.random() * 0.5 + 0.1;
+      }
+      update() {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        
+        // Ekrana yukarıdan çıkarsa aşağıdan başlat
+        if (this.y < 0) {
+          this.y = canvas.height;
+          this.x = Math.random() * canvas.width;
+        }
+        // Sağa sola çıkış
+        if (this.x > canvas.width) this.x = 0;
+        else if (this.x < 0) this.x = canvas.width;
+      }
+      draw() {
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      particlesArray = [];
+      // Ekran genişliğine göre partikül sayısı hesaplama
+      const numberOfParticles = Math.min(Math.floor(window.innerWidth / 15), 150); 
+      for (let i = 0; i < numberOfParticles; i++) {
+        particlesArray.push(new Particle());
+      }
+    }
+
+    function animateParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particlesArray.length; i++) {
+        particlesArray[i].update();
+        particlesArray[i].draw();
+      }
+      requestAnimationFrame(animateParticles);
+    }
+
+    initParticles();
+    animateParticles();
   </script>
 </body>
 </html>
