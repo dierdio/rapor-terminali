@@ -110,7 +110,7 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
            <button class="sb-item" id="nav-personel-yonetimi" onclick="showPage('personel-yonetimi')">PERSONEL YÖNETİMİ</button>
            <button class="sb-item" id="nav-format-yonetimi" onclick="showPage('format-yonetimi')">RAPOR FORMATLARI</button>
            <div class="sb-label" style="margin-top:8px">İLETİŞİM</div>
-           <button class="sb-item" id="nav-mesaj-gonder" onclick="showPage('mesaj-gonder')">MESAJ GÖNDER</button>`;
+           <button class="sb-item" id="nav-mesaj-kutu" onclick="toggleMesajKutusu()" style="color:var(--green);border-color:var(--green)">[ MESAJ KUTUSU ] <span id="sb-mesaj-badge" style="display:none;color:var(--bg);background:var(--green);padding:0 5px;border-radius:3px;margin-left:5px;"></span></button><button class="sb-item" id="nav-mesaj-gonder" onclick="showPage('mesaj-gonder')">MESAJ GÖNDER</button>`;
     }
 
     function toggleTree(id) { const toggle = document.getElementById('tree-' + id); const children = document.getElementById('tree-' + id + '-children'); if (!toggle || !children) return; const isOpen = toggle.classList.contains('open'); toggle.classList.toggle('open', !isOpen); children.classList.toggle('open', !isOpen); }
