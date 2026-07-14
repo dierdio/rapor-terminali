@@ -620,30 +620,39 @@ function initRealtime() {
             // Handle reports
             const tMap = {
                 'raporlar': { arr: typeof ALL_RAPS !== 'undefined' ? ALL_RAPS : [], pages: ['tum-raporlar', 'raporlarim'] },
-                'kaza_raporlari': { arr: typeof ALL_KAZA !== 'undefined' ? ALL_KAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
-                'muhafaza_raporlari': { arr: typeof ALL_MUHAFAZA !== 'undefined' ? ALL_MUHAFAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
-                'ornek_toplama': { arr: typeof ALL_ORNEK_TOPLAMA !== 'undefined' ? ALL_ORNEK_TOPLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
-                'ornek_saklama': { arr: typeof ALL_ORNEK_SAKLAMA !== 'undefined' ? ALL_ORNEK_SAKLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
+                'kaza_raporlar': { arr: typeof ALL_KAZA !== 'undefined' ? ALL_KAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
+                'muhafaza_raporlar': { arr: typeof ALL_MUHAFAZA !== 'undefined' ? ALL_MUHAFAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
+                'ornek_toplama_raporlar': { arr: typeof ALL_ORNEK_TOPLAMA !== 'undefined' ? ALL_ORNEK_TOPLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
+                'ornek_saklama_raporlar': { arr: typeof ALL_ORNEK_SAKLAMA !== 'undefined' ? ALL_ORNEK_SAKLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
                 'gunluk_raporlar': { arr: typeof ALL_GRAPS !== 'undefined' ? ALL_GRAPS : [], pages: ['tum-gunluk-raporlar', 'gunluk-raporlarim'] }
             };
             
             if (tMap[table]) {
                 const conf = tMap[table];
+                let mappedNw = nw;
+                if (table === 'raporlar' && typeof dbToRap === 'function') mappedNw = dbToRap(nw);
+                if (table === 'gunluk_raporlar' && typeof dbToGRap === 'function') mappedNw = dbToGRap(nw);
+                
                 if (ev === 'INSERT') {
-                    if (!conf.arr.find(x => x.id === nw.id)) {
-                        conf.arr.unshift(nw);
-                        if (nw.username !== CU.username && CU.role === 'yetkili' && table === 'raporlar') {
-                            showToast('YENİ RAPOR GİRİŞİ', `Tür: Deney Raporu<br>Personel: ${nw.username}`);
+                    if (!conf.arr.find(x => x.id === mappedNw.id)) {
+                        conf.arr.unshift(mappedNw);
+                        if (mappedNw.username !== CU.username && CU.role === 'yetkili' && table === 'raporlar') {
+                            showToast('YENİ RAPOR GİRİŞİ', `Tür: Deney Raporu<br>Personel: ${mappedNw.username}`);
                         }
                     }
                 } else if (ev === 'UPDATE') {
-                    const idx = conf.arr.findIndex(x => x.id === nw.id);
-                    if (idx !== -1) {
-                        conf.arr[idx] = nw;
-                        if (nw.username === CU.username && nw.onay_durum !== 'bekliyor') {
-                            showToast('RAPOR GÜNCELLEMESİ', `Rapor ID: ${nw.id}<br>Durum: ${nw.onay_durum.toUpperCase()}`);
-                        }
-                    } else conf.arr.unshift(nw);
+                    if (nw.is_deleted === true) {
+                        const idx = conf.arr.findIndex(x => (old && x.id === old.id) || x.id === nw.id);
+                        if (idx !== -1) conf.arr.splice(idx, 1);
+                    } else {
+                        const idx = conf.arr.findIndex(x => x.id === mappedNw.id);
+                        if (idx !== -1) {
+                            conf.arr[idx] = mappedNw;
+                            if (mappedNw.username === CU.username && mappedNw.onayDurum && mappedNw.onayDurum !== 'bekliyor') {
+                                showToast('RAPOR GÜNCELLEMESİ', `Rapor ID: ${mappedNw.id}<br>Durum: ${mappedNw.onayDurum.toUpperCase()}`);
+                            }
+                        } else conf.arr.unshift(mappedNw);
+                    }
                 } else if (ev === 'DELETE') {
                     const idx = conf.arr.findIndex(x => x.id === old.id);
                     if (idx !== -1) conf.arr.splice(idx, 1);
