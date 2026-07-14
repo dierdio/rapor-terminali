@@ -554,7 +554,7 @@ function bLoglar() {
 
 
 function showToast(title, msg) {
-    if (window.T62_SFX !== false && window.playClick) {
+    if (window.T62_SFX !== false) {
         // play a sound if we have one
         const actx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = actx.createOscillator();
@@ -596,6 +596,15 @@ function initRealtime() {
                 updateMesajBadge();
                 renderMesajKutusu();
                 showToast('YENİ MESAJ', `Gönderen: ${m.gonderen_un}<br>Konu: ${m.konu}`);
+            }
+        })
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'mesajlar' }, payload => {
+            const deletedId = payload.old.id;
+            const idx = ALL_MESAJLAR.findIndex(m => m.id === deletedId);
+            if (idx !== -1) {
+                ALL_MESAJLAR.splice(idx, 1);
+                updateMesajBadge();
+                renderMesajKutusu();
             }
         })
         .subscribe();
