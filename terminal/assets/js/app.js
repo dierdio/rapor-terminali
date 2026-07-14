@@ -12,7 +12,7 @@ const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     let ALL_RAPS = [], ALL_GRAPS = [], ALL_KAZA = [], ALL_MUHAFAZA = [], ALL_ORNEK_TOPLAMA = [], ALL_ORNEK_SAKLAMA = [];
 
     async function fetchRaps() { if (window.F_fetchRaps) return ALL_RAPS; window.F_fetchRaps = true;  const { data } = await _supabase.from('raporlar').select('id, username, display_name, scd, scp, d_no, sorumlu, rutbe, zb, ze, sd, amac, sonuc, ano, ek, timestamps, onay_durum, onay_yapan, onay_tarih, created_at').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_RAPS = (data || []).map(dbToRap); return ALL_RAPS; }
-    async function insertRap(rap) { const { data, error } = await _supabase.from('raporlar').insert([rapToDb(rap)]).select().single(); if (error) return null; const mapped = dbToRap(data); ALL_RAPS.unshift(mapped); return mapped; }
+    async function insertRap(rap) { const { data, error } = await _supabase.from('raporlar').insert([rapToDb(rap)]).select().single(); if (error) return null; const mapped = dbToRap(data); ALL_RAPS.unshift(mapped); logAction('YENİ RAPOR OLUŞTURULDU', `Deney Raporu ID: ${mapped.id}`); return mapped; }
     async function updateRap(id, fields) { const { error } = await _supabase.from('raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_RAPS.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_RAPS[i], fields); } }
     async function deleteRap(id) { const { error } = await _supabase.from('raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_RAPS = ALL_RAPS.filter(x => x.id !== id); }
 
@@ -49,9 +49,9 @@ const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     async function deleteOrnekSaklama(id) { const { error } = await _supabase.from('ornek_saklama_raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_ORNEK_SAKLAMA = ALL_ORNEK_SAKLAMA.filter(x => x.id !== id); }
     async function updateOrnekSaklama(id, fields) { const { error } = await _supabase.from('ornek_saklama_raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_ORNEK_SAKLAMA.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_ORNEK_SAKLAMA[i], fields); } }
 
-    async function fetchMesajlar() { if (window.F_fetchMesajlar) return ALL_MESAJLAR; const { data } = await _supabase.from('mesajlar').select('*').order('created_at', { ascending: false }); ALL_MESAJLAR = data || []; updateMesajBadge(); window.F_fetchMesajlar = true; return ALL_MESAJLAR; }
+    async function fetchMesajlar() { if (window.F_fetchMesajlar) return ALL_MESAJLAR; const { data } = await _supabase.from('mesajlar').select('*').order('created_at', { ascending: false }); ALL_MESAJLAR = data || []; updateMesajBadge(); initRealtime(); logAction('SİSTEME GİRİŞ YAPILDI', 'Başarılı giriş'); window.F_fetchMesajlar = true; return ALL_MESAJLAR; }
     async function sendMesaj(row) { const { data, error } = await _supabase.from('mesajlar').insert([row]).select().single(); if (!error && data) ALL_MESAJLAR.unshift(data); return { data, error }; }
-    async function mesajOkundu(id) { const m = ALL_MESAJLAR.find(x => x.id === id); if (!m) return; const list = Array.isArray(m.okundu_by) ? m.okundu_by : []; if (list.includes(CU.username)) return; const updated = [...list, CU.username]; await _supabase.from('mesajlar').update({ okundu_by: updated }).eq('id', id); m.okundu_by = updated; updateMesajBadge(); }
+    async function mesajOkundu(id) { const m = ALL_MESAJLAR.find(x => x.id === id); if (!m) return; const list = Array.isArray(m.okundu_by) ? m.okundu_by : []; if (list.includes(CU.username)) return; const updated = [...list, CU.username]; await _supabase.from('mesajlar').update({ okundu_by: updated }).eq('id', id); m.okundu_by = updated; updateMesajBadge(); initRealtime(); logAction('SİSTEME GİRİŞ YAPILDI', 'Başarılı giriş'); }
     
 window.MESAJ_TAB = window.MESAJ_TAB || 'gelen';
 window.setMesajTab = function(tab) { window.MESAJ_TAB = tab; renderMesajKutusu(); };
@@ -68,7 +68,7 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
       ALL_PROFILES = (allProfiles || []).map(p => ({ username: p.username, role: p.role, displayName: p.display_name, rutbe: p.rutbe, rutbeKat: p.rutbe_kat, robloxId: p.roblox_id }));
       const myRow = (allProfiles || []).find(x => x.id === userId);
       const profileData = ALL_PROFILES.find(p => p.username === myRow?.username);
-      if (!profileData) { await _supabase.auth.signOut(); window.location.replace('/terminal/login.html'); return; }
+      if (!profileData) { await logAction('SİSTEMDEN ÇIKIŞ YAPILDI'); await _supabase.auth.signOut(); window.location.replace('/terminal/login.html'); return; }
       CU = Object.freeze({ userId, username: profileData.username, role: profileData.role, displayName: profileData.displayName, rutbe: profileData.rutbe, rutbeKat: profileData.rutbeKat, robloxId: profileData.robloxId, email: data.session.user.email });
       document.getElementById('hun').textContent = CU.displayName;
       const re = document.getElementById('hrutbe');
@@ -76,7 +76,7 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
       
       await Promise.all([fetchMesajlar()]); 
       buildSidebar();
-      document.getElementById('init-loading').style.display = 'none';
+      await playBootSequence(); document.getElementById('init-loading').style.display = 'none';
       setTimeout(() => { Promise.all([fetchRaps(), fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama(), fetchGRaps()]).catch(console.error); }, 1000);
       document.getElementById('main-screen').classList.add('active');
       if (CU.role === 'yetkisiz') { showPage(isS1() ? 'gunluk-yaz' : 'rapor-yaz'); }
@@ -88,7 +88,7 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
     setInterval(updateClock, 1000);
     (function () { const el = document.getElementById('build-ver-badge'); if (el) el.innerHTML = 'BUILD <span>' + BUILD_VERSION + '</span>'; })();
 
-    async function doLogout() { await _supabase.auth.signOut(); CU = null; VF = null; imgs = []; tsc = 0; window.location.replace('/terminal/login.html'); }
+    async function doLogout() { await logAction('SİSTEMDEN ÇIKIŞ YAPILDI'); await _supabase.auth.signOut(); CU = null; VF = null; imgs = []; tsc = 0; window.location.replace('/terminal/login.html'); }
 
     function buildSidebar() {
       const sb = document.getElementById('sidebar');
@@ -143,6 +143,8 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
         else if (id === 'ozel-raporlarim') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await Promise.all([fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]); if (window.current_page_id !== id) return; ca.innerHTML = bOzelRaporlarim(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
         else if (id === 'tum-ozel-raporlar') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await Promise.all([fetchKaza(), fetchMuhafaza(), fetchOrnekToplama(), fetchOrnekSaklama()]); if (window.current_page_id !== id) return; ca.innerHTML = bTumOzelRaporlar(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
         else if (id === 'mesaj-gonder') ca.innerHTML = bMesajGonder();
+        else if (id === 'ayarlar') ca.innerHTML = bAyarlar();
+        else if (id === 'loglar') { ca.innerHTML = '<div class="ph"><h2>YÜKLENİYOR...</h2></div>'; setTimeout(async () => { await fetchLoglar(); if (window.current_page_id !== id) return; ca.innerHTML = bLoglar(); if(window.typeText) ca.querySelectorAll('.ph h2').forEach(h=>window.typeText(h,h.textContent,20)); }, 10); }
         else if (id === 'hesap-olustur') ca.innerHTML = bHesapOlustur();
         else if (id === 'personel-yonetimi') ca.innerHTML = bPersonelYonetimi();
         else if (id === 'format-yonetimi') { ca.innerHTML = bFormatYonetimi(); fetchFormatlar(); }
@@ -328,7 +330,7 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
 }
     async function mesajDetayAc(id) { const m = ALL_MESAJLAR.find(x => x.id === id); if (!m) return; await mesajOkundu(id); renderMesajKutusu(); const aliciLabel = m.alici_tip === 'tekil' ? m.alici_un : m.alici_tip === 'toplu_yetkisiz' ? 'Tüm Yetkisiz Personel' : m.alici_tip === 'toplu_yetkili' ? 'Tüm Yetkili Personel' : 'Tüm Personel'; const body = document.getElementById('mesaj-detay-body'); const profil = ALL_PROFILES.find(p => p.username === m.gonderen_un); const kodAdi = profil ? profil.displayName : m.gonderen_un; body.innerHTML = `<div class="mesaj-detay-meta"><span class="mesaj-detay-ml">GÖNDEREN</span><span class="mesaj-detay-mv">${kodAdi}</span><span class="mesaj-detay-ml">ALICI</span><span class="mesaj-detay-mv">${aliciLabel}</span><span class="mesaj-detay-ml">KONU</span><span class="mesaj-detay-mv">${m.konu}</span><span class="mesaj-detay-ml">TARİH</span><span class="mesaj-detay-mv">${fmtMesajTarih(m.created_at)}</span></div><div class="mesaj-detay-icerik">${m.mesaj}</div>${m.gorsel_url ? `<img src="${m.gorsel_url}" class="mesaj-detay-gorsel" alt="Görsel" onclick="openLb('${m.gorsel_url}')" style="cursor:zoom-in;max-width:100%;"/>` : ''}${m.gonderen_un === CU.username ? `<div style="margin-top:15px;text-align:right;"><button class="sil-btn" onclick="silMesaj(${m.id})" style="font-size:10px">[ MESAJI SİL ]</button></div>` : ''}`; document.getElementById('mesaj-detay-overlay').classList.add('active'); }
     function bMesajGonder() { const opts = ALL_PROFILES.filter(p => p.username !== CU.username).sort((a, b) => a.username.localeCompare(b.username)).map(p => `<option value="tekil:${p.username}">${p.username} — ${p.displayName || ''} (${p.role})</option>`).join(''); return `<div class="mesaj-form-wrap"><div class="ph"><h2>MESAJ GÖNDER</h2></div><div class="rf" style="margin-top:16px"><div class="fs"><div class="fs-title">// ALICI SEÇİMİ</div><select class="mesaj-alici-select" id="mg-alici"><optgroup label="── TOPLU MESAJ ──"><option value="toplu_yetkisiz">Toplu Mesaj (Tüm Yetkisiz Personel)</option><option value="toplu_yetkili">Toplu Mesaj (Tüm Yetkili Personel)</option><option value="toplu_herkes">Toplu Mesaj (Herkes)</option></optgroup><optgroup label="── BİREYSEL PERSONEL ──">${opts}</optgroup></select></div><div class="fs" style="margin-top:12px"><div class="fs-title">// KONU</div><input type="text" class="ts" id="mg-konu" style="width:100%"/></div><div class="fs" style="margin-top:12px"><div class="fs-title">// MESAJ İÇERİĞİ</div><textarea class="ta" id="mg-mesaj" rows="7" style="width:100%"></textarea></div><div class="fs" style="margin-top:12px"><div class="fs-title">// GÖRSEL EKLE (OPSİYONEL)</div><input type="file" id="mg-gorsel" accept="image/*" class="ts" style="width:100%;cursor:pointer"/></div><button class="mesaj-send-btn" id="mg-send-btn" onclick="mesajGonder()">[ MESAJI GÖNDER ]</button><div id="mg-result" style="margin-top:10px;font-size:10px;display:none"></div></div></div>`; }
-    async function mesajGonder() { const aliciVal = document.getElementById('mg-alici').value; const konu = document.getElementById('mg-konu').value.trim(); const mesajText = document.getElementById('mg-mesaj').value.trim(); const gorselFile = document.getElementById('mg-gorsel').files[0]; const resultEl = document.getElementById('mg-result'); const btn = document.getElementById('mg-send-btn'); if (!konu || !mesajText) { resultEl.style.display = 'block'; resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Konu ve mesaj zorunludur.'; return; } btn.disabled = true; resultEl.style.display = 'block'; resultEl.style.color = 'var(--text-dim)'; resultEl.textContent = 'GÖNDERİLİYOR...'; let gorselUrl = null; if (gorselFile) { gorselUrl = await new Promise((resolve) => { const r = new FileReader(); r.onload = ev => resolve(ev.target.result); r.readAsDataURL(gorselFile); }); } const isTekil = aliciVal.startsWith('tekil:'); const row = { gonderen_id: (await _supabase.auth.getUser()).data.user.id, gonderen_un: CU.username, alici_tip: isTekil ? 'tekil' : aliciVal, alici_un: isTekil ? aliciVal.replace('tekil:', '') : null, konu, mesaj: mesajText, gorsel_url: gorselUrl }; const { error } = await sendMesaj(row); btn.disabled = false; if (error) { resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Mesaj gönderilemedi: ' + error.message; } else { resultEl.style.color = 'var(--green)'; resultEl.textContent = '✓ MESAJ BAŞARIYLA GÖNDERİLDİ.'; document.getElementById('mg-konu').value = ''; document.getElementById('mg-mesaj').value = ''; document.getElementById('mg-gorsel').value = ''; } }
+    async function mesajGonder() { const aliciVal = document.getElementById('mg-alici').value; const konu = document.getElementById('mg-konu').value.trim(); const mesajText = document.getElementById('mg-mesaj').value.trim(); const gorselFile = document.getElementById('mg-gorsel').files[0]; const resultEl = document.getElementById('mg-result'); const btn = document.getElementById('mg-send-btn'); if (!konu || !mesajText) { resultEl.style.display = 'block'; resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Konu ve mesaj zorunludur.'; return; } btn.disabled = true; resultEl.style.display = 'block'; resultEl.style.color = 'var(--text-dim)'; resultEl.textContent = 'GÖNDERİLİYOR...'; let gorselUrl = null; if (gorselFile) { gorselUrl = await new Promise((resolve) => { const r = new FileReader(); r.onload = ev => resolve(ev.target.result); r.readAsDataURL(gorselFile); }); } const isTekil = aliciVal.startsWith('tekil:'); const row = { gonderen_id: (await _supabase.auth.getUser()).data.user.id, gonderen_un: CU.username, alici_tip: isTekil ? 'tekil' : aliciVal, alici_un: isTekil ? aliciVal.replace('tekil:', '') : null, konu, mesaj: mesajText, gorsel_url: gorselUrl }; const { error } = await sendMesaj(row); btn.disabled = false; if (error) { resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Mesaj gönderilemedi: ' + error.message; } else { resultEl.style.color = 'var(--green)'; resultEl.textContent = '✓ MESAJ BAŞARIYLA GÖNDERİLDİ.'; logAction('MESAJ GÖNDERİLDİ', `Alıcı: ${row.alici_tip} ${row.alici_un || ''}`); document.getElementById('mg-konu').value = ''; document.getElementById('mg-mesaj').value = ''; document.getElementById('mg-gorsel').value = ''; } }
 async function onaylaRapor(id, type = 'deney') {
     let table = type === 'gunluk' ? 'gunluk_raporlar' : 'raporlar';
     let array = type === 'gunluk' ? ALL_GRAPS : ALL_RAPS;
@@ -341,6 +343,8 @@ async function onaylaRapor(id, type = 'deney') {
             r.onayYapan = CU.displayName;
             r.onayTarih = new Date().toISOString();
         }
+        logAction('RAPOR REDDEDİLDİ', `Rapor ID: ${id} (${type})`);
+        logAction('RAPOR ONAYLANDI', `Rapor ID: ${id} (${type})`);
         if (type === 'gunluk') {
             if (openGModalId) openGMo(openGModalId);
             showPage(VF ? 'dosyalar' : 'tum-gunluk');
@@ -365,6 +369,8 @@ async function reddetRapor(id, type = 'deney') {
             r.onayYapan = CU.displayName;
             r.onayTarih = new Date().toISOString();
         }
+        logAction('RAPOR REDDEDİLDİ', `Rapor ID: ${id} (${type})`);
+        logAction('RAPOR ONAYLANDI', `Rapor ID: ${id} (${type})`);
         if (type === 'gunluk') {
             if (openGModalId) openGMo(openGModalId);
             showPage(VF ? 'dosyalar' : 'tum-gunluk');
@@ -386,10 +392,168 @@ async function silMesaj(id) {
             return;
         }
         ALL_MESAJLAR = ALL_MESAJLAR.filter(m => m.id !== id);
-        updateMesajBadge();
+        updateMesajBadge(); initRealtime(); logAction('SİSTEME GİRİŞ YAPILDI', 'Başarılı giriş');
         renderMesajKutusu();
         closeMesajDetay();
+        logAction('MESAJ SİLİNDİ', `Mesaj ID: ${id}`);
     } else {
         alert('Mesaj silinirken hata oluştu.');
     }
+}
+
+
+function bAyarlar() {
+    const s = JSON.parse(localStorage.getItem('t62_settings') || '{}');
+    const theme = s.theme || 'default';
+    const sfx = s.sfx !== false;
+    const fastBoot = s.fastBoot === true;
+    
+    return `<div class="ph"><h2>SİSTEM AYARLARI</h2></div>
+    <div class="rf" style="margin-top:16px;">
+        <div class="fs">
+            <div class="fs-title">// ARAYÜZ TEMASI</div>
+            <select id="set-theme" class="ts" onchange="saveSettings()">
+                <option value="default" ${theme === 'default' ? 'selected' : ''}>Klasik Yeşil (Matrix)</option>
+                <option value="amber" ${theme === 'amber' ? 'selected' : ''}>Kehribar (Eski Sistem)</option>
+                <option value="red" ${theme === 'red' ? 'selected' : ''}>Kırmızı Alarm</option>
+            </select>
+        </div>
+        <div class="fs" style="margin-top:16px;">
+            <div class="fs-title">// SES EFEKTLERİ</div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <input type="checkbox" id="set-sfx" onchange="saveSettings()" ${sfx ? 'checked' : ''} /> Ses efektleri açık (Tıklama, Bildirim vs.)
+            </label>
+        </div>
+        <div class="fs" style="margin-top:16px;">
+            <div class="fs-title">// HIZLI BAŞLATMA</div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+                <input type="checkbox" id="set-boot" onchange="saveSettings()" ${fastBoot ? 'checked' : ''} /> Boot simülasyonunu atla
+            </label>
+        </div>
+    </div>`;
+}
+
+function saveSettings() {
+    const theme = document.getElementById('set-theme').value;
+    const sfx = document.getElementById('set-sfx').checked;
+    const fastBoot = document.getElementById('set-boot').checked;
+    
+    const settings = { theme, sfx, fastBoot };
+    localStorage.setItem('t62_settings', JSON.stringify(settings));
+    applySettings();
+}
+
+function applySettings() {
+    const s = JSON.parse(localStorage.getItem('t62_settings') || '{}');
+    document.body.classList.remove('theme-amber', 'theme-red');
+    if (s.theme && s.theme !== 'default') {
+        document.body.classList.add('theme-' + s.theme);
+    }
+    // Update global variables for sound if needed
+    window.T62_SFX = s.sfx !== false;
+}
+
+// Ensure settings are applied on load
+applySettings();
+
+
+async function logAction(aksiyon, detay = '') {
+    if (!CU || !CU.username) return;
+    try {
+        await _supabase.from('sistem_loglari').insert([{
+            kullanici_ad: CU.username,
+            aksiyon: aksiyon,
+            detay: detay
+        }]);
+    } catch(e) {}
+}
+
+let ALL_LOGS = [];
+async function fetchLoglar() {
+    const { data } = await _supabase.from('sistem_loglari').select('*').order('created_at', { ascending: false }).limit(100);
+    ALL_LOGS = data || [];
+    return ALL_LOGS;
+}
+
+function bLoglar() {
+    let h = `<div class="ph"><h2>SİSTEM GÜVENLİK LOGLARI</h2></div><div class="rlist" style="margin-top:10px;">`;
+    if (!ALL_LOGS.length) {
+        h += `<div class="empty">LOG BULUNAMADI.</div>`;
+    } else {
+        h += ALL_LOGS.map(l => {
+            const date = new Date(l.created_at).toLocaleString('tr-TR');
+            return `<div class="rc" style="display:flex;flex-direction:column;gap:5px;border-left-color:var(--amber);">
+                <div style="font-size:10px;color:var(--text-dim)">[ ${date} ] — KULLANICI: <span style="color:var(--green)">${l.kullanici_ad}</span></div>
+                <div style="font-size:14px;color:var(--text)">◈ ${l.aksiyon}</div>
+                ${l.detay ? `<div style="font-size:11px;color:var(--text-dim)">Detay: ${l.detay}</div>` : ''}
+            </div>`;
+        }).join('');
+    }
+    h += `</div>`;
+    return h;
+}
+
+
+function showToast(title, msg) {
+    if (window.T62_SFX !== false && window.playClick) {
+        // play a sound if we have one
+        const actx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = actx.createOscillator();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(800, actx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, actx.currentTime + 0.1);
+        const g = actx.createGain();
+        g.gain.setValueAtTime(0.1, actx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.2);
+        osc.connect(g); g.connect(actx.destination);
+        osc.start(); osc.stop(actx.currentTime + 0.2);
+    }
+    const c = document.getElementById('toast-container');
+    if (!c) return;
+    const t = document.createElement('div');
+    t.style.background = 'var(--bg2)';
+    t.style.border = '1px solid var(--green)';
+    t.style.padding = '10px 15px';
+    t.style.color = 'var(--green)';
+    t.style.fontFamily = "'VT323', monospace";
+    t.style.boxShadow = '0 0 10px var(--green-glow)';
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(100%)';
+    t.style.transition = 'all 0.3s ease';
+    t.innerHTML = `<div style="font-weight:bold;font-size:16px;border-bottom:1px solid var(--border);padding-bottom:5px;margin-bottom:5px;">◈ ${title}</div><div style="font-size:14px;color:var(--text-dim)">${msg}</div>`;
+    c.appendChild(t);
+    
+    setTimeout(() => { t.style.opacity = '1'; t.style.transform = 'translateX(0)'; }, 50);
+    setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateX(100%)'; setTimeout(() => t.remove(), 300); }, 5000);
+}
+
+function initRealtime() {
+    // Listen for new messages
+    _supabase.channel('public:mesajlar')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'mesajlar' }, payload => {
+            const m = payload.new;
+            if (m.gonderen_un !== CU.username && (m.alici_un === CU.username || m.alici_tip === 'toplu_herkes' || (m.alici_tip === 'toplu_yetkisiz' && CU.role === 'yetkisiz') || (m.alici_tip === 'toplu_yetkili' && CU.role === 'yetkili'))) {
+                ALL_MESAJLAR.unshift(m);
+                updateMesajBadge();
+                renderMesajKutusu();
+                showToast('YENİ MESAJ', `Gönderen: ${m.gonderen_un}<br>Konu: ${m.konu}`);
+            }
+        })
+        .subscribe();
+        
+    // Listen for report approvals
+    _supabase.channel('public:raporlar')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'raporlar' }, payload => {
+            const r = payload.new;
+            if (r.username === CU.username && r.onay_durum !== 'bekliyor') {
+                // Update local state if needed
+                const local = ALL_RAPS.find(x => x.id === r.id);
+                if (local && local.onayDurum === 'bekliyor') {
+                    local.onayDurum = r.onay_durum;
+                    local.onayYapan = r.onay_yapan;
+                    showToast('RAPOR GÜNCELLEMESİ', `Rapor ID: ${r.id}<br>Durum: ${r.onay_durum.toUpperCase()}`);
+                }
+            }
+        })
+        .subscribe();
 }

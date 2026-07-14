@@ -294,3 +294,14 @@ body.red-alert-mode {
     --text: var(--red);
     --text-dim: #cc0000;
 }
+
+body.theme-amber {
+  --green: #ffb000; --green-dim: #cca800; --green-dark: #665000; --green-glow: rgba(255, 176, 0, 0.12);
+  --bg: #0a0800; --bg2: #141000; --bg3: #1f1800; --border: #332800;
+  --text: #ffb000; --text-dim: #cca800; --text-dark: #665000;
+}
+body.theme-red {
+  --green: #ff2222; --green-dim: #cc0000; --green-dark: #660000; --green-glow: rgba(255, 34, 34, 0.12);
+  --bg: #1a0000; --bg2: #260000; --bg3: #330000; --border: #4d0000;
+  --text: #ff2222; --text-dim: #cc0000; --text-dark: #660000;
+}
