@@ -3,28 +3,32 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tesis-62 // Giriş</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet"/>
-  
+  <title>SCP Foundation // Ethics Committee Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/terminal/assets/css/style.css" />
 </head>
 <body style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;">
-  <div class="scanline"></div>
-  <div class="build-ver" id="build-ver-badge"></div>
+  <!-- Network Canvas Background -->
+  <canvas id="network-canvas"></canvas>
+
+  <div class="build-ver" id="build-ver-badge" style="position:fixed;bottom:10px;right:10px;font-size:10px;color:var(--text-muted);"></div>
+  
   <div class="login-wrap">
     <div class="login-box">
-      <div class="login-hdr"><div class="login-hdr-title">◈ TESİS-62 ◈</div><div class="login-hdr-sub">BİLİM VE ARAŞTIRMA DEPARTMANI // RAPOR TERMİNALİ</div></div>
+      <div class="login-hdr">
+        <div class="login-hdr-title">SCP Foundation</div>
+        <div class="login-hdr-sub">Ethics Committee // Authorized Access Only</div>
+      </div>
       <div class="login-body">
-        <pre class="login-ascii">
-╔══════════════════════════════════╗
-║            VAKIF 62           ║
-║   !YETKİSİZ ERİŞİM YASAKTIR!   ║
-╚══════════════════════════════════╝
-        </pre>
-        <div class="login-warn">⚠ TÜM GİRİŞ DENEMELERİ KAYIT ALTINA ALINMAKTADIR ⚠</div>
-        <div class="tf"><label>PERSONEL KİMLİK KODU</label><input type="text" class="ti" id="lu" placeholder="kullanici_adi" autocomplete="off"/></div>
-        <div class="tf"><label>ERİŞİM KODU</label><input type="password" class="ti" id="lp" placeholder="••••••••"/></div>
-        <button class="login-btn" id="login-btn" onclick="doLogin()">[ SİSTEME GİR ]<span class="cursor"></span></button>
+        <div class="tf">
+          <label>PERSONEL KİMLİK KODU</label>
+          <input type="text" class="ti" id="lu" placeholder="kullanici_adi" autocomplete="off"/>
+        </div>
+        <div class="tf">
+          <label>ERİŞİM KODU</label>
+          <input type="password" class="ti" id="lp" placeholder="••••••••"/>
+        </div>
+        <button class="login-btn" id="login-btn" onclick="doLogin()">SİSTEME GİR</button>
         <div class="login-err" id="lerr">ERİŞİM REDDEDİLDİ. KİMLİK DOĞRULANAMADI.</div>
         <div class="login-info" id="login-info" style="display:none">KİMLİK DOĞRULANIYOR...</div>
       </div>
@@ -33,7 +37,69 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-<script src="/terminal/assets/js/effects.js"></script>
+  <script src="/terminal/assets/js/effects.js"></script>
   <script src="/terminal/assets/js/login.js"></script>
+  
+  <script>
+    // Simple Network Canvas Background for Login
+    const canvas = document.getElementById('network-canvas');
+    const ctx = canvas.getContext('2d');
+    let width, height;
+    let particles = [];
+    
+    function initCanvas() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+        particles = [];
+        const numParticles = Math.min(Math.floor(width * height / 15000), 100);
+        for(let i=0; i<numParticles; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: Math.random() * 1.5 + 0.5
+            });
+        }
+    }
+    
+    function drawCanvas() {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.strokeStyle = 'rgba(255, 71, 71, 0.15)'; // Reddish lines
+        
+        particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            if(p.x < 0 || p.x > width) p.vx *= -1;
+            if(p.y < 0 || p.y > height) p.vy *= -1;
+            
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        
+        for(let i=0; i<particles.length; i++) {
+            for(let j=i+1; j<particles.length; j++) {
+                const dx = particles[i].x - particles[j].x;
+                const dy = particles[i].y - particles[j].y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if(dist < 120) {
+                    ctx.beginPath();
+                    ctx.moveTo(particles[i].x, particles[i].y);
+                    ctx.lineTo(particles[j].x, particles[j].y);
+                    ctx.lineWidth = 1 - dist/120;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(drawCanvas);
+    }
+    
+    window.addEventListener('resize', initCanvas);
+    initCanvas();
+    drawCanvas();
+  </script>
 </body>
 </html>
