@@ -3,185 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SCP Foundation // Ethics Committee Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <title>Tesis-62 // Rapor Terminali</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet" />
+  
   <link rel="stylesheet" href="/terminal/assets/css/style.css" />
 </head>
 <body>
-  <!-- Network Canvas Background -->
-  <canvas id="network-canvas"></canvas>
-
-  <div class="build-ver" id="build-ver-badge"></div>
-  
-  <!-- Removed init-loading overlay for the sleek modern feel, but keeping element so JS doesn't break -->
-  <div id="init-loading" style="display:none;">
-    <div id="boot-text"></div>
-    <div id="boot-cursor"></div>
+  <div class="scanline"></div><div class="build-ver" id="build-ver-badge"></div>
+  <div id="init-loading" style="position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:99999;padding:20px;font-family:'VT323',monospace;color:var(--green)">
+    <div style="font-size:28px;letter-spacing:4px;text-shadow:0 0 12px var(--green);margin-bottom:20px;">◈ TESİS-62 KERNEL v5.1.0 ◈</div>
+    <div id="boot-text" style="font-size:16px;line-height:1.5;white-space:pre-wrap;text-align:left;width:100%;"></div>
+    <div id="boot-cursor" style="width:10px;height:20px;background:var(--green);animation:blink 1s infinite;margin-top:5px;display:none;"></div>
   </div>
-
   <div class="main-screen" id="main-screen">
-    <!-- Top Header -->
     <div class="hdr">
       <div class="hdr-top">
-        <div class="hdr-logo">
-          <div class="scp-badge">SCP</div>
-          <div>
-            <div class="hdr-main">SCP Foundation</div>
-            <div class="hdr-t">Ethics Committee</div>
-          </div>
-        </div>
-        <div class="hdr-right">
-          <div class="hdr-clock" id="hclock">--:--:--</div>
-          
-          <button class="mesaj-bell-btn" onclick="toggleMesajKutusu()" title="Bildirimler / Mesajlar" style="background:transparent;border:none;cursor:pointer;position:relative;">
-            <svg viewBox="0 0 24 24" fill="var(--text-muted)" width="20" height="20">
-               <path d="M12 22C13.1 22 14 21.1 14 20H10C10 21.1 10.9 22 12 22ZM18 16V11C18 7.93 16.36 5.36 13.5 4.68V4C13.5 3.17 12.83 2.5 12 2.5C11.17 2.5 10.5 3.17 10.5 4V4.68C7.63 5.36 6 7.92 6 11V16L4 18V19H20V18L18 16Z"/>
-            </svg>
-            <span class="mesaj-badge" id="mesaj-badge" style="display:none;position:absolute;top:-5px;right:-5px;background:var(--red);color:white;border-radius:50%;font-size:10px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;"></span>
-          </button>
-
-          <button class="logout-btn" onclick="doLogout()">Çıkış Yap</button>
-          
-          <div class="hdr-user">
-            <div class="hdr-user-info">
-              <span id="hun">—</span>
-              <span id="hrutbe">—</span>
-            </div>
-            <div class="user-avatar">
-              <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-            </div>
-          </div>
-        </div>
+        <div class="hdr-logo"><div class="scp-badge">SCP</div><div><div class="hdr-t">TESİS-62 // BİLİM VE ARAŞTIRMA DEPARTMANI</div><div class="hdr-main">RAPOR TERMİNALİ v5.1.0</div></div></div>
+        <div class="hdr-right"><div class="hdr-clock" id="hclock">--:--:--</div><button class="mesaj-bell-btn" onclick="toggleMesajKutusu()" title="Mesaj Kutusu"><span class="mesaj-bell-icon">✉</span><span class="mesaj-badge" id="mesaj-badge" style="display:none"></span></button>
+        <div class="hdr-user"><span><span class="sdot"></span>BAĞLI:</span><span id="hun" style="color:var(--green)">—</span><span id="hrutbe" style="font-size:9px">—</span><button class="logout-btn" onclick="doLogout()">[ ÇIKIŞ ]</button></div></div>
       </div>
-      <div class="hdr-status" style="display:none;"></div>
+      <div class="hdr-status"><span><span class="sdot"></span>SİSTEM AKTİF</span><span><span class="sdot red"></span>GİZLİLİK: SEVİYE-4</span></div>
     </div>
-
-    <!-- Main Content Body -->
-    <div class="main-body">
-      <!-- Sidebar is empty by default, populated dynamically for sub-menus -->
-      <div class="sidebar" id="sidebar"></div>
-      
-      <div class="content" id="ca"></div>
-    </div>
+    <div class="main-body"><div class="sidebar" id="sidebar"></div><div class="content" id="ca"></div></div>
   </div>
-
-  <!-- Bottom Navigation Dock -->
-  <div class="bottom-nav-dock">
-    <button class="nav-icon-btn active" id="dock-dashboard" onclick="showPage(CU && CU.role==='yetkisiz' ? (isS1()?'gunluk-yaz':'rapor-yaz') : 'tum-raporlar'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Ana Sayfa">
-      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-submit" onclick="showPage('rapor-yaz'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Yeni Rapor Oluştur">
-      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-reports" onclick="showPage('raporlarim'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Raporlarım">
-      <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-format" onclick="showPage('format-yonetimi'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Format Yönetimi">
-      <svg viewBox="0 0 24 24"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-activity" onclick="showPage('tum-ozel-raporlar'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Aktivite ve Duyurular">
-      <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-mail" onclick="showPage('mesaj-gonder'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Mesaj Gönder">
-      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-users" onclick="showPage('personel-yonetimi'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Personel Yönetimi">
-      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-news" onclick="showPage('dinamik'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Haberler / Duyurular (Dinamik Raporlar)">
-      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 9h-2V5h2v6zm0 4h-2v-2h2v2z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-bell" onclick="toggleMesajKutusu()" title="Mesaj Kutusu">
-      <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-files" onclick="showPage('dosyalar'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Dosyalar">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-    </button>
-    <button class="nav-icon-btn" id="dock-settings" onclick="showPage('ayarlar'); document.querySelectorAll('.nav-icon-btn').forEach(b=>b.classList.remove('active')); this.classList.add('active');" title="Ayarlar">
-      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.49-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
-    </button>
-  </div>
-
-  <!-- Keep old modals and overlays exactly the same structure for JS functionality -->
-  <div class="mesaj-overlay" id="mesaj-overlay" onclick="closeMesajOnOutside(event)"><div class="mesaj-panel" id="mesaj-panel"><div class="mesaj-panel-hdr"><span class="mesaj-panel-title">MESAJ KUTUSU</span><button class="mesaj-panel-close" onclick="closeMesajKutusu()">✕</button></div><div class="mesaj-panel-body" id="mesaj-panel-body"></div></div></div>
-  <div class="mesaj-overlay" id="mesaj-detay-overlay" onclick="closeMesajDetayOnOutside(event)"><div class="mesaj-panel" id="mesaj-detay-panel"><div class="mesaj-panel-hdr"><span class="mesaj-panel-title">MESAJ DETAYI</span><button class="mesaj-panel-close" onclick="closeMesajDetay()">✕</button></div><div class="mesaj-panel-body" id="mesaj-detay-body"></div></div></div>
-  <div class="confirm-overlay" id="confirm-overlay"><div class="confirm-box"><div class="confirm-hdr"><div class="confirm-hdr-title">KAYIT SİLME İŞLEMİ</div></div><div class="confirm-body"><div class="confirm-warn">Bu kayıt kalıcı olarak silinecektir. Bu işlem geri alınamaz.</div><div class="confirm-target" id="confirm-target">—</div><div class="confirm-btns"><button class="confirm-evet" onclick="confirmSil()">EVET, SİL</button><button class="confirm-hayir" onclick="cancelSil()">İPTAL</button></div></div></div></div>
-  <div class="lb" id="lb" onclick="closeLb()"><button class="lb-close" onclick="closeLb()">✕</button><img id="lb-img" src="" alt="" /><div class="lb-hint">ESC veya tıkla — kapat</div></div>
-  <div class="mo" id="mo" onclick="closeMo(event)"><div class="mb"><div class="mh"><div class="mt" id="mt">RAPOR DETAYI</div><div style="display:flex;gap:6px;align-items:center"><button class="sil-btn" id="mo-sil-btn" onclick="silFromModal()" style="font-size:10px">SİL</button><button class="mc" onclick="closeMoDirect()">✕</button></div></div><div class="mbody" id="mbody"></div></div></div>
+  <div class="mesaj-overlay" id="mesaj-overlay" onclick="closeMesajOnOutside(event)"><div class="mesaj-panel" id="mesaj-panel"><div class="mesaj-panel-hdr"><span class="mesaj-panel-title">◈ MESAJ KUTUSU</span><button class="mesaj-panel-close" onclick="closeMesajKutusu()">✕</button></div><div class="mesaj-panel-body" id="mesaj-panel-body"></div></div></div>
+  <div class="mesaj-overlay" id="mesaj-detay-overlay" onclick="closeMesajDetayOnOutside(event)"><div class="mesaj-panel" id="mesaj-detay-panel"><div class="mesaj-panel-hdr"><span class="mesaj-panel-title">◈ MESAJ DETAYI</span><button class="mesaj-panel-close" onclick="closeMesajDetay()">✕</button></div><div class="mesaj-panel-body" id="mesaj-detay-body"></div></div></div>
+  <div class="confirm-overlay" id="confirm-overlay"><div class="confirm-box"><div class="confirm-hdr"><div class="confirm-hdr-title">⚠ KAYIT SİLME İŞLEMİ</div></div><div class="confirm-body"><div class="confirm-warn">Bu kayıt kalıcı olarak silinecektir. Bu işlem geri alınamaz.</div><div class="confirm-target" id="confirm-target">—</div><div class="confirm-btns"><button class="confirm-evet" onclick="confirmSil()">[ EVET, SİL ]</button><button class="confirm-hayir" onclick="cancelSil()">[ İPTAL ]</button></div></div></div></div>
+  <div class="lb" id="lb" onclick="closeLb()"><button class="lb-close" onclick="closeLb()">[ KAPAT ]</button><img id="lb-img" src="" alt="" /><div class="lb-hint">ESC veya tıkla — kapat</div></div>
+  <div class="mo" id="mo" onclick="closeMo(event)"><div class="mb"><div class="mh"><div class="mt" id="mt">RAPOR DETAYI</div><div style="display:flex;gap:6px;align-items:center"><button class="sil-btn" id="mo-sil-btn" onclick="silFromModal()" style="font-size:10px">[ SİL ]</button><button class="mc" onclick="closeMoDirect()">[ KAPAT ]</button></div></div><div class="mbody" id="mbody"></div></div></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <script src="/terminal/assets/js/effects.js"></script>
+<script src="/terminal/assets/js/effects.js"></script>
   <script src="/terminal/assets/js/app.js"></script>
-  <div id="toast-container" style="position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;"></div>
-
-  <script>
-    // Simple Network Canvas Background for Terminal
-    const canvas = document.getElementById('network-canvas');
-    const ctx = canvas.getContext('2d');
-    let width, height;
-    let particles = [];
-    
-    function initCanvas() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-        particles = [];
-        const numParticles = Math.min(Math.floor(width * height / 12000), 120);
-        for(let i=0; i<numParticles; i++) {
-            particles.push({
-                x: Math.random() * width,
-                y: Math.random() * height,
-                vx: (Math.random() - 0.5) * 0.4,
-                vy: (Math.random() - 0.5) * 0.4,
-                radius: Math.random() * 1.5 + 0.5,
-                color: Math.random() > 0.8 ? 'rgba(255, 71, 71, 0.8)' : 'rgba(255, 255, 255, 0.4)'
-            });
-        }
-    }
-    
-    function drawCanvas() {
-        ctx.clearRect(0, 0, width, height);
-        
-        particles.forEach(p => {
-            p.x += p.vx;
-            p.y += p.vy;
-            if(p.x < 0 || p.x > width) p.vx *= -1;
-            if(p.y < 0 || p.y > height) p.vy *= -1;
-            
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-            ctx.fillStyle = p.color;
-            ctx.fill();
-        });
-        
-        for(let i=0; i<particles.length; i++) {
-            for(let j=i+1; j<particles.length; j++) {
-                const dx = particles[i].x - particles[j].x;
-                const dy = particles[i].y - particles[j].y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if(dist < 150) {
-                    ctx.beginPath();
-                    ctx.moveTo(particles[i].x, particles[i].y);
-                    ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.lineWidth = 1 - dist/150;
-                    
-                    if (particles[i].color === 'rgba(255, 71, 71, 0.8)' || particles[j].color === 'rgba(255, 71, 71, 0.8)') {
-                        ctx.strokeStyle = `rgba(255, 71, 71, ${0.2 * (1 - dist/150)})`;
-                    } else {
-                        ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - dist/150)})`;
-                    }
-                    
-                    ctx.stroke();
-                }
-            }
-        }
-        requestAnimationFrame(drawCanvas);
-    }
-    
-    window.addEventListener('resize', initCanvas);
-    initCanvas();
-    drawCanvas();
-  </script>
+<div id="toast-container" style="position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;"></div>
 </body>
 </html>
