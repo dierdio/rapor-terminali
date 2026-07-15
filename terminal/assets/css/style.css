@@ -148,7 +148,8 @@ html, body {
     border-radius: 20px; 
     padding: 30px; 
     box-shadow: 0 8px 32px 0 rgba(0,0,0,0.4);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s, transform 0.1s ease-out;
 }
 .rf:hover { border-color: rgba(255,255,255,0.15); box-shadow: 0 12px 40px 0 rgba(0,0,0,0.5); transform: translateY(-2px); }
 .rf { max-width: 100%; }
@@ -234,7 +235,8 @@ html, body {
     backdrop-filter: blur(20px) saturate(150%);
     border-radius: 16px;
     border: 1px solid var(--glass-border);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s, transform 0.1s ease-out;
 }
 .rc:hover { transform: translateY(-4px) scale(1.01); box-shadow: 0 20px 40px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.3); background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%); }
 .rc-hdr { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
@@ -261,7 +263,8 @@ html, body {
     border: 1px solid var(--glass-border); border-radius: 20px; 
     padding: 24px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 8px;
     backdrop-filter: blur(20px) saturate(150%);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transform-style: preserve-3d;
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s, transform 0.1s ease-out;
 }
 .fi:hover { border-color: rgba(255,255,255,0.3); transform: translateY(-6px) scale(1.02); box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
 .fi-icon { font-size: 32px; margin-bottom: 8px; color: var(--text-main); }
@@ -325,8 +328,10 @@ html, body {
     background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 100%);
     backdrop-filter: blur(30px) saturate(200%); -webkit-backdrop-filter: blur(30px) saturate(200%);
     border: 1px solid rgba(255,255,255,0.15); border-radius: 24px; 
-    box-shadow: 0 25px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2); overflow: hidden;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
     animation: loginFloat 6s ease-in-out infinite;
+    transform-style: preserve-3d;
+    transition: background 0.4s, border-color 0.4s, box-shadow 0.4s, transform 0.1s ease-out;
 }
 @keyframes loginFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 .login-hdr { padding: 30px 20px 10px; text-align: center; background: none; border: none; }
@@ -511,3 +516,9 @@ html, body {
 
 /* Clear fixes for utility classes added by script */
 .ph h2::before, .sb-item::before, .exp-btn::before, .sil-btn::before { content: none !important; }
+
+/* 3D Inner Pop-out Effect */
+.rc > *, .rf > *, .fi > *, .login-box > * {
+    transform: translateZ(30px);
+    pointer-events: auto; /* Ensure inner elements are clickable despite 3D transform */
+}
