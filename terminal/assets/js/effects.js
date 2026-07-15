@@ -140,6 +140,7 @@ window.triggerRedAlert = function(active) {
         document.body.classList.add('red-alert-mode');
     } else {
         document.body.classList.remove('red-alert-mode');
+    }
 };
 
 // === 3D TILT EFFECT ===
