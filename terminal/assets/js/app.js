@@ -1,7 +1,7 @@
 const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3YWptbHh4bXhhbXduZXllYmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTA0MTIsImV4cCI6MjA5NDY4NjQxMn0.Buifz0hiJ-3SrXpCX31EiaQ_f8TMgyWOzmsm-9YIMoY';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD_VERSION = 'v5.2 [PORTFOLIO/LAZY YÜKLEME]';
+    const BUILD_VERSION = 'v5.3 [PORTFOLIO/LAZY YÜKLEME]';
 
     const SCP_LIST = [ { s: 'Sektör 2', i: ['SCP-012','SCP-066','SCP-087','SCP-093','SCP-120','SCP-173','SCP-207','SCP-316','SCP-330','SCP-513','SCP-701','SCP-714','SCP-860','SCP-914','SCP-966','SCP-999','SCP-1025','SCP-1056','SCP-1162'] }, { s: 'Sektör 3', i: ['SCP-002','SCP-008','SCP-016','SCP-017','SCP-035','SCP-049','SCP-076','SCP-079','SCP-096','SCP-106','SCP-217','SCP-299','SCP-323','SCP-409','SCP-457','SCP-610','SCP-682','SCP-938','SCP-939','SCP-2006','SCP-3114'] } ];
     const SCD_LIST = [ { s: 'Sektör 2', i: ['SCD-012','SCD-066','SCD-087','SCD-093','SCD-120','SCD-173','SCD-207','SCD-316','SCD-330','SCD-513','SCD-701','SCD-714','SCD-860','SCD-914','SCD-966','SCD-999','SCD-1025','SCD-1056','SCD-1162'] }, { s: 'Sektör 3', i: ['SCD-002','SCD-008','SCD-016','SCD-017','SCD-035','SCD-049','SCD-076','SCD-079','SCD-096','SCD-106','SCD-217','SCD-299','SCD-323','SCD-409','SCD-457','SCD-610','SCD-682','SCD-938','SCD-939','SCD-2006','SCD-3114'] } ];
@@ -129,7 +129,11 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
     function toggleTree(id) { const toggle = document.getElementById('tree-' + id); const children = document.getElementById('tree-' + id + '-children'); if (!toggle || !children) return; const isOpen = toggle.classList.contains('open'); toggle.classList.toggle('open', !isOpen); children.classList.toggle('open', !isOpen); }
     function setNav(id) { document.querySelectorAll('.sb-item').forEach(e => e.classList.remove('active')); const el = document.getElementById('nav-' + id); if (el) el.classList.add('active'); }
 
-    async function showPage(id) {
+    async function showPage(id, skipHistory = false) {
+      if (!skipHistory) history.pushState({ page: id }, '', '#' + id);
+      const sb = document.querySelector('.sidebar');
+      if (sb && sb.classList.contains('open')) sb.classList.remove('open');
+
       window.current_page_id = id;
       VF = null; VF_TAB = 'deney'; imgs = []; tsc = 0; setNav(id);
       const ca = document.getElementById('ca');
@@ -287,6 +291,7 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
     async function gonderOrnekSaklama() { const saved = await insertOrnekSaklama({ user_id: CU.userId, username: CU.username, display_name: CU.displayName, ornek_scp: document.getElementById('os-scp').value, ornek_tarih_saat: document.getElementById('os-tarih').value, ne_yapilacak: document.getElementById('os-ne').value, saklama_yeri: document.getElementById('os-yer').value, onay_durum: 'bekliyor' }); if (!saved) { alert('Hata'); return; } alert("Başarılı"); }
 
     async function openMo(id) {
+        history.pushState({ modal: 'mo' }, '', '#mo');
       const r = getRaps().find(x => x.id === id); if (!r) return;
       if (!r.images_loaded) {
           const { data } = await _supabase.from('raporlar').select('images').eq('id', id).single();
@@ -306,7 +311,7 @@ if (r.images && r.images.length > 0) { b += `<div class="mf"><div class="mfl">//
       document.getElementById('mbody').innerHTML = b; document.getElementById('mo').classList.add('active');
     }
 
-    function openLb(src) { document.getElementById('lb-img').src = src; document.getElementById('lb').classList.add('active'); document.body.style.overflow = 'hidden'; }
+    function openLb(src) { history.pushState({ modal: 'lb' }, '', '#lb'); document.getElementById('lb-img').src = src; document.getElementById('lb').classList.add('active'); document.body.style.overflow = 'hidden'; }
     function closeLb() { document.getElementById('lb').classList.remove('active'); document.getElementById('lb-img').src = ''; document.body.style.overflow = ''; }
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb() });
     function onayDurumBadge(durum) { if (durum === 'onaylandi') return `<span class="onay-badge onay-onaylandi">✓ ONAYLANDI</span>`; if (durum === 'reddedildi') return `<span class="onay-badge onay-reddedildi">✕ REDDEDİLDİ</span>`; return `<span class="onay-badge onay-bekliyor">◎ ONAY BEKLİYOR</span>`; }
@@ -327,6 +332,7 @@ if (r.images && r.images.length > 0) { b += `<div class="mf"><div class="mfl">//
     function gCard(r, su) { return `<div class="rc" style="border-left-color:var(--amber-dim)"><div class="rc-hdr"><div><div class="rc-id" style="color:var(--amber)">GÜNLÜK-${r.dNo || '000'}</div><div class="rc-meta">${su ? `<span style="color:var(--green)">${r.displayName}</span> · ` : ''}${r.tarih}</div></div><div>${onayDurumBadge(r.onayDurum)}</div></div><div class="rc-body">${r.deneyler ? r.deneyler.substring(0, 120) + ' ' : ''}</div><div style="display:flex;gap:6px;margin-top:8px"><button class="exp-btn" onclick="openGMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>${(CU.role === 'yetkili') ? `<button class="sil-btn" onclick="silGRapor(${r.id})">[ SİL ]</button>` : ''}</div></div>`; }
     let openGModalId = null;
     function openGMo(id) { 
+        history.pushState({ modal: 'gmo' }, '', '#mo');
         const r = getGRaps().find(x => x.id === id); if (!r) return; 
         openGModalId = id; openModalId = null;
         const silBtn = document.getElementById('mo-sil-btn'); 
@@ -781,4 +787,29 @@ function getSortSelectHtml() {
             <option value="id-asc" ${window.currentSort==='id-asc'?'selected':''}>Numaraya Göre (En Düşük)</option>
         </select>
     </div>`;
+}
+
+window.addEventListener('popstate', (e) => {
+    let closedAny = false;
+    ['lb', 'mo', 'confirm-overlay'].forEach(mid => {
+        const el = document.getElementById(mid);
+        if (el && el.classList.contains('active')) {
+            el.classList.remove('active');
+            if(mid === 'lb') document.body.style.overflow = 'auto';
+            closedAny = true;
+        }
+    });
+    const sb = document.querySelector('.sidebar');
+    if (sb && sb.classList.contains('open')) {
+        sb.classList.remove('open');
+        closedAny = true;
+    }
+    
+    if (!closedAny && e.state && e.state.page) {
+        showPage(e.state.page, true);
+    }
+});
+function toggleSidebar() {
+    const sb = document.querySelector('.sidebar');
+    if (sb) sb.classList.toggle('open');
 }
