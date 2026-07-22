@@ -16,14 +16,14 @@ const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     async function updateRap(id, fields) { const { error } = await _supabase.from('raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_RAPS.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_RAPS[i], fields); } }
     async function deleteRap(id) { const { error } = await _supabase.from('raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_RAPS = ALL_RAPS.filter(x => x.id !== id); }
 
-    async function fetchGRaps() { if (window.F_fetchGRaps) return ALL_GRAPS; window.F_fetchGRaps = true;  const { data } = await _supabase.from('gunluk_raporlar').select('id, username, display_name, scd, scp, d_no, sorumlu, rutbe, zb, ze, sd, amac, sonuc, ano, ek, timestamps, onay_durum, onay_yapan, onay_tarih, created_at').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_GRAPS = (data || []).map(dbToGRap); return ALL_GRAPS; }
+    async function fetchGRaps() { if (window.F_fetchGRaps) return ALL_GRAPS; window.F_fetchGRaps = true;  const { data } = await _supabase.from('gunluk_raporlar').select('id, user_id, username, display_name, d_no, roblox_adi, rutbe, rutbe_kat, deneyler, sure, ekler, mesai_images, deney_images, onay_durum, onay_yapan, onay_tarih, created_at').eq('is_deleted', false).order('created_at', { ascending: false }); ALL_GRAPS = (data || []).map(dbToGRap); return ALL_GRAPS; }
     async function insertGRap(rap) { const { data, error } = await _supabase.from('gunluk_raporlar').insert([gRapToDb(rap)]).select().single(); if (error) return null; const mapped = dbToGRap(data); ALL_GRAPS.unshift(mapped); return mapped; }
     async function updateGRap(id, fields) { const { error } = await _supabase.from('gunluk_raporlar').update(fields).eq('id', id); if (!error) { const i = ALL_GRAPS.findIndex(x => x.id === id); if (i >= 0) Object.assign(ALL_GRAPS[i], fields); } }
     async function deleteGRap(id) { const { error } = await _supabase.from('gunluk_raporlar').update({ is_deleted: true }).eq('id', id); if (!error) ALL_GRAPS = ALL_GRAPS.filter(x => x.id !== id); }
 
-    function dbToRap(r) { return { id: r.id, username: r.username, displayName: r.display_name, scd: r.scd, scp: r.scp, dNo: r.d_no, sorumlu: r.sorumlu, rutbe: r.rutbe, zb: r.zb, ze: r.ze, sd: r.sd, amac: r.amac, sonuc: r.sonuc, ano: r.ano, ek: r.ek, timestamps: r.timestamps || [], images: r.images || [], onayDurum: r.onay_durum || 'bekliyor', onayYapan: r.onay_yapan, onayTarih: r.onay_tarih, tarih: r.created_at ? new Date(r.created_at).toLocaleString('tr-TR') : '—' }; }
+    function dbToRap(r) { return { id: r.id, username: r.username, displayName: r.display_name, scd: r.scd, scp: r.scp, dNo: r.d_no, sorumlu: r.sorumlu, rutbe: r.rutbe, zb: r.zb, ze: r.ze, sd: r.sd, amac: r.amac, sonuc: r.sonuc, ano: r.ano, ek: r.ek, timestamps: r.timestamps || [], images: r.images || [], onayDurum: r.onay_durum || 'bekliyor', onayYapan: r.onay_yapan, onayTarih: r.onay_tarih, tarih: r.created_at ? new Date(r.created_at).toLocaleString('tr-TR') : '—', rawDate: r.created_at }; }
     function rapToDb(r) { return { user_id: CU.userId, username: r.username, display_name: r.displayName, scd: r.scd, scp: r.scp, d_no: r.dNo, sorumlu: r.sorumlu, rutbe: r.rutbe, zb: r.zb, ze: r.ze, sd: r.sd, amac: r.amac, sonuc: r.sonuc, ano: r.ano, ek: r.ek, timestamps: r.timestamps, images: r.images, onay_durum: 'bekliyor' }; }
-    function dbToGRap(r) { return { id: r.id, username: r.username, displayName: r.display_name, dNo: r.d_no, robloxAdi: r.roblox_adi, rutbe: r.rutbe, rutbeKat: r.rutbe_kat, deneyler: r.deneyler, sure: r.sure, ekler: r.ekler, mesaiImgs: r.mesai_images || [], deneyImgs: r.deney_images || [], onayDurum: r.onay_durum || 'bekliyor', onayYapan: r.onay_yapan, onayTarih: r.onay_tarih, tarih: r.created_at ? new Date(r.created_at).toLocaleString('tr-TR') : '—' }; }
+    function dbToGRap(r) { return { id: r.id, username: r.username, displayName: r.display_name, dNo: r.d_no, robloxAdi: r.roblox_adi, rutbe: r.rutbe, rutbeKat: r.rutbe_kat, deneyler: r.deneyler, sure: r.sure, ekler: r.ekler, mesaiImgs: r.mesai_images || [], deneyImgs: r.deney_images || [], onayDurum: r.onay_durum || 'bekliyor', onayYapan: r.onay_yapan, onayTarih: r.onay_tarih, tarih: r.created_at ? new Date(r.created_at).toLocaleString('tr-TR') : '—', rawDate: r.created_at }; }
     function gRapToDb(r) { return { user_id: CU.userId, username: r.username, display_name: r.displayName, d_no: r.dNo, roblox_adi: r.robloxAdi, rutbe: r.rutbe, rutbe_kat: r.rutbeKat, deneyler: r.deneyler, sure: r.sure, ekler: r.ekler, mesai_images: r.mesaiImgs, deney_images: r.deneyImgs, onay_durum: 'bekliyor' }; }
 
     function getRaps() { return ALL_RAPS; } function getGRaps() { return ALL_GRAPS; }
@@ -207,7 +207,30 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
     async function gonder() { const btn = document.querySelector('#ca .sub-btn'); if (btn) { btn.disabled = true; } const saved = await insertRap({ username: CU.username, displayName: CU.displayName, dNo: fmtNo(userRapCount(CU.username) + 1), scd: document.getElementById('r-scd').value, scp: document.getElementById('r-scp').value, sorumlu: document.getElementById('r-sor').value.trim(), rutbe: CU.rutbe || '', zb: document.getElementById('r-zb').value, ze: document.getElementById('r-ze').value, sd: document.getElementById('r-sd').value, amac: document.getElementById('r-amac').value.trim(), sonuc: document.getElementById('r-sonuc').value.trim(), ano: document.getElementById('r-ano').value.trim(), ek: document.getElementById('r-ek').value.trim(), timestamps: getTs(), images: [...imgs] }); if (btn) { btn.disabled = false; } if (!saved) { alert('Hata'); return; } alert('Başarılı!'); }
 
     function bRaporlarim() { const raps = getRaps().filter(r => r.username === CU.username); let h = `<div><div class="ph"><h2>RAPORLARIM</h2></div><div class="rlist">`; if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else { h += getSortSelectHtml(); sortRaps(raps.slice()).forEach(r => h += rCard(r, false)); } return h + `</div></div>`; }
-    function bTumRaporlar() { const raps = getRaps(); let h = `<div><div class="ph"><h2>TÜM RAPORLAR</h2></div><div class="rlist">`; if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else { h += getSortSelectHtml(); sortRaps(raps.slice()).forEach(r => h += rCard(r, true)); } return h + `</div></div>`; }
+    function bTumRaporlar() { 
+        let allItems = [];
+        getRaps().forEach(r => allItems.push({ ...r, _type: 'deney' }));
+        (typeof ALL_KAZA !== 'undefined' ? ALL_KAZA : []).forEach(r => allItems.push({ ...r, _type: 'kaza' }));
+        (typeof ALL_MUHAFAZA !== 'undefined' ? ALL_MUHAFAZA : []).forEach(r => allItems.push({ ...r, _type: 'muhafaza' }));
+        (typeof ALL_ORNEK_TOPLAMA !== 'undefined' ? ALL_ORNEK_TOPLAMA : []).forEach(r => allItems.push({ ...r, _type: 'ot' }));
+        (typeof ALL_ORNEK_SAKLAMA !== 'undefined' ? ALL_ORNEK_SAKLAMA : []).forEach(r => allItems.push({ ...r, _type: 'os' }));
+        getGRaps().forEach(r => allItems.push({ ...r, _type: 'gunluk' }));
+        
+        let h = `<div><div class="ph"><h2>TÜM RAPORLAR</h2></div><div class="rlist">`; 
+        if (!allItems.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; 
+        else { 
+            h += getSortSelectHtml(); 
+            sortRaps(allItems).forEach(r => {
+                if (r._type === 'deney') h += rCard(r, true);
+                else if (r._type === 'kaza') h += kazaCard(r, true);
+                else if (r._type === 'muhafaza') h += muhafazaCard(r, true);
+                else if (r._type === 'ot') h += ornekToplamaCard(r, true);
+                else if (r._type === 'os') h += ornekSaklamaCard(r, true);
+                else if (r._type === 'gunluk') h += gCard(r, true);
+            }); 
+        } 
+        return h + `</div></div>`; 
+    }
     function rCard(r, su) { return `<div class="rc"><div class="rc-hdr"><div><div class="rc-id">${r.scd || '—'} // DENEY-${r.dNo || '000'}</div><div class="rc-meta">${su ? `<span style="color:var(--green)">${r.displayName}</span> · ` : ''}${r.tarih}</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span class="rc-scp">${r.scp ? r.scp.split('–')[0].trim() : '—'}</span>${onayDurumBadge(r.onayDurum)}</div></div><div class="rc-body">${r.amac ? r.amac.substring(0, 120) + '…' : ''}</div><div style="display:flex;gap:6px;margin-top:8px"><button class="exp-btn" onclick="openMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>${(CU.role === 'yetkili') ? `<button class="sil-btn" onclick="silRapor(${r.id})">[ SİL ]</button>` : ''}</div></div>`; }
 
     function bDosyalar() {
@@ -279,7 +302,7 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
       if (r.timestamps && r.timestamps.length > 0) { b += `<div class="mf"><div class="mfl">// ZAMAN DAMGALARI</div>`; r.timestamps.forEach(t => { b += `<div class="mts"><span class="mts-t">[${t.time || '--:--:--'}]</span><span>${t.note || ''}</span></div>`; }); b += `</div>`; }
       b += `<div class="mf"><div class="mfl">// ANORMAL DURUMLAR</div><div class="mfp">${r.ano || 'Kayıt yok.'}</div></div><div class="mf"><div class="mfl">// EKLEMELERİM</div><div class="mfp">${r.ek || 'Kayıt yok.'}</div></div>`;
       b += `<div class="mf"><div class="mfl">// ONAY DURUMU</div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">${onayDurumBadge(r.onayDurum)}${r.onayYapan ? `<span style="font-size:10px;color:var(--text-dim)">— ${r.onayYapan} · ${fmtMesajTarih(r.onayTarih)}</span>` : ''}</div>${CU.role === 'yetkili' ? `<div class="onay-btn-grp"><button class="onay-btn onayla" onclick="onaylaRapor(${r.id})">[ ✓ ONAYLA ]</button><button class="onay-btn reddet" onclick="reddetRapor(${r.id})">[ ✕ REDDET ]</button></div>`: ''}</div>`;
-      if (r.images && r.images.length > 0) { b += `<div class="mf"><div class="mfl">// GÖRSELLER</div><div class="mimgs">`; r.images.forEach(s => { b += `<img src="${s}" class="mimg" onclick="openLb('${s}')" title="Büyütmek için tıkla"/>`; }); b += `</div></div>`; }
+if (r.images && r.images.length > 0) { b += `<div class="mf"><div class="mfl">// GÖRSELLER</div><div class="mimgs">`; r.images.forEach(s => { b += `<img src="${s}" class="mimg" onclick="openLb('${s}')" title="Büyütmek için tıkla"/>`; }); b += `</div></div>`; }
       document.getElementById('mbody').innerHTML = b; document.getElementById('mo').classList.add('active');
     }
 
@@ -288,13 +311,32 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb() });
     function onayDurumBadge(durum) { if (durum === 'onaylandi') return `<span class="onay-badge onay-onaylandi">✓ ONAYLANDI</span>`; if (durum === 'reddedildi') return `<span class="onay-badge onay-reddedildi">✕ REDDEDİLDİ</span>`; return `<span class="onay-badge onay-bekliyor">◎ ONAY BEKLİYOR</span>`; }
 
-    function bGunlukYaz() { return `<div><div class="ph"><h2>YENİ GÜNLÜK RAPOR</h2></div><div class="rf"><div class="fs"><div class="fg"><label>ROBLOX TAKMA ADIM</label><input type="text" class="tin" id="g-roblox"/></div></div><div class="fs"><div class="fg"><label>YAPTIĞIM DENEYLER</label><textarea class="ta" id="g-deneyler"></textarea></div><div class="fg"><label>SÜRE</label><input type="text" class="tin" id="g-sure"/></div></div><button class="sub-btn" onclick="gonderGunluk()">[ GÖNDER ]</button></div></div>`; }
-    async function gonderGunluk() { const saved = await insertGRap({ username: CU.username, displayName: CU.displayName, dNo: fmtNo(userGRapCount(CU.username) + 1), robloxAdi: document.getElementById('g-roblox').value, deneyler: document.getElementById('g-deneyler').value, sure: document.getElementById('g-sure').value }); if (!saved) { alert('Hata'); return; } alert("Başarılı"); }
+    function bGunlukYaz() { 
+        imgs = [];
+        return `<div><div class="ph"><h2>YENİ GÜNLÜK RAPOR</h2></div><div class="rf"><div class="fs"><div class="fg"><label>ROBLOX TAKMA ADIM</label><input type="text" class="tin" id="g-roblox"/></div></div><div class="fs"><div class="fg"><label>YAPTIĞIM DENEYLER</label><textarea class="ta" id="g-deneyler"></textarea></div><div class="fg"><label>SÜRE</label><input type="text" class="tin" id="g-sure"/></div><div class="fg"><label>GÖRSEL EKLE (OPSİYONEL)</label><div class="img-area" onclick="document.getElementById('g-img-input').click()"><span class="img-lbl">GÖRSEL SEÇ VEYA SÜRÜKLE</span><input type="file" id="g-img-input" multiple accept="image/*" onchange="handleImg(event)"/></div><div class="img-prev" id="img-prev"></div></div></div><button class="sub-btn" onclick="gonderGunluk()">[ GÖNDER ]</button></div></div>`; 
+    }
+    async function gonderGunluk() { 
+        const btn = document.querySelector('#ca .sub-btn'); if (btn) { btn.disabled = true; }
+        const saved = await insertGRap({ username: CU.username, displayName: CU.displayName, dNo: fmtNo(userGRapCount(CU.username) + 1), robloxAdi: document.getElementById('g-roblox').value, deneyler: document.getElementById('g-deneyler').value, sure: document.getElementById('g-sure').value, deneyImgs: [...imgs] }); 
+        if (btn) { btn.disabled = false; }
+        if (!saved) { alert('Hata'); return; } 
+        alert("Başarılı"); 
+    }
     function bGunlukRaporlarim() { const graps = getGRaps().filter(r => r.username === CU.username); let h = `<div><div class="ph"><h2>GÜNLÜK RAPORLARIM</h2></div><div class="rlist">`; if (!graps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else graps.slice().reverse().forEach(r => h += gCard(r, false)); return h + `</div></div>`; }
     function bTumGunluk() { const graps = getGRaps(); let h = `<div><div class="ph"><h2>TÜM GÜNLÜK RAPORLAR</h2></div><div class="rlist">`; if (!graps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else graps.slice().reverse().forEach(r => h += gCard(r, true)); return h + `</div></div>`; }
-    function gCard(r, su) { return `<div class="rc" style="border-left-color:var(--amber-dim)"><div class="rc-hdr"><div><div class="rc-id" style="color:var(--amber)">GÜNLÜK-${r.dNo || '000'}</div><div class="rc-meta">${su ? `<span style="color:var(--green)">${r.displayName}</span> · ` : ''}${r.tarih}</div></div></div><div class="rc-body">${r.deneyler ? r.deneyler.substring(0, 120) + '…' : ''}</div><div style="display:flex;gap:6px;margin-top:8px"><button class="exp-btn" onclick="openGMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>${(CU.role === 'yetkili') ? `<button class="sil-btn" onclick="silGRapor(${r.id})">[ SİL ]</button>` : ''}</div></div>`; }
+    function gCard(r, su) { return `<div class="rc" style="border-left-color:var(--amber-dim)"><div class="rc-hdr"><div><div class="rc-id" style="color:var(--amber)">GÜNLÜK-${r.dNo || '000'}</div><div class="rc-meta">${su ? `<span style="color:var(--green)">${r.displayName}</span> · ` : ''}${r.tarih}</div></div><div>${onayDurumBadge(r.onayDurum)}</div></div><div class="rc-body">${r.deneyler ? r.deneyler.substring(0, 120) + ' ' : ''}</div><div style="display:flex;gap:6px;margin-top:8px"><button class="exp-btn" onclick="openGMo(${r.id})">[ TAM RAPORU GÖRÜNTÜLE ]</button>${(CU.role === 'yetkili') ? `<button class="sil-btn" onclick="silGRapor(${r.id})">[ SİL ]</button>` : ''}</div></div>`; }
     let openGModalId = null;
-    function openGMo(id) { const r = getGRaps().find(x => x.id === id); if (!r) return; openGModalId = id; const silBtn = document.getElementById('mo-sil-btn'); if (silBtn) { silBtn.style.display = (CU.role === 'yetkili') ? 'block' : 'none'; silBtn.onclick = () => silGRaporFromModal(); } document.getElementById('mt').textContent = `GÜNLÜK RAPOR — ${r.dNo || '000'} // ${r.displayName}`; let b = `<div class="mf"><div class="mfl">YAPILAN DENEYLER</div><div class="mfp">${r.deneyler || '—'}</div></div><div class="mf"><div class="mfl">MESAİDE GEÇİRİLEN SÜRE</div><div class="mfv">${r.sure || '—'}</div></div>`; document.getElementById('mbody').innerHTML = b; document.getElementById('mo').classList.add('active'); }
+    function openGMo(id) { 
+        const r = getGRaps().find(x => x.id === id); if (!r) return; 
+        openGModalId = id; openModalId = null;
+        const silBtn = document.getElementById('mo-sil-btn'); 
+        if (silBtn) { silBtn.style.display = (CU.role === 'yetkili') ? 'block' : 'none'; silBtn.onclick = () => silGRaporFromModal(); } 
+        document.getElementById('mt').textContent = `GÜNLÜK RAPOR - ${r.dNo || '000'} // ${r.displayName}`; 
+        let b = `<div class="mf"><div class="mfl">ROBLOX TAKMA ADI</div><div class="mfv">${r.robloxAdi || '-'}</div></div><div class="mf"><div class="mfl">YAPILAN DENEYLER</div><div class="mfp">${r.deneyler || '-'}</div></div><div class="mf"><div class="mfl">MESAİDE GEÇİRİLEN SÜRE</div><div class="mfv">${r.sure || '-'}</div></div>`; 
+        b += `<div class="mf"><div class="mfl">// ONAY DURUMU</div><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px">${onayDurumBadge(r.onayDurum)}${r.onayYapan ? `<span style="font-size:10px;color:var(--text-dim)">- ${r.onayYapan} — ${fmtMesajTarih(r.onayTarih)}</span>` : ''}</div>${CU.role === 'yetkili' ? `<div class="onay-btn-grp"><button class="onay-btn onayla" onclick="onaylaRapor(${r.id}, 'gunluk')">[ ✓ ONAYLA ]</button><button class="onay-btn reddet" onclick="reddetRapor(${r.id}, 'gunluk')">[ ✗ REDDET ]</button></div>`: ''}</div>`;
+        if (r.deneyImgs && r.deneyImgs.length > 0) { b += `<div class="mf"><div class="mfl">// GÖRSELLER</div><div class="mimgs">`; r.deneyImgs.forEach(s => { b += `<img src="${s}" class="mimg" onclick="openLb('${s}')" title="Büyütmek için tıkla"/>`; }); b += `</div></div>`; }
+        document.getElementById('mbody').innerHTML = b; document.getElementById('mo').classList.add('active'); 
+    }
     function silGRaporFromModal() { if (openGModalId) silGRapor(openGModalId); }
     function silGRapor(id) { const r = getGRaps().find(x => x.id === id); if (!r) return; silPendingId = 'g_' + id; document.getElementById('confirm-target').textContent = `GÜNLÜK-${r.dNo || '000'} — ${r.displayName}`; document.getElementById('confirm-overlay').classList.add('active'); }
 
@@ -620,11 +662,11 @@ function initRealtime() {
             // Handle reports
             const tMap = {
                 'raporlar': { arr: typeof ALL_RAPS !== 'undefined' ? ALL_RAPS : [], pages: ['tum-raporlar', 'raporlarim'] },
-                'kaza_raporlar': { arr: typeof ALL_KAZA !== 'undefined' ? ALL_KAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
-                'muhafaza_raporlar': { arr: typeof ALL_MUHAFAZA !== 'undefined' ? ALL_MUHAFAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
-                'ornek_toplama_raporlar': { arr: typeof ALL_ORNEK_TOPLAMA !== 'undefined' ? ALL_ORNEK_TOPLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
-                'ornek_saklama_raporlar': { arr: typeof ALL_ORNEK_SAKLAMA !== 'undefined' ? ALL_ORNEK_SAKLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim'] },
-                'gunluk_raporlar': { arr: typeof ALL_GRAPS !== 'undefined' ? ALL_GRAPS : [], pages: ['tum-gunluk-raporlar', 'gunluk-raporlarim'] }
+                'kaza_raporlar': { arr: typeof ALL_KAZA !== 'undefined' ? ALL_KAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim', 'tum-raporlar'] },
+                'muhafaza_raporlar': { arr: typeof ALL_MUHAFAZA !== 'undefined' ? ALL_MUHAFAZA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim', 'tum-raporlar'] },
+                'ornek_toplama_raporlar': { arr: typeof ALL_ORNEK_TOPLAMA !== 'undefined' ? ALL_ORNEK_TOPLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim', 'tum-raporlar'] },
+                'ornek_saklama_raporlar': { arr: typeof ALL_ORNEK_SAKLAMA !== 'undefined' ? ALL_ORNEK_SAKLAMA : [], pages: ['tum-ozel-raporlar', 'ozel-raporlarim', 'tum-raporlar'] },
+                'gunluk_raporlar': { arr: typeof ALL_GRAPS !== 'undefined' ? ALL_GRAPS : [], pages: ['tum-gunluk', 'gunluk-raporlarim', 'tum-raporlar'] }
             };
             
             if (tMap[table]) {
@@ -717,12 +759,12 @@ function sortRaps(rapsArray) {
     return rapsArray.sort((a, b) => {
         let vA, vB;
         if (window.currentSort.startsWith('date')) {
-            // For general reports, use id as fallback for date if timestamp is weird, but they are already mostly sorted by id in JS.
-            vA = a.id || 0;
-            vB = b.id || 0;
+            vA = new Date(a.rawDate || a.created_at || a.tarih || 0).getTime();
+            vB = new Date(b.rawDate || b.created_at || b.tarih || 0).getTime();
+            if (isNaN(vA)) vA = a.id || 0;
+            if (isNaN(vB)) vB = b.id || 0;
             return window.currentSort === 'date-asc' ? (vA - vB) : (vB - vA);
         } else if (window.currentSort.startsWith('id')) {
-            // Number extract (dNo or id)
             vA = parseInt(a.dNo || a.id || 0);
             vB = parseInt(b.dNo || b.id || 0);
             return window.currentSort === 'id-asc' ? (vA - vB) : (vB - vA);
