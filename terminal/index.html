@@ -11,14 +11,14 @@
 <body>
   <div class="scanline"></div><div class="build-ver" id="build-ver-badge"></div>
   <div id="init-loading" style="position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;z-index:99999;padding:20px;font-family:'VT323',monospace;color:var(--green)">
-    <div style="font-size:28px;letter-spacing:4px;text-shadow:0 0 12px var(--green);margin-bottom:20px;">◈ TESİS-62 KERNEL v5.3.0 ◈</div>
+    <div style="font-size:28px;letter-spacing:4px;text-shadow:0 0 12px var(--green);margin-bottom:20px;">◈ TESİS-62 KERNEL v5.4.0 ◈</div>
     <div id="boot-text" style="font-size:16px;line-height:1.5;white-space:pre-wrap;text-align:left;width:100%;"></div>
     <div id="boot-cursor" style="width:10px;height:20px;background:var(--green);animation:blink 1s infinite;margin-top:5px;display:none;"></div>
   </div>
   <div class="main-screen" id="main-screen">
     <div class="hdr">
       <div class="hdr-top">
-        <div class="hdr-logo"><button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button><div class="scp-badge">SCP</div><div><div class="hdr-t">TESİS-62 // BİLİM VE ARAŞTIRMA DEPARTMANI</div><div class="hdr-main">RAPOR TERMİNALİ v5.3.0</div></div></div>
+        <div class="hdr-logo"><button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button><div class="scp-badge">SCP</div><div><div class="hdr-t">TESİS-62 // BİLİM VE ARAŞTIRMA DEPARTMANI</div><div class="hdr-main">RAPOR TERMİNALİ v5.4.0</div></div></div>
         <div class="hdr-right"><div class="hdr-clock" id="hclock">--:--:--</div><button class="mesaj-bell-btn" onclick="toggleMesajKutusu()" title="Mesaj Kutusu"><span class="mesaj-bell-icon">✉</span><span class="mesaj-badge" id="mesaj-badge" style="display:none"></span></button>
         <div class="hdr-user"><span><span class="sdot"></span>BAĞLI:</span><span id="hun" style="color:var(--green)">—</span><span id="hrutbe" style="font-size:9px">—</span><button class="logout-btn" onclick="doLogout()">[ ÇIKIŞ ]</button></div></div>
       </div>
