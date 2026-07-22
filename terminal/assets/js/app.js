@@ -114,7 +114,8 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
              <div class="sb-tree-group"><button class="sb-tree-toggle" id="tree-dinamik" onclick="toggleTree('dinamik'); yukleDinamikMenu()"><span>DİNAMİK RAPORLAR</span><span class="sb-tree-arrow">▶</span></button><div class="sb-tree-children" id="tree-dinamik-children"><div class="sb-item" style="font-size:9px">Yükleniyor...</div></div></div>`;
       } else {
           content = `<div class="sb-label">YETKİLİ ERİŞİMİ</div>
-           <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM RAPORLAR</button>
+           <button class="sb-item" id="nav-tum-raporlar" onclick="showPage('tum-raporlar')">TÜM DENEY RAPORLARI</button>
+           <button class="sb-item" id="nav-tum-gunluk" onclick="showPage('tum-gunluk')">TÜM GÜNLÜK RAPORLAR</button>
            <button class="sb-item" id="nav-tum-ozel-raporlar" onclick="showPage('tum-ozel-raporlar')">TÜM ÖZEL RAPORLAR</button>
            <button class="sb-item" id="nav-dosyalar" onclick="showPage('dosyalar')">PERSONEL DOSYALARI</button>
            <div class="sb-label" style="margin-top:8px">SİSTEM YÖNETİMİ</div>
@@ -212,25 +213,14 @@ function getGelenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m =
 
     function bRaporlarim() { const raps = getRaps().filter(r => r.username === CU.username); let h = `<div><div class="ph"><h2>RAPORLARIM</h2></div><div class="rlist">`; if (!raps.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; else { h += getSortSelectHtml(); sortRaps(raps.slice()).forEach(r => h += rCard(r, false)); } return h + `</div></div>`; }
     function bTumRaporlar() { 
-        let allItems = [];
-        getRaps().forEach(r => allItems.push({ ...r, _type: 'deney' }));
-        (typeof ALL_KAZA !== 'undefined' ? ALL_KAZA : []).forEach(r => allItems.push({ ...r, _type: 'kaza' }));
-        (typeof ALL_MUHAFAZA !== 'undefined' ? ALL_MUHAFAZA : []).forEach(r => allItems.push({ ...r, _type: 'muhafaza' }));
-        (typeof ALL_ORNEK_TOPLAMA !== 'undefined' ? ALL_ORNEK_TOPLAMA : []).forEach(r => allItems.push({ ...r, _type: 'ot' }));
-        (typeof ALL_ORNEK_SAKLAMA !== 'undefined' ? ALL_ORNEK_SAKLAMA : []).forEach(r => allItems.push({ ...r, _type: 'os' }));
-        getGRaps().forEach(r => allItems.push({ ...r, _type: 'gunluk' }));
+        let allItems = getRaps();
         
-        let h = `<div><div class="ph"><h2>TÜM RAPORLAR</h2></div><div class="rlist">`; 
+        let h = `<div><div class="ph"><h2>TÜM DENEY RAPORLARI</h2></div><div class="rlist">`; 
         if (!allItems.length) h += `<div class="empty">VERİ BULUNAMADI.</div>`; 
         else { 
             h += getSortSelectHtml(); 
-            sortRaps(allItems).forEach(r => {
-                if (r._type === 'deney') h += rCard(r, true);
-                else if (r._type === 'kaza') h += kazaCard(r, true);
-                else if (r._type === 'muhafaza') h += muhafazaCard(r, true);
-                else if (r._type === 'ot') h += ornekToplamaCard(r, true);
-                else if (r._type === 'os') h += ornekSaklamaCard(r, true);
-                else if (r._type === 'gunluk') h += gCard(r, true);
+            sortRaps(allItems.slice()).forEach(r => {
+                h += rCard(r, true);
             }); 
         } 
         return h + `</div></div>`; 
@@ -393,7 +383,7 @@ if (r.images && r.images.length > 0) { b += `<div class="mf"><div class="mfl">//
     function bMesajGonder() { const opts = ALL_PROFILES.filter(p => p.username !== CU.username).sort((a, b) => a.username.localeCompare(b.username)).map(p => `<option value="tekil:${p.username}">${p.username} — ${p.displayName || ''} (${p.role})</option>`).join(''); return `<div class="mesaj-form-wrap"><div class="ph"><h2>MESAJ GÖNDER</h2></div><div class="rf" style="margin-top:16px"><div class="fs"><div class="fs-title">// ALICI SEÇİMİ</div><select class="mesaj-alici-select" id="mg-alici"><optgroup label="── TOPLU MESAJ ──"><option value="toplu_yetkisiz">Toplu Mesaj (Tüm Yetkisiz Personel)</option><option value="toplu_yetkili">Toplu Mesaj (Tüm Yetkili Personel)</option><option value="toplu_herkes">Toplu Mesaj (Herkes)</option></optgroup><optgroup label="── BİREYSEL PERSONEL ──">${opts}</optgroup></select></div><div class="fs" style="margin-top:12px"><div class="fs-title">// KONU</div><input type="text" class="ts" id="mg-konu" style="width:100%"/></div><div class="fs" style="margin-top:12px"><div class="fs-title">// MESAJ İÇERİĞİ</div><textarea class="ta" id="mg-mesaj" rows="7" style="width:100%"></textarea></div><div class="fs" style="margin-top:12px"><div class="fs-title">// GÖRSEL EKLE (OPSİYONEL)</div><input type="file" id="mg-gorsel" accept="image/*" class="ts" style="width:100%;cursor:pointer"/></div><button class="mesaj-send-btn" id="mg-send-btn" onclick="mesajGonder()">[ MESAJI GÖNDER ]</button><div id="mg-result" style="margin-top:10px;font-size:10px;display:none"></div></div></div>`; }
     async function mesajGonder() { const aliciVal = document.getElementById('mg-alici').value; const konu = document.getElementById('mg-konu').value.trim(); const mesajText = document.getElementById('mg-mesaj').value.trim(); const gorselFile = document.getElementById('mg-gorsel').files[0]; const resultEl = document.getElementById('mg-result'); const btn = document.getElementById('mg-send-btn'); if (!konu || !mesajText) { resultEl.style.display = 'block'; resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Konu ve mesaj zorunludur.'; return; } btn.disabled = true; resultEl.style.display = 'block'; resultEl.style.color = 'var(--text-dim)'; resultEl.textContent = 'GÖNDERİLİYOR...'; let gorselUrl = null; if (gorselFile) { gorselUrl = await new Promise((resolve) => { const r = new FileReader(); r.onload = ev => resolve(ev.target.result); r.readAsDataURL(gorselFile); }); } const isTekil = aliciVal.startsWith('tekil:'); const row = { gonderen_id: (await _supabase.auth.getUser()).data.user.id, gonderen_un: CU.username, alici_tip: isTekil ? 'tekil' : aliciVal, alici_un: isTekil ? aliciVal.replace('tekil:', '') : null, konu, mesaj: mesajText, gorsel_url: gorselUrl }; const { error } = await sendMesaj(row); btn.disabled = false; if (error) { resultEl.style.color = 'var(--red)'; resultEl.textContent = '[HATA] Mesaj gönderilemedi: ' + error.message; } else { resultEl.style.color = 'var(--green)'; resultEl.textContent = '✓ MESAJ BAŞARIYLA GÖNDERİLDİ.'; logAction('MESAJ GÖNDERİLDİ', `Alıcı: ${row.alici_tip} ${row.alici_un || ''}`); document.getElementById('mg-konu').value = ''; document.getElementById('mg-mesaj').value = ''; document.getElementById('mg-gorsel').value = ''; } }
 async function onaylaRapor(id, type = 'deney') {
-    let table = type === 'gunluk' ? 'gunluk_raporlar' : 'raporlar';
+    let table = 'raporlar'; // All daily and experiment reports are now in raporlar
     let array = type === 'gunluk' ? ALL_GRAPS : ALL_RAPS;
     
     const { error } = await _supabase.from(table).update({ onay_durum: 'onaylandi', onay_yapan: CU.displayName, onay_tarih: new Date().toISOString() }).eq('id', id);
@@ -404,7 +394,7 @@ async function onaylaRapor(id, type = 'deney') {
             r.onayYapan = CU.displayName;
             r.onayTarih = new Date().toISOString();
         }
-        logAction('RAPOR ONAYLANDI', `Rapor ID: ${id} (${type})`);
+        logAction(type === 'gunluk' ? 'GÜNLÜK RAPOR ONAYLANDI' : 'RAPOR ONAYLANDI', `Rapor ID: ${id} (${type})`);
         if (r && r.username) {
             _supabase.from('mesajlar').insert([{
                 gonderen_un: 'SİSTEM', alici_un: r.username, alici_tip: 'kisi',
@@ -412,11 +402,11 @@ async function onaylaRapor(id, type = 'deney') {
             }]).then(()=>{});
         }
         if (type === 'gunluk') {
-            if (openGModalId) openGMo(openGModalId);
-            showPage(VF ? 'dosyalar' : 'tum-gunluk');
+            if (typeof openGModalId !== 'undefined' && openGModalId) openGMo(openGModalId);
+            showPage(typeof VF !== 'undefined' && VF ? 'dosyalar' : 'tum-gunluk');
         } else {
-            if (openModalId) openMo(openModalId);
-            showPage(VF ? 'dosyalar' : 'tum-raporlar');
+            if (typeof openModalId !== 'undefined' && openModalId) openMo(openModalId);
+            showPage(typeof VF !== 'undefined' && VF ? 'dosyalar' : 'tum-raporlar');
         }
     } else {
         alert("Bir hata oluştu.");
@@ -424,7 +414,7 @@ async function onaylaRapor(id, type = 'deney') {
 }
 
 async function reddetRapor(id, type = 'deney') {
-    let table = type === 'gunluk' ? 'gunluk_raporlar' : 'raporlar';
+    let table = 'raporlar';
     let array = type === 'gunluk' ? ALL_GRAPS : ALL_RAPS;
     
     const { error } = await _supabase.from(table).update({ onay_durum: 'reddedildi', onay_yapan: CU.displayName, onay_tarih: new Date().toISOString() }).eq('id', id);
@@ -435,19 +425,19 @@ async function reddetRapor(id, type = 'deney') {
             r.onayYapan = CU.displayName;
             r.onayTarih = new Date().toISOString();
         }
-        logAction('RAPOR ONAYLANDI', `Rapor ID: ${id} (${type})`);
+        logAction(type === 'gunluk' ? 'GÜNLÜK RAPOR REDDEDİLDİ' : 'RAPOR REDDEDİLDİ', `Rapor ID: ${id} (${type})`);
         if (r && r.username) {
             _supabase.from('mesajlar').insert([{
                 gonderen_un: 'SİSTEM', alici_un: r.username, alici_tip: 'kisi',
-                konu: 'RAPOR ONAYI', mesaj: `Göndermiş olduğunuz ${id} numaralı ${type.toUpperCase()} raporunuz ${CU.displayName} tarafından ONAYLANMIŞTIR.`
+                konu: 'RAPOR REDDİ', mesaj: `Göndermiş olduğunuz ${id} numaralı ${type.toUpperCase()} raporunuz ${CU.displayName} tarafından REDDEDİLMİŞTİR.`
             }]).then(()=>{});
         }
         if (type === 'gunluk') {
-            if (openGModalId) openGMo(openGModalId);
-            showPage(VF ? 'dosyalar' : 'tum-gunluk');
+            if (typeof openGModalId !== 'undefined' && openGModalId) openGMo(openGModalId);
+            showPage(typeof VF !== 'undefined' && VF ? 'dosyalar' : 'tum-gunluk');
         } else {
-            if (openModalId) openMo(openModalId);
-            showPage(VF ? 'dosyalar' : 'tum-raporlar');
+            if (typeof openModalId !== 'undefined' && openModalId) openMo(openModalId);
+            showPage(typeof VF !== 'undefined' && VF ? 'dosyalar' : 'tum-raporlar');
         }
     } else {
         alert("Bir hata oluştu.");
@@ -676,16 +666,27 @@ function initRealtime() {
             };
             
             if (tMap[table]) {
-                const conf = tMap[table];
+                let conf = tMap[table];
                 let mappedNw = nw;
-                if (table === 'raporlar' && typeof dbToRap === 'function') mappedNw = dbToRap(nw);
-                if (table === 'gunluk_raporlar' && typeof dbToGRap === 'function') mappedNw = dbToGRap(nw);
+                
+                if (table === 'raporlar') {
+                    if ((nw.scd === 'GUNLUK' || (old && old.scd === 'GUNLUK'))) {
+                        mappedNw = dbToGRap(nw);
+                        conf = { arr: (typeof ALL_GRAPS !== 'undefined' ? ALL_GRAPS : []), pages: ['tum-gunluk', 'gunluk-raporlarim'] };
+                    } else {
+                        mappedNw = dbToRap(nw);
+                        conf = { arr: (typeof ALL_RAPS !== 'undefined' ? ALL_RAPS : []), pages: ['tum-raporlar', 'raporlarim'] };
+                    }
+                } else if (table === 'gunluk_raporlar' && typeof dbToGRap === 'function') {
+                    mappedNw = dbToGRap(nw);
+                }
                 
                 if (ev === 'INSERT') {
                     if (!conf.arr.find(x => x.id === mappedNw.id)) {
                         conf.arr.unshift(mappedNw);
                         if (mappedNw.username !== CU.username && CU.role === 'yetkili' && table === 'raporlar') {
-                            showToast('YENİ RAPOR GİRİŞİ', `Tür: Deney Raporu<br>Personel: ${mappedNw.username}`);
+                            const tur = nw.scd === 'GUNLUK' ? 'Günlük Rapor' : 'Deney Raporu';
+                            showToast('YENİ RAPOR GİRİŞİ', `Tür: ${tur}<br>Personel: ${mappedNw.username}`);
                         }
                     }
                 } else if (ev === 'UPDATE') {
@@ -702,7 +703,7 @@ function initRealtime() {
                         } else conf.arr.unshift(mappedNw);
                     }
                 } else if (ev === 'DELETE') {
-                    const idx = conf.arr.findIndex(x => x.id === old.id);
+                    const idx = conf.arr.findIndex(x => (old && x.id === old.id) || x.id === nw.id);
                     if (idx !== -1) conf.arr.splice(idx, 1);
                 }
                 
