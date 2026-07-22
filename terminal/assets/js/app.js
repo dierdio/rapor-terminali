@@ -1,7 +1,7 @@
 const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3YWptbHh4bXhhbXduZXllYmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTA0MTIsImV4cCI6MjA5NDY4NjQxMn0.Buifz0hiJ-3SrXpCX31EiaQ_f8TMgyWOzmsm-9YIMoY';
     const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    const BUILD_VERSION = 'v5.6.0 [PORTFOLIO/LAZY YÜKLEME]';
+    const BUILD_VERSION = 'v5.6.1 [PORTFOLIO/LAZY YÜKLEME]';
 
     const SCP_LIST = [ { s: 'Sektör 2', i: ['SCP-012','SCP-066','SCP-087','SCP-093','SCP-120','SCP-173','SCP-207','SCP-316','SCP-330','SCP-513','SCP-701','SCP-714','SCP-860','SCP-914','SCP-966','SCP-999','SCP-1025','SCP-1056','SCP-1162'] }, { s: 'Sektör 3', i: ['SCP-002','SCP-008','SCP-016','SCP-017','SCP-035','SCP-049','SCP-076','SCP-079','SCP-096','SCP-106','SCP-217','SCP-299','SCP-323','SCP-409','SCP-457','SCP-610','SCP-682','SCP-938','SCP-939','SCP-2006','SCP-3114'] } ];
     const SCD_LIST = [ { s: 'Sektör 2', i: ['SCD-012','SCD-066','SCD-087','SCD-093','SCD-120','SCD-173','SCD-207','SCD-316','SCD-330','SCD-513','SCD-701','SCD-714','SCD-860','SCD-914','SCD-966','SCD-999','SCD-1025','SCD-1056','SCD-1162'] }, { s: 'Sektör 3', i: ['SCD-002','SCD-008','SCD-016','SCD-017','SCD-035','SCD-049','SCD-076','SCD-079','SCD-096','SCD-106','SCD-217','SCD-299','SCD-323','SCD-409','SCD-457','SCD-610','SCD-682','SCD-938','SCD-939','SCD-2006','SCD-3114'] } ];
@@ -397,7 +397,7 @@ async function onaylaRapor(id, type = 'deney') {
         logAction(type === 'gunluk' ? 'GÜNLÜK RAPOR ONAYLANDI' : 'RAPOR ONAYLANDI', `Rapor ID: ${id} (${type})`);
         if (r && r.username) {
             _supabase.from('mesajlar').insert([{
-                gonderen_un: 'SİSTEM', alici_un: r.username, alici_tip: 'kisi',
+                gonderen_un: 'SİSTEM', alici_un: r.username, alici_tip: 'tekil',
                 konu: 'RAPOR ONAYI', mesaj: `Göndermiş olduğunuz ${id} numaralı ${type.toUpperCase()} raporunuz ${CU.displayName} tarafından ONAYLANMIŞTIR.`
             }]).then(()=>{});
         }
@@ -428,7 +428,7 @@ async function reddetRapor(id, type = 'deney') {
         logAction(type === 'gunluk' ? 'GÜNLÜK RAPOR REDDEDİLDİ' : 'RAPOR REDDEDİLDİ', `Rapor ID: ${id} (${type})`);
         if (r && r.username) {
             _supabase.from('mesajlar').insert([{
-                gonderen_un: 'SİSTEM', alici_un: r.username, alici_tip: 'kisi',
+                gonderen_un: 'SİSTEM', alici_un: r.username, alici_tip: 'tekil',
                 konu: 'RAPOR REDDİ', mesaj: `Göndermiş olduğunuz ${id} numaralı ${type.toUpperCase()} raporunuz ${CU.displayName} tarafından REDDEDİLMİŞTİR.`
             }]).then(()=>{});
         }
@@ -693,6 +693,8 @@ function initRealtime() {
                     if (nw.is_deleted === true) {
                         const idx = conf.arr.findIndex(x => (old && x.id === old.id) || x.id === nw.id);
                         if (idx !== -1) conf.arr.splice(idx, 1);
+                        if (typeof openModalId !== 'undefined' && openModalId === nw.id) closeMoDirect();
+                        if (typeof openGModalId !== 'undefined' && openGModalId === nw.id) closeMoDirect();
                     } else {
                         const idx = conf.arr.findIndex(x => x.id === mappedNw.id);
                         if (idx !== -1) {
@@ -700,11 +702,15 @@ function initRealtime() {
                             if (mappedNw.username === CU.username && mappedNw.onayDurum && mappedNw.onayDurum !== 'bekliyor') {
                                 showToast('RAPOR GÜNCELLEMESİ', `Rapor ID: ${mappedNw.id}<br>Durum: ${mappedNw.onayDurum.toUpperCase()}`);
                             }
+                            if (typeof openModalId !== 'undefined' && openModalId === mappedNw.id) openMo(openModalId);
+                            if (typeof openGModalId !== 'undefined' && openGModalId === mappedNw.id) openGMo(openGModalId);
                         } else conf.arr.unshift(mappedNw);
                     }
                 } else if (ev === 'DELETE') {
                     const idx = conf.arr.findIndex(x => (old && x.id === old.id) || x.id === nw.id);
                     if (idx !== -1) conf.arr.splice(idx, 1);
+                    if (typeof openModalId !== 'undefined' && old && openModalId === old.id) closeMoDirect();
+                    if (typeof openGModalId !== 'undefined' && old && openGModalId === old.id) closeMoDirect();
                 }
                 
                 if (window.current_page_id && conf.pages.includes(window.current_page_id)) {
