@@ -53,7 +53,20 @@ const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
     async function sendMesaj(row) { const { data, error } = await _supabase.from('mesajlar').insert([row]).select().single(); if (!error && data) ALL_MESAJLAR.unshift(data); return { data, error }; }
     async function mesajOkundu(id) { const m = ALL_MESAJLAR.find(x => x.id === id); if (!m) return; const list = Array.isArray(m.okundu_by) ? m.okundu_by : []; if (list.includes(CU.username)) return; const updated = [...list, CU.username]; await _supabase.from('mesajlar').update({ okundu_by: updated }).eq('id', id); m.okundu_by = updated; updateMesajBadge(); }
     
-    async function fetchRutbeler() { const { data } = await _supabase.from('rutbeler').select('*').order('id', { ascending: true }); if (data) RUTBE_LIST = data; return RUTBE_LIST; }
+    const DEFAULT_RUTBELER = [ { kat: 'hc', label: '── HC ──', disabled: true }, { kat: 'hc', label: 'Bilim Direktörü Asistanı - S4', disabled: false }, { kat: 'hc', label: 'Baş Araştırmacı - S4', disabled: false }, { kat: 'hr', label: '── HR ──', disabled: true }, { kat: 'hr', label: 'Baş Araştırmacı Stajyeri - S4', disabled: false }, { kat: 'hr', label: 'Tesis Araştırmacısı - S4', disabled: false }, { kat: 'hr', label: 'Uzman Araştırmacı - S4', disabled: false }, { kat: 'hr', label: 'Yetkin Araştırmacı - S4', disabled: false }, { kat: 'mr', label: '── MR ──', disabled: true }, { kat: 'mr', label: 'Seçkin Araştırmacı - S4', disabled: false }, { kat: 'mr', label: 'Deneyimli Araştırmacı - S3', disabled: false }, { kat: 'mr', label: 'Araştırmacı - S3', disabled: false }, { kat: 'mr', label: 'Yeni Araştırmacı - S3', disabled: false }, { kat: 'lr', label: '── LR ──', disabled: true }, { kat: 'lr', label: 'Araştırmacı Adayı - S2', disabled: false }, { kat: 'lr', label: 'Uzman Stajyer - S2', disabled: false }, { kat: 'lr', label: 'Stajyer - S2', disabled: false } ];
+    async function fetchRutbeler() { 
+      const { data, error } = await _supabase.from('rutbeler').select('*').order('id', { ascending: true }); 
+      if (data && data.length > 0) {
+        RUTBE_LIST = data; 
+      } else if (!error) {
+        const { error: insErr } = await _supabase.from('rutbeler').insert(DEFAULT_RUTBELER);
+        if (!insErr) {
+            const { data: newData } = await _supabase.from('rutbeler').select('*').order('id', { ascending: true });
+            if (newData) RUTBE_LIST = newData;
+        }
+      }
+      return RUTBE_LIST; 
+    }
 window.MESAJ_TAB = window.MESAJ_TAB || 'gelen';
 window.setMesajTab = function(tab) { window.MESAJ_TAB = tab; renderMesajKutusu(); };
 function getGidenMesajlar() { if (!CU) return []; return ALL_MESAJLAR.filter(m => m.gonderen_un === CU.username); }
