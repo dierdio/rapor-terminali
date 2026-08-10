@@ -45,42 +45,104 @@ function getHighResImage(url, steamAppID) {
     return url.replace('capsule_sm_120', 'capsule_616x353').replace('capsule_231x87', 'header');
 }
 
+// --- SONSUZ KAYDIRMA (INFINITE SCROLL) ---
+let currentView = '';
+let currentPage = 0;
+let isLoadingMore = false;
+let hasMore = true;
+let scrollObserver = null;
+
+function setupInfiniteScroll(loadFunction) {
+    if (scrollObserver) scrollObserver.disconnect();
+    
+    scrollObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !isLoadingMore && hasMore) {
+            currentPage++;
+            loadFunction(true);
+        }
+    }, { rootMargin: '400px' }); // Sayfa sonuna 400px kala tetikle
+
+    setTimeout(() => {
+        let sentinel = document.getElementById('scroll-sentinel');
+        if (sentinel) scrollObserver.observe(sentinel);
+    }, 100);
+}
+
 // --- VİEW (GÖRÜNÜM) OLUŞTURUCULAR ---
 
-async function renderHome() {
-    showLoading();
+async function renderHome(isLoadMore = false) {
+    if (!isLoadMore) {
+        currentView = 'home';
+        currentPage = 0;
+        hasMore = true;
+        showLoading();
+    }
+    
+    if (isLoadingMore || !hasMore) return;
+    isLoadingMore = true;
+
     try {
-        // En yüksek Metacritic puanlı oyunları çekelim (Ana Sayfa Vitrini) - 60 Oyun
-        const res = await fetch(`${CHEAPSHARK_API}/deals?storeID=1&sortBy=Metacritic&pageSize=60`);
+        const res = await fetch(`${CHEAPSHARK_API}/deals?storeID=1&sortBy=Metacritic&pageSize=60&pageNumber=${currentPage}`);
         const games = await res.json();
         
-        if (!games || games.length === 0) throw new Error("Oyun bulunamadı");
+        if (!games || games.length === 0) {
+            hasMore = false;
+            isLoadingMore = false;
+            if(!isLoadMore) appView.innerHTML = '<div class="view-section">Oyun bulunamadı.</div>';
+            return;
+        }
 
-        let html = `<div class="view-section"><div class="game-grid">`;
+        let html = '';
         games.forEach(game => {
             const imgUrl = getHighResImage(game.thumb, game.steamAppID);
-            // onclick için dealID ve steamAppID paslıyoruz
             html += `
                 <div class="game-card" onclick="openGameDetail('${game.gameID}', '${game.dealID}', '${game.steamAppID}')">
-                    <img src="${imgUrl}" alt="${game.title}" class="game-poster" onerror="this.onerror=null; this.src='${game.thumb}';">
+                    <img loading="lazy" src="${imgUrl}" alt="${game.title}" class="game-poster" onerror="this.onerror=null; this.src='${game.thumb}';">
                 </div>
             `;
         });
-        html += `</div></div>`;
-        appView.innerHTML = html;
+
+        if (!isLoadMore) {
+            appView.innerHTML = `
+                <div class="view-section">
+                    <div class="game-grid" id="main-grid">${html}</div>
+                    <div id="scroll-sentinel" style="height: 20px; width: 100%; margin-top: 20px;"></div>
+                </div>
+            `;
+            setupInfiniteScroll(renderHome);
+        } else {
+            document.getElementById('main-grid').insertAdjacentHTML('beforeend', html);
+        }
     } catch (err) {
-        showError('Oyunlar yüklenirken hata oluştu: ' + err.message);
+        if(!isLoadMore) showError('Oyunlar yüklenirken hata oluştu: ' + err.message);
+    } finally {
+        isLoadingMore = false;
     }
 }
 
-async function renderDiscounts() {
-    showLoading();
+async function renderDiscounts(isLoadMore = false) {
+    if (!isLoadMore) {
+        currentView = 'discounts';
+        currentPage = 0;
+        hasMore = true;
+        showLoading();
+    }
+    
+    if (isLoadingMore || !hasMore) return;
+    isLoadingMore = true;
+
     try {
-        // İndirim oranı yüksek olanları çekelim - 60 Oyun
-        const res = await fetch(`${CHEAPSHARK_API}/deals?sortBy=Savings&pageSize=60&lowerPrice=1`);
+        const res = await fetch(`${CHEAPSHARK_API}/deals?sortBy=Savings&pageSize=60&lowerPrice=1&pageNumber=${currentPage}`);
         const discounts = await res.json();
 
-        let html = `<div class="view-section"><div class="game-grid">`;
+        if (!discounts || discounts.length === 0) {
+            hasMore = false;
+            isLoadingMore = false;
+            if(!isLoadMore) appView.innerHTML = '<div class="view-section">İndirim bulunamadı.</div>';
+            return;
+        }
+
+        let html = '';
         discounts.forEach(item => {
             const imgUrl = getHighResImage(item.thumb, item.steamAppID);
             const savings = Math.round(item.savings);
@@ -92,14 +154,26 @@ async function renderDiscounts() {
                     <div class="platform-logo">
                         <i class="${iconClass}" style="color: white; font-size: 20px;"></i>
                     </div>
-                    <img src="${imgUrl}" alt="${item.title}" class="game-poster" onerror="this.onerror=null; this.src='${item.thumb}';">
+                    <img loading="lazy" src="${imgUrl}" alt="${item.title}" class="game-poster" onerror="this.onerror=null; this.src='${item.thumb}';">
                 </div>
             `;
         });
-        html += `</div></div>`;
-        appView.innerHTML = html;
+
+        if (!isLoadMore) {
+            appView.innerHTML = `
+                <div class="view-section">
+                    <div class="game-grid" id="main-grid">${html}</div>
+                    <div id="scroll-sentinel" style="height: 20px; width: 100%; margin-top: 20px;"></div>
+                </div>
+            `;
+            setupInfiniteScroll(renderDiscounts);
+        } else {
+            document.getElementById('main-grid').insertAdjacentHTML('beforeend', html);
+        }
     } catch (err) {
-        showError('İndirimler yüklenirken hata oluştu.');
+        if(!isLoadMore) showError('İndirimler yüklenirken hata oluştu.');
+    } finally {
+        isLoadingMore = false;
     }
 }
 

@@ -211,6 +211,10 @@ body {
     aspect-ratio: 3/4;
     background-color: var(--bg-panel);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    /* DOM Virtualization (Sanallaştırma) */
+    content-visibility: auto;
+    contain-intrinsic-size: 300px 400px;
 }
 
 .game-card:hover {
