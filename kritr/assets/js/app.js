@@ -120,6 +120,7 @@ async function renderGameDetail(gameID, dealID, steamAppID) {
                 if (revRes.ok) {
                     const revData = await revRes.json();
                     if (revData.reviews) reviews = revData.reviews;
+                    if (revData.query_summary) querySummary = revData.query_summary;
                 }
             } catch (e) {
                 console.log("Steam yorumları çekilemedi (CORS veya API hatası)", e);
@@ -129,14 +130,13 @@ async function renderGameDetail(gameID, dealID, steamAppID) {
         // Skorlar
         let metaScore = info.metacriticScore && info.metacriticScore !== "0" ? info.metacriticScore : 'N/A';
         
-        // Tasarımın tam görünmesi için Metacritic bazlı (veya rastgele) gerçekçi IGN ve PCGamer puanları üretiyoruz.
-        let baseScore = metaScore !== 'N/A' ? parseInt(metaScore) : Math.floor(Math.random() * 20) + 75; // 75-95 arası
-        
-        let ignScore = (baseScore / 10 + (Math.random() * 0.8 - 0.4)).toFixed(1);
-        if (ignScore > 10) ignScore = "10.0";
-        
-        let pcgScore = Math.floor(baseScore + (Math.random() * 10 - 5));
-        if (pcgScore > 100) pcgScore = 100;
+        // Gerçek Steam Puanları
+        let steamPercent = 'N/A';
+        let steamStatus = 'N/A';
+        if (querySummary && querySummary.total_reviews > 0) {
+            steamPercent = Math.round((querySummary.total_positive / querySummary.total_reviews) * 100) + '%';
+            steamStatus = querySummary.review_score_desc || 'N/A';
+        }
         
         let bannerImg = getHighResImage(info.thumb);
         let fallbackBanner = info.thumb;
@@ -161,13 +161,15 @@ async function renderGameDetail(gameID, dealID, steamAppID) {
                         <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Metacritic.svg" class="score-logo" alt="Metacritic" style="filter: invert(1); height: 30px;">
                         <div class="score-box score-metacritic" style="${metaScore === 'N/A' ? 'background:#444' : ''}">${metaScore}</div>
                     </div>
-                    <div class="score-item">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/9/9f/IGN_Logo.svg" class="score-logo" alt="IGN" style="height: 30px;">
-                        <div class="score-box score-ign" style="font-size: 1.4rem;">${ignScore}</div>
+                    <div class="score-item" style="flex-direction: column; justify-content: center; gap: 5px;">
+                        <i class="fab fa-steam" style="font-size: 24px; color: white;"></i>
+                        <span style="font-size: 0.7rem; color: #aaa; text-align: center;">Steam Puanı</span>
+                        <div class="score-box" style="font-size: 1.2rem; background: ${steamPercent === 'N/A' ? '#444' : '#66c0f4'}; color: #fff;">${steamPercent}</div>
                     </div>
-                    <div class="score-item">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/PC_Gamer_logo.svg" class="score-logo" alt="PC Gamer" style="height: 30px; filter: invert(1);">
-                        <div class="score-box score-pcgamer">${pcgScore}</div>
+                    <div class="score-item" style="flex-direction: column; justify-content: center; gap: 5px;">
+                        <i class="fas fa-users" style="font-size: 24px; color: white;"></i>
+                        <span style="font-size: 0.7rem; color: #aaa; text-align: center;">Genel Durum</span>
+                        <div class="score-box" style="font-size: 0.8rem; background: ${steamStatus === 'N/A' ? '#444' : 'var(--neon-green)'}; padding: 5px; color: #000; text-align: center;">${steamStatus}</div>
                     </div>
                 </div>
 
