@@ -1,33 +1,60 @@
-// --- MOCK DATA (Sahte Veriler) ---
-const mockGames = [
-    { id: 'f1-24', title: 'F1 24', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co830s.jpg' },
-    { id: 'subnautica', title: 'Subnautica', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1iqw.jpg' },
-    { id: 'cuphead', title: 'Cuphead', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1tq9.jpg' },
-    { id: 'halo-2', title: 'Halo 2', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co2kcy.jpg' },
-    { id: 'pc-building-sim', title: 'PC Building Simulator', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1x76.jpg' },
-    { id: 'stardew-valley', title: 'Stardew Valley', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/xrpmydnu9a09nwuteznp.jpg' },
-    { id: 'portal-2', title: 'Portal 2', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1rs4.jpg' }
-];
-
-const mockDiscounts = [
-    { id: 'cocoon', title: 'Cocoon', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co6i9q.jpg', discount: '-50%', platformIcon: 'fab fa-steam' },
-    { id: 'crysis-2', title: 'Crysis 2 Remastered', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co3p81.jpg', discount: '-60%', platformIcon: 'fab fa-neos' }, // Epic games icon
-    { id: 'construction-sim', title: 'Construction Simulator', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co506z.jpg', discount: '-50%', platformIcon: 'fab fa-xbox' },
-    { id: 'rdr2', title: 'Red Dead Redemption 2', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1q1f.jpg', discount: '-75%', platformIcon: 'fab fa-steam' },
-    { id: 'btd6', title: 'Bloons TD 6', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co38g3.jpg', discount: '-75%', platformIcon: 'fab fa-neos' },
-    { id: 'metro-2033', title: 'Metro 2033 Redux', image: 'https://images.igdb.com/igdb/image/upload/t_cover_big/co1rci.jpg', discount: 'FREE', platformIcon: 'fab fa-steam', isFree: true }
-];
-
-// --- VİEW (GÖRÜNÜM) OLUŞTURUCULAR ---
+// --- SUPABASE BAĞLANTISI ---
+const supabaseUrl = 'https://poxifowrycsxkhduzshx.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBveGlmb3dyeWNzeGtoZHV6c2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzOTI1ODAsImV4cCI6MjEwMTk2ODU4MH0.X0HK_oqako8yY7-Sf9wWGRSgUp7VaYtSFdao7g0OaGE';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 const appView = document.getElementById('app-view');
 
-function renderHome() {
+// --- YARDIMCI FONKSİYONLAR ---
+function showLoading() {
+    appView.innerHTML = `
+        <div class="view-section" style="display:flex; justify-content:center; align-items:center; height:50vh; color: var(--neon-green);">
+            <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+        </div>
+    `;
+}
+
+function showError(msg) {
+    appView.innerHTML = `
+        <div class="view-section" style="display:flex; justify-content:center; align-items:center; height:50vh; color: #ff3333; flex-direction:column; gap:10px;">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+            <h3>HATA: ${msg}</h3>
+        </div>
+    `;
+}
+
+function showEmpty(msg) {
+    appView.innerHTML = `
+        <div class="view-section" style="display:flex; justify-content:center; align-items:center; height:50vh; color: var(--text-muted); flex-direction:column; gap:10px;">
+            <i class="fas fa-ghost fa-2x"></i>
+            <h3>${msg}</h3>
+        </div>
+    `;
+}
+
+// --- VİEW (GÖRÜNÜM) OLUŞTURUCULAR ---
+
+async function renderHome() {
+    showLoading();
+    const { data: games, error } = await supabase
+        .from('games')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error(error);
+        return showError('Oyunlar yüklenemedi. Tabloyu oluşturduğunuzdan emin olun.');
+    }
+    
+    if (!games || games.length === 0) {
+        return showEmpty('Henüz veritabanına hiç oyun eklemediniz.');
+    }
+
     let html = `<div class="view-section"><div class="game-grid">`;
-    mockGames.forEach(game => {
+    games.forEach(game => {
         html += `
             <div class="game-card" onclick="openGameDetail('${game.id}')">
-                <img src="${game.image}" alt="${game.title}" class="game-poster">
+                <img src="${game.image_url}" alt="${game.title}" class="game-poster">
             </div>
         `;
     });
@@ -35,18 +62,45 @@ function renderHome() {
     appView.innerHTML = html;
 }
 
-function renderDiscounts() {
+async function renderDiscounts() {
+    showLoading();
+    // İndirimler tablosunu ve ilişkili oyunu (games) çekiyoruz.
+    const { data: discounts, error } = await supabase
+        .from('discounts')
+        .select('*, games(*)')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error(error);
+        return showError('İndirimler yüklenemedi. Tablo yapısını kontrol edin.');
+    }
+
+    if (!discounts || discounts.length === 0) {
+        return showEmpty('Şu an aktif bir indirim bulunmuyor.');
+    }
+
     let html = `<div class="view-section"><div class="game-grid">`;
-    mockDiscounts.forEach(game => {
-        let badgeStyle = game.isFree ? 'background-color: #d4af37; color: #000;' : ''; // Altın sarısı Free
-        let discountText = game.isFree ? 'FREE' : game.discount;
+    discounts.forEach(item => {
+        if (!item.games) return; // İlişkili oyun silinmişse atla
+        
+        let isFree = item.discount_text.toUpperCase() === 'FREE' || item.discount_text === '-100%';
+        let badgeStyle = isFree ? 'background-color: #d4af37; color: #000;' : ''; 
+        let discountText = isFree ? 'FREE' : item.discount_text;
+        
+        // Basit ikon eşleştirme (steam -> fab fa-steam)
+        let iconClass = 'fas fa-gamepad';
+        if (item.platform.toLowerCase().includes('steam')) iconClass = 'fab fa-steam';
+        else if (item.platform.toLowerCase().includes('epic')) iconClass = 'fab fa-neos';
+        else if (item.platform.toLowerCase().includes('xbox')) iconClass = 'fab fa-xbox';
+        else if (item.platform.toLowerCase().includes('playstation')) iconClass = 'fab fa-playstation';
+
         html += `
-            <div class="game-card" onclick="openGameDetail('${game.id}')">
+            <div class="game-card" onclick="openGameDetail('${item.game_id}')">
                 <div class="discount-badge" style="${badgeStyle}">${discountText}</div>
                 <div class="platform-logo">
-                    <i class="${game.platformIcon}" style="color: white; font-size: 20px;"></i>
+                    <i class="${iconClass}" style="color: white; font-size: 20px;"></i>
                 </div>
-                <img src="${game.image}" alt="${game.title}" class="game-poster">
+                <img src="${item.games.image_url}" alt="${item.games.title}" class="game-poster">
             </div>
         `;
     });
@@ -54,52 +108,75 @@ function renderDiscounts() {
     appView.innerHTML = html;
 }
 
-function renderGameDetail(gameId) {
-    // Portal 2 mockup'ına uygun sabit tasarım
-    const html = `
+async function renderGameDetail(gameId) {
+    showLoading();
+    
+    // Oyun verisini çek
+    const { data: game, error: gameError } = await supabase
+        .from('games')
+        .select('*')
+        .eq('id', gameId)
+        .single();
+        
+    if (gameError) return showError('Oyun detayı bulunamadı.');
+
+    // Yorumları çek
+    const { data: reviews, error: reviewsError } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('game_id', gameId)
+        .order('created_at', { ascending: false });
+
+    // Puanlar yoksa "N/A" veya 0 gösterelim
+    let metaScore = game.metacritic_score || 'N/A';
+    let ignScore = game.ign_score || 'N/A';
+    let pcgScore = game.pcgamer_score || 'N/A';
+
+    let html = `
         <div class="view-section game-detail">
             <div class="game-banner">
-                <img src="https://images.igdb.com/igdb/image/upload/t_screenshot_big/ar3tz.jpg" alt="Portal 2 Banner">
+                <img src="${game.banner_url || game.image_url}" alt="${game.title} Banner">
             </div>
             
             <div class="scores-grid">
                 <div class="score-item">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Metacritic.svg" class="score-logo" alt="Metacritic" style="filter: invert(1); height: 30px;">
-                    <div class="score-box score-metacritic">95</div>
+                    <div class="score-box score-metacritic">${metaScore}</div>
                 </div>
                 <div class="score-item">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/9/9f/IGN_Logo.svg" class="score-logo" alt="IGN" style="height: 30px;">
-                    <div class="score-box score-ign" style="font-size: 1.4rem;">9.5</div>
+                    <div class="score-box score-ign" style="font-size: 1.4rem;">${ignScore}</div>
                 </div>
                 <div class="score-item">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/3/30/PC_Gamer_logo.svg" class="score-logo" alt="PC Gamer" style="height: 30px; filter: invert(1);">
-                    <div class="score-box score-pcgamer">94</div>
+                    <div class="score-box score-pcgamer">${pcgScore}</div>
                 </div>
             </div>
 
             <div class="comments-section">
-                <!-- Örnek Steam Yorumu 1 -->
+    `;
+
+    if (reviews && reviews.length > 0) {
+        reviews.forEach(review => {
+            let icon = review.is_recommended ? '<i class="fas fa-thumbs-up thumb-up" style="color:#66c0f4"></i>' : '<i class="fas fa-thumbs-down" style="color:#ff3333"></i>';
+            let recText = review.is_recommended ? 'Recommended' : 'Not Recommended';
+            html += `
                 <div class="comment-card">
                     <div class="comment-header">
-                        <i class="fas fa-thumbs-up thumb-up"></i>
-                        <span>Recommended • 6.5 hrs on record</span>
+                        ${icon}
+                        <span>${recText} • ${review.play_time || 'Gizli'} • Yazan: ${review.author}</span>
                     </div>
                     <div class="comment-body">
-                        The first Portal had genius, original gameplay mechanics, great story...
-                        <br><br>
-                        This sequel brings all those qualities to a new level... lots of wow moments, graphics is beautiful.
+                        ${review.content}
                     </div>
                 </div>
-                <!-- Örnek Steam Yorumu 2 -->
-                <div class="comment-card">
-                    <div class="comment-header">
-                        <i class="fas fa-thumbs-up thumb-up"></i>
-                        <span>Recommended • 23.8 hrs on record</span>
-                    </div>
-                    <div class="comment-body">
-                        I wish I could wipe my memory of this game just to experience it for the first time all over again.
-                    </div>
-                </div>
+            `;
+        });
+    } else {
+        html += `<div style="color:var(--text-muted); text-align:center;">Bu oyun için henüz yorum yapılmamış.</div>`;
+    }
+
+    html += `
             </div>
         </div>
     `;
@@ -109,7 +186,7 @@ function renderGameDetail(gameId) {
 function renderPlaceholder(pageName) {
     appView.innerHTML = `
         <div class="view-section" style="display:flex; justify-content:center; align-items:center; height:50vh; color: var(--text-muted);">
-            <h2>${pageName.toUpperCase()} SAYFASI YAPIM AŞAMASINDA</h2>
+            <h2>${pageName.toUpperCase()} SAYFASI HAZIRLANIYOR</h2>
         </div>
     `;
 }
