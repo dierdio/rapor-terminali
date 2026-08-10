@@ -36,9 +36,12 @@ function showError(msg) {
 }
 
 // Resim URL'sini iyileştir (Bazen çok düşük çözünürlüklü geliyor)
-function getHighResImage(url) {
-    if (!url) return 'https://via.placeholder.com/300x400?text=No+Image';
-    // Cheapshark'tan gelen steam capsullerini büyütelim
+function getHighResImage(url, steamAppID) {
+    if (steamAppID && steamAppID !== 'null') {
+        // Steam'in kendi yüksek çözünürlüklü kütüphane görselini kullan
+        return `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${steamAppID}/library_600x900.jpg`;
+    }
+    if (!url) return 'https://via.placeholder.com/300x400?text=Kritr';
     return url.replace('capsule_sm_120', 'capsule_616x353').replace('capsule_231x87', 'header');
 }
 
@@ -47,19 +50,19 @@ function getHighResImage(url) {
 async function renderHome() {
     showLoading();
     try {
-        // En yüksek Metacritic puanlı oyunları çekelim (Ana Sayfa Vitrini)
-        const res = await fetch(`${CHEAPSHARK_API}/deals?storeID=1&sortBy=Metacritic&pageSize=20`);
+        // En yüksek Metacritic puanlı oyunları çekelim (Ana Sayfa Vitrini) - 60 Oyun
+        const res = await fetch(`${CHEAPSHARK_API}/deals?storeID=1&sortBy=Metacritic&pageSize=60`);
         const games = await res.json();
         
         if (!games || games.length === 0) throw new Error("Oyun bulunamadı");
 
         let html = `<div class="view-section"><div class="game-grid">`;
         games.forEach(game => {
-            const imgUrl = getHighResImage(game.thumb);
+            const imgUrl = getHighResImage(game.thumb, game.steamAppID);
             // onclick için dealID ve steamAppID paslıyoruz
             html += `
                 <div class="game-card" onclick="openGameDetail('${game.gameID}', '${game.dealID}', '${game.steamAppID}')">
-                    <img src="${imgUrl}" alt="${game.title}" class="game-poster" onerror="this.src='https://via.placeholder.com/300x400?text=Kritr'">
+                    <img src="${imgUrl}" alt="${game.title}" class="game-poster" onerror="this.onerror=null; this.src='${game.thumb}';">
                 </div>
             `;
         });
@@ -73,13 +76,13 @@ async function renderHome() {
 async function renderDiscounts() {
     showLoading();
     try {
-        // İndirim oranı yüksek olanları çekelim
-        const res = await fetch(`${CHEAPSHARK_API}/deals?sortBy=Savings&pageSize=24&lowerPrice=1`);
+        // İndirim oranı yüksek olanları çekelim - 60 Oyun
+        const res = await fetch(`${CHEAPSHARK_API}/deals?sortBy=Savings&pageSize=60&lowerPrice=1`);
         const discounts = await res.json();
 
         let html = `<div class="view-section"><div class="game-grid">`;
         discounts.forEach(item => {
-            const imgUrl = getHighResImage(item.thumb);
+            const imgUrl = getHighResImage(item.thumb, item.steamAppID);
             const savings = Math.round(item.savings);
             const iconClass = storeIcons[item.storeID] || 'fas fa-gamepad';
 
@@ -89,7 +92,7 @@ async function renderDiscounts() {
                     <div class="platform-logo">
                         <i class="${iconClass}" style="color: white; font-size: 20px;"></i>
                     </div>
-                    <img src="${imgUrl}" alt="${item.title}" class="game-poster" onerror="this.src='https://via.placeholder.com/300x400?text=Kritr'">
+                    <img src="${imgUrl}" alt="${item.title}" class="game-poster" onerror="this.onerror=null; this.src='${item.thumb}';">
                 </div>
             `;
         });
