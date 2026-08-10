@@ -206,28 +206,54 @@ function renderPlaceholder(pageName) {
     `;
 }
 
-// --- NAVİGASYON (ROUTING) KONTROLÜ ---
-function navigate(page) {
-    // Aktif class'ı güncelle
-    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    document.querySelector(`.nav-item[data-target="${page}"]`).classList.add('active');
-
-    // Sayfayı render et
-    if (page === 'home') renderHome();
-    else if (page === 'discounts') renderDiscounts();
-    else if (page === 'discover') renderHome();
-    else renderPlaceholder(page);
-    
-    // Sayfanın en üstüne kaydır
-    appView.scrollTop = 0;
+// --- YÖNLENDİRME (ROUTING) SİSTEMİ ---
+function navigateTo(path) {
+    window.history.pushState({}, '', path);
+    handleRoute();
 }
 
-// --- DETAYA GİT ---
+window.navigate = function(page) {
+    let path = page === 'home' ? '/kritr/home' : '/kritr/' + page;
+    navigateTo(path);
+};
+
 window.openGameDetail = function(gameID, dealID, steamAppID) {
-    renderGameDetail(gameID, dealID, steamAppID);
+    navigateTo(`/kritr/game/${gameID}?deal=${dealID}&steam=${steamAppID}`);
+};
+
+function handleRoute() {
+    let path = window.location.pathname;
+    
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    appView.scrollTop = 0;
+
+    if (path.startsWith('/kritr/game/')) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const gameID = path.split('/')[3]; // /kritr/game/ID
+        const dealID = urlParams.get('deal') || 'null';
+        const steamAppID = urlParams.get('steam') || 'null';
+        
+        renderGameDetail(gameID, dealID, steamAppID);
+    } else {
+        let page = path.replace('/kritr/', '');
+        if (!page || page === 'kritr') page = 'home';
+        
+        let navEl = document.querySelector(`.nav-item[data-target="${page}"]`);
+        if(navEl) navEl.classList.add('active');
+
+        if (page === 'home' || page === 'discover') renderHome();
+        else if (page === 'discounts') renderDiscounts();
+        else renderPlaceholder(page);
+    }
 }
 
-// İlk açılışta Anasayfayı yükle
+// Geri / İleri tuşlarına basıldığında rotayı yenile
+window.addEventListener('popstate', handleRoute);
+
+// İlk açılışta rotayı yakala
 document.addEventListener('DOMContentLoaded', () => {
-    navigate('home');
+    if (window.location.pathname === '/kritr' || window.location.pathname === '/kritr/') {
+        window.history.replaceState({}, '', '/kritr/home');
+    }
+    handleRoute();
 });
