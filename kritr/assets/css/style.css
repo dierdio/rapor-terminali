@@ -1,0 +1,438 @@
+/* --- Değişkenler ve Temel Ayarlar --- */
+:root {
+    --bg-dark: #101010;
+    --bg-panel: #1a1a1a;
+    --neon-green: #00d660;
+    --neon-green-dim: rgba(0, 214, 96, 0.2);
+    --text-light: #ffffff;
+    --text-muted: #888888;
+    --nav-bg: #2a2a2a;
+    --icon-color: #000000;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-dark);
+    color: var(--text-light);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden; /* App container scroll edilecek */
+}
+
+/* --- Uygulama İskeleti --- */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    position: relative;
+}
+
+.content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* --- Üst Başlık (Header) --- */
+.top-header {
+    background-color: var(--bg-dark);
+    padding: 15px 20px;
+    z-index: 10;
+    flex-shrink: 0;
+}
+
+.header-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* Logo */
+.logo {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--neon-green);
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-shadow: 0 0 10px var(--neon-green-dim);
+}
+
+/* Arama Çubuğu */
+.search-container {
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+}
+
+#search-input {
+    width: 100%;
+    padding: 12px 20px 12px 45px;
+    border-radius: 25px;
+    border: none;
+    background-color: var(--neon-green);
+    color: #000;
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    outline: none;
+}
+
+#search-input::placeholder {
+    color: rgba(0,0,0,0.6);
+}
+
+.search-icon {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #000;
+    font-size: 1.1rem;
+    pointer-events: none;
+}
+
+/* Profil İkonu */
+.profile-container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    cursor: pointer;
+}
+
+.profile-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid var(--neon-green);
+}
+
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* --- Ana İçerik Alanı --- */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 20px 100px 20px; /* Altta nav için boşluk */
+    scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+.main-content::-webkit-scrollbar {
+    width: 6px;
+}
+.main-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.main-content::-webkit-scrollbar-thumb {
+    background: var(--nav-bg);
+    border-radius: 10px;
+}
+
+/* --- Alt Navigasyon (Mobile Default) --- */
+.navigation {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background-color: var(--nav-bg);
+    border-radius: 30px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 15px 0;
+    z-index: 100;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.nav-item {
+    color: var(--icon-color);
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 50px;
+    height: 50px;
+}
+
+.nav-item.active {
+    color: var(--neon-green);
+    filter: drop-shadow(0 0 5px var(--neon-green-dim));
+}
+
+/* --- View Container (Sayfa İçerikleri) --- */
+.view-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    animation: fadeIn 0.4s ease forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- Oyun Grid Yapısı --- */
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+}
+
+/* Oyun Kartı */
+.game-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    aspect-ratio: 3/4;
+    background-color: var(--bg-panel);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.game-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 214, 96, 0.2);
+}
+
+.game-poster {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* İndirim Rozeti (Ribbon) */
+.discount-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #ff3333;
+    color: #fff;
+    padding: 5px 12px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-bottom-right-radius: 8px;
+    z-index: 2;
+    box-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+}
+
+/* Platform Logosu */
+.platform-logo {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 35px;
+    height: 35px;
+    background-color: var(--bg-dark);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    padding: 5px;
+    box-shadow: -2px 2px 10px rgba(0,0,0,0.5);
+}
+
+.platform-logo img {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+}
+
+/* --- Oyun Detay Sayfası --- */
+.game-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.game-banner {
+    width: 100%;
+    height: 200px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+}
+
+.game-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Puanlar Grid */
+.scores-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    align-items: center;
+    justify-items: center;
+    background-color: rgba(255,255,255,0.02);
+    padding: 20px;
+    border-radius: 12px;
+}
+
+.score-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.score-logo {
+    height: 40px;
+    object-fit: contain;
+}
+
+/* Puan Kutuları */
+.score-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: 800;
+    font-size: 1.8rem;
+    color: #fff;
+    width: 70px;
+    height: 70px;
+    border-radius: 12px;
+}
+
+.score-metacritic { background-color: #66cc33; }
+.score-ign { background-color: #bf1313; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); width: 80px; height: 90px; }
+.score-pcgamer { background-color: #d81f26; border-radius: 50%; border: 4px solid #fff; }
+
+/* Yorumlar Alanı */
+.comments-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.comment-card {
+    background-color: #171a21; /* Steam rengi */
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    color: #a4b4c5;
+    font-size: 0.85rem;
+}
+
+.comment-header .thumb-up {
+    color: #66c0f4;
+    font-size: 1.2rem;
+}
+
+.comment-body {
+    color: #c6d4df;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* --- MASAÜSTÜ (Desktop) MEDYA SORGULARI --- */
+@media (min-width: 768px) {
+    .app-container {
+        flex-direction: row;
+    }
+
+    /* Sol Yan Menü (Sidebar Nav) */
+    .navigation {
+        position: static;
+        transform: none;
+        width: 80px;
+        height: 100vh;
+        flex-direction: column;
+        justify-content: center;
+        gap: 30px;
+        border-radius: 0;
+        border-right: 1px solid rgba(255,255,255,0.05);
+        background-color: var(--bg-dark);
+        box-shadow: none;
+    }
+
+    .nav-item {
+        color: var(--text-muted); /* Masaüstünde siyah ikonlar karanlıkta kaybolur, gri yapalım */
+    }
+
+    .nav-item.active {
+        color: var(--neon-green);
+    }
+
+    /* İçerik Sarıcı */
+    .content-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Header düzeni */
+    .top-header {
+        width: 100%;
+    }
+
+    .header-content {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .logo {
+        margin-right: auto;
+    }
+
+    .search-container {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 400px;
+    }
+
+    .profile-container {
+        position: static;
+    }
+
+    .main-content {
+        padding: 30px;
+    }
+
+    /* Oyun Grid - 4+ sütun */
+    .game-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 25px;
+    }
+
+    /* Oyun Detay Masaüstü */
+    .game-banner {
+        height: 350px;
+    }
+}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KRITR | Oyuncu Merkezi</title>
+    
+    <!-- Fontlar: Logo için Orbitron, metinler için Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    
+    <!-- İkonlar için FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Stiller -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    
+    <!-- Uygulama Çerçevesi -->
+    <div class="app-container">
+        
+        <!-- Navigasyon (Mobilde alt bar, masaüstünde sol bar) -->
+        <nav class="navigation">
+            <a href="#" class="nav-item" data-target="discounts" onclick="navigate('discounts')">
+                <i class="fas fa-percentage"></i>
+            </a>
+            <a href="#" class="nav-item" data-target="favorites" onclick="navigate('favorites')">
+                <i class="fas fa-bookmark"></i>
+            </a>
+            <a href="#" class="nav-item active" data-target="home" onclick="navigate('home')">
+                <i class="fas fa-home"></i>
+            </a>
+            <a href="#" class="nav-item" data-target="settings" onclick="navigate('settings')">
+                <i class="fas fa-cog"></i>
+            </a>
+            <a href="#" class="nav-item" data-target="discover" onclick="navigate('discover')">
+                <i class="fas fa-compass"></i>
+            </a>
+        </nav>
+
+        <!-- İçerik Sarıcı (Masaüstünde Nav'ın yanında durur) -->
+        <div class="content-wrapper">
+            <!-- Üst Başlık (Header) -->
+            <header class="top-header">
+                <div class="header-content">
+                    <div class="logo" onclick="navigate('home')">KRITR</div>
+                    
+                    <div class="search-container">
+                        <input type="text" placeholder="Search a game..." id="search-input">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
+                    
+                    <div class="profile-container">
+                        <!-- Gerçek avatara dönüştürülecek, şimdilik placeholder -->
+                        <div class="profile-avatar">
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=KRITR" alt="Profile">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- İçerik Alanı (SPA View) -->
+            <main id="app-view" class="main-content">
+                <!-- Sayfa içerikleri buraya JavaScript ile yüklenecek -->
+            </main>
+        </div>
+    </div>
+
+    <!-- Uygulama Mantığı -->
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
