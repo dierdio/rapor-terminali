@@ -149,9 +149,12 @@
   <!-- Ana İçerik -->
   <div class="content">
     <h1>DIERDIO</h1>
-    <div class="tilt-wrapper">
+    <div class="tilt-wrapper" style="display: flex; gap: 30px;">
       <a href="/terminal/" class="card" id="terminal-btn">
         <span>RAPOR TERMİNALİ</span>
+      </a>
+      <a href="/kritr/" class="card" id="kritr-btn">
+        <span>KRITR</span>
       </a>
     </div>
   </div>
@@ -251,10 +254,10 @@
       noise.stop(audioCtx.currentTime + 0.04);
     }
 
-    document.getElementById('terminal-btn').addEventListener('click', (e) => {
-      playClickSound();
-      // Yönlendirmeyi çok hafif geciktirerek sesin duyulmasını garanti altına alabilirsiniz
-      // Ancak varsayılan yönlendirme de gayet hızlı ve iyi çalışacaktır.
+    document.querySelectorAll('.card').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        playClickSound();
+      });
     });
 
     // --- AURORA ARKA PLAN HAREKETİ ---
@@ -281,7 +284,7 @@
     animateAurora();
 
     // --- 3D TILT EFEKTİ ---
-    const card = document.querySelector('.card');
+    const cards = document.querySelectorAll('.card');
     const tiltWrapper = document.querySelector('.tilt-wrapper');
 
     tiltWrapper.addEventListener('mousemove', (e) => {
@@ -296,12 +299,16 @@
       const rotateX = ((y - centerY) / centerY) * -12; 
       const rotateY = ((x - centerX) / centerX) * 12;
 
-      card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      cards.forEach(card => {
+        card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      });
     });
 
     tiltWrapper.addEventListener('mouseleave', () => {
       // Fare karttan ayrıldığında eski konumuna yumuşak geçiş
-      card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+      cards.forEach(card => {
+        card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+      });
     });
 
     // --- PARTİCÜL (PARTICLE) EFEKTİ (CANVAS) ---
