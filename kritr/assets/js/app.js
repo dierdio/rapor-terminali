@@ -402,7 +402,7 @@ window.handleLoginSubmit = async function(e) {
                 }
             });
             if (error) throw error;
-            alert("Kayıt başarılı! Lütfen giriş yapın.");
+            alert("Kayıt başarılı! Lütfen e-posta adresinize gelen doğrulama bağlantısına tıklayın.");
             document.getElementById('auth-mode-toggle').checked = false;
             window.updateAuthModeUI();
         } else {
