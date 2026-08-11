@@ -47,8 +47,8 @@ function getHighResImage(url, steamAppID) {
 
 // --- ÖNBELLEK (CACHE) DURUMU ---
 const stateCache = {
-    home: { html: '', scrollY: 0, currentPage: 0, hasMore: true },
-    discounts: { html: '', scrollY: 0, currentPage: 0, hasMore: true }
+    home: { html: '', scrollY: 0, currentPage: 0, hasMore: true, searchTerm: '' },
+    discounts: { html: '', scrollY: 0, currentPage: 0, hasMore: true, searchTerm: '' }
 };
 
 // --- SONSUZ KAYDIRMA (INFINITE SCROLL) ---
@@ -58,27 +58,34 @@ let isLoadingMore = false;
 let hasMore = true;
 let scrollObserver = null;
 
-// --- ARAMA İŞLEMİ ---
+let currentSearch = '';
+let searchTimeout = null;
+
+// --- ARAMA İŞLEMİ (API ÜZERİNDEN) ---
 window.triggerSearch = function() {
     const searchInput = document.getElementById('search-input');
     if (!searchInput) return;
-    const filter = searchInput.value.toLowerCase();
     
-    // Sadece oyun kartlarını seç (Arama sadece mevcut sayfadaki kartları filtreler)
-    const gameCards = document.querySelectorAll('.game-grid .game-card');
+    const newSearch = searchInput.value.trim().toLowerCase();
+    if (newSearch === currentSearch) return; // Değişmediyse işlem yapma
     
-    gameCards.forEach(card => {
-        const img = card.querySelector('.game-poster');
-        if (img) {
-            const title = img.alt.toLowerCase();
-            // Kullanıcının isteği: Sadece o harfle başlayanlar
-            if (title.startsWith(filter)) {
-                card.style.display = 'block';
-            } else {
-                card.style.display = 'none';
-            }
+    currentSearch = newSearch;
+    
+    // Kullanıcı yazmayı bitirene kadar bekle (Debounce)
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        // Eski önbellekleri temizle ki arama sonuçlarıyla karışmasın
+        if (currentView === 'home') stateCache.home.html = '';
+        if (currentView === 'discounts') stateCache.discounts.html = '';
+        
+        if (currentView === 'discounts') {
+            renderDiscounts();
+        } else if (currentView === 'home') {
+            renderHome();
+        } else {
+            navigate('home');
         }
-    });
+    }, 500);
 };
 
 function setupInfiniteScroll(loadFunction) {
@@ -107,14 +114,18 @@ async function renderHome(isLoadMore = false) {
             appView.scrollTop = stateCache.home.scrollY;
             currentPage = stateCache.home.currentPage;
             hasMore = stateCache.home.hasMore;
+            currentSearch = stateCache.home.searchTerm || '';
+            const sInput = document.getElementById('search-input');
+            if (sInput) sInput.value = currentSearch;
+            
             currentView = 'home';
             setupInfiniteScroll(renderHome);
-            triggerSearch();
             return;
         }
 
         currentView = 'home';
-        currentPage = Math.floor(Math.random() * 30); // Rastgele oyunlar için rastgele sayfa
+        // Arama varsa her zaman sayfa 0'dan başlar, yoksa rastgele sayfa
+        currentPage = currentSearch ? 0 : Math.floor(Math.random() * 30);
         hasMore = true;
         showLoading();
     }
@@ -123,7 +134,12 @@ async function renderHome(isLoadMore = false) {
     isLoadingMore = true;
 
     try {
-        const res = await fetch(`${CHEAPSHARK_API}/deals?storeID=1&sortBy=Metacritic&pageSize=60&pageNumber=${currentPage}`);
+        let apiUrl = `${CHEAPSHARK_API}/deals?storeID=1&sortBy=Metacritic&pageSize=60&pageNumber=${currentPage}`;
+        if (currentSearch) {
+            apiUrl = `${CHEAPSHARK_API}/deals?storeID=1&title=${encodeURIComponent(currentSearch)}&pageSize=60&pageNumber=${currentPage}`;
+        }
+        
+        const res = await fetch(apiUrl);
         const games = await res.json();
         
         if (!games || games.length === 0) {
@@ -154,7 +170,6 @@ async function renderHome(isLoadMore = false) {
         } else {
             document.getElementById('main-grid').insertAdjacentHTML('beforeend', html);
         }
-        triggerSearch(); // Yeni yüklenen oyunları da arama filtresinden geçir
     } catch (err) {
         if(!isLoadMore) showError('Oyunlar yüklenirken hata oluştu: ' + err.message);
     } finally {
@@ -169,9 +184,12 @@ async function renderDiscounts(isLoadMore = false) {
             appView.scrollTop = stateCache.discounts.scrollY;
             currentPage = stateCache.discounts.currentPage;
             hasMore = stateCache.discounts.hasMore;
+            currentSearch = stateCache.discounts.searchTerm || '';
+            const sInput = document.getElementById('search-input');
+            if (sInput) sInput.value = currentSearch;
+
             currentView = 'discounts';
             setupInfiniteScroll(renderDiscounts);
-            triggerSearch();
             return;
         }
 
@@ -185,7 +203,11 @@ async function renderDiscounts(isLoadMore = false) {
     isLoadingMore = true;
 
     try {
-        const res = await fetch(`${CHEAPSHARK_API}/deals?sortBy=Savings&pageSize=60&lowerPrice=1&pageNumber=${currentPage}`);
+        let apiUrl = `${CHEAPSHARK_API}/deals?sortBy=Savings&pageSize=60&lowerPrice=1&pageNumber=${currentPage}`;
+        if (currentSearch) {
+            apiUrl += `&title=${encodeURIComponent(currentSearch)}`;
+        }
+        const res = await fetch(apiUrl);
         const discounts = await res.json();
 
         if (!discounts || discounts.length === 0) {
@@ -223,7 +245,6 @@ async function renderDiscounts(isLoadMore = false) {
         } else {
             document.getElementById('main-grid').insertAdjacentHTML('beforeend', html);
         }
-        triggerSearch(); // Yeni yüklenen oyunları da arama filtresinden geçir
     } catch (err) {
         if(!isLoadMore) showError('İndirimler yüklenirken hata oluştu.');
     } finally {
@@ -232,6 +253,7 @@ async function renderDiscounts(isLoadMore = false) {
 }
 
 async function renderGameDetail(gameID, dealID, steamAppID) {
+    currentView = 'game_detail';
     showLoading();
     try {
         // 1. CheapShark'tan oyun detayını çek (Fiyat, İsim, Metacritic vs.)
@@ -370,6 +392,7 @@ function handleRoute() {
         stateCache[currentView].scrollY = appView.scrollTop;
         stateCache[currentView].currentPage = currentPage;
         stateCache[currentView].hasMore = hasMore;
+        stateCache[currentView].searchTerm = currentSearch;
     }
 
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
