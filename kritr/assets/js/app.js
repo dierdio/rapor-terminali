@@ -20,7 +20,6 @@ function showLoading() {
         <div class="view-section" style="display:flex; justify-content:center; align-items:center; height:50vh; color: var(--neon-green);">
             <div style="text-align:center;">
                 <i class="fas fa-circle-notch fa-spin fa-3x"></i>
-                <p style="margin-top: 15px; color: var(--text-muted);">Veriler Çekiliyor...</p>
             </div>
         </div>
     `;
