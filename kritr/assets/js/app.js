@@ -45,12 +45,41 @@ function getHighResImage(url, steamAppID) {
     return url.replace('capsule_sm_120', 'capsule_616x353').replace('capsule_231x87', 'header');
 }
 
+// --- ÖNBELLEK (CACHE) DURUMU ---
+const stateCache = {
+    home: { html: '', scrollY: 0, currentPage: 0, hasMore: true },
+    discounts: { html: '', scrollY: 0, currentPage: 0, hasMore: true }
+};
+
 // --- SONSUZ KAYDIRMA (INFINITE SCROLL) ---
 let currentView = '';
 let currentPage = 0;
 let isLoadingMore = false;
 let hasMore = true;
 let scrollObserver = null;
+
+// --- ARAMA İŞLEMİ ---
+window.triggerSearch = function() {
+    const searchInput = document.getElementById('search-input');
+    if (!searchInput) return;
+    const filter = searchInput.value.toLowerCase();
+    
+    // Sadece oyun kartlarını seç (Arama sadece mevcut sayfadaki kartları filtreler)
+    const gameCards = document.querySelectorAll('.game-grid .game-card');
+    
+    gameCards.forEach(card => {
+        const img = card.querySelector('.game-poster');
+        if (img) {
+            const title = img.alt.toLowerCase();
+            // Kullanıcının isteği: Sadece o harfle başlayanlar
+            if (title.startsWith(filter)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+};
 
 function setupInfiniteScroll(loadFunction) {
     if (scrollObserver) scrollObserver.disconnect();
@@ -72,8 +101,20 @@ function setupInfiniteScroll(loadFunction) {
 
 async function renderHome(isLoadMore = false) {
     if (!isLoadMore) {
+        // Eğer geri gelindiyse (farklı bir view'dan 'home'a geçiliyorsa) ve önbellek varsa
+        if (stateCache.home.html && currentView !== 'home') {
+            appView.innerHTML = stateCache.home.html;
+            appView.scrollTop = stateCache.home.scrollY;
+            currentPage = stateCache.home.currentPage;
+            hasMore = stateCache.home.hasMore;
+            currentView = 'home';
+            setupInfiniteScroll(renderHome);
+            triggerSearch();
+            return;
+        }
+
         currentView = 'home';
-        currentPage = 0;
+        currentPage = Math.floor(Math.random() * 30); // Rastgele oyunlar için rastgele sayfa
         hasMore = true;
         showLoading();
     }
@@ -113,6 +154,7 @@ async function renderHome(isLoadMore = false) {
         } else {
             document.getElementById('main-grid').insertAdjacentHTML('beforeend', html);
         }
+        triggerSearch(); // Yeni yüklenen oyunları da arama filtresinden geçir
     } catch (err) {
         if(!isLoadMore) showError('Oyunlar yüklenirken hata oluştu: ' + err.message);
     } finally {
@@ -122,6 +164,17 @@ async function renderHome(isLoadMore = false) {
 
 async function renderDiscounts(isLoadMore = false) {
     if (!isLoadMore) {
+        if (stateCache.discounts.html && currentView !== 'discounts') {
+            appView.innerHTML = stateCache.discounts.html;
+            appView.scrollTop = stateCache.discounts.scrollY;
+            currentPage = stateCache.discounts.currentPage;
+            hasMore = stateCache.discounts.hasMore;
+            currentView = 'discounts';
+            setupInfiniteScroll(renderDiscounts);
+            triggerSearch();
+            return;
+        }
+
         currentView = 'discounts';
         currentPage = 0;
         hasMore = true;
@@ -170,6 +223,7 @@ async function renderDiscounts(isLoadMore = false) {
         } else {
             document.getElementById('main-grid').insertAdjacentHTML('beforeend', html);
         }
+        triggerSearch(); // Yeni yüklenen oyunları da arama filtresinden geçir
     } catch (err) {
         if(!isLoadMore) showError('İndirimler yüklenirken hata oluştu.');
     } finally {
@@ -310,10 +364,18 @@ window.openGameDetail = function(gameID, dealID, steamAppID) {
 function handleRoute() {
     let path = window.location.pathname;
     
+    // Yönlendirme öncesi mevcut view'in durumunu kaydet (Scroll, İçerik vs.)
+    if (currentView === 'home' || currentView === 'discounts') {
+        stateCache[currentView].html = appView.innerHTML;
+        stateCache[currentView].scrollY = appView.scrollTop;
+        stateCache[currentView].currentPage = currentPage;
+        stateCache[currentView].hasMore = hasMore;
+    }
+
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    appView.scrollTop = 0;
 
     if (path.startsWith('/kritr/game/')) {
+        appView.scrollTop = 0;
         const urlParams = new URLSearchParams(window.location.search);
         const gameID = path.split('/')[3]; // /kritr/game/ID
         const dealID = urlParams.get('deal') || 'null';
@@ -338,6 +400,11 @@ window.addEventListener('popstate', handleRoute);
 
 // İlk açılışta rotayı yakala
 document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', triggerSearch);
+    }
+
     if (window.location.pathname === '/kritr' || window.location.pathname === '/kritr/') {
         window.history.replaceState({}, '', '/kritr/home');
     }
