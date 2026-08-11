@@ -541,6 +541,17 @@ window.addEventListener('popstate', handleRoute);
 
 // İlk açılışta rotayı yakala
 document.addEventListener('DOMContentLoaded', async () => {
+    // --- SUPABASE HATA AYIKLAMA (URL'den Hata Okuma) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const authError = urlParams.get('error_description') || hashParams.get('error_description');
+    
+    if (authError) {
+        alert("Doğrulama Hatası: " + decodeURIComponent(authError).replace(/\+/g, ' '));
+        // URL'yi temizle
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // Session Kontrolü
     const { data } = await _supabase.auth.getSession();
     const btnHeader = document.querySelector('.login-btn-header');
