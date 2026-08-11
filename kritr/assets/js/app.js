@@ -390,7 +390,17 @@ window.handleLoginSubmit = async function(e) {
     
     try {
         if (isRegister) {
-            const { data, error } = await _supabase.auth.signUp({ email, password: pass });
+            const username = document.getElementById('login-username').value.trim();
+            const { data, error } = await _supabase.auth.signUp({ 
+                email, 
+                password: pass,
+                options: {
+                    data: {
+                        username: username,
+                        display_name: username
+                    }
+                }
+            });
             if (error) throw error;
             alert("Kayıt başarılı! Lütfen giriş yapın.");
             document.getElementById('auth-mode-toggle').checked = false;
@@ -413,6 +423,18 @@ window.updateAuthModeUI = function() {
     const isRegister = document.getElementById('auth-mode-toggle').checked;
     document.getElementById('login-title').textContent = isRegister ? 'Hesap Oluştur' : 'Giriş Yap';
     document.getElementById('login-submit-btn').textContent = isRegister ? 'Kayıt Ol' : 'Giriş Yap';
+    
+    const userGroup = document.getElementById('username-group');
+    const userInput = document.getElementById('login-username');
+    if (userGroup && userInput) {
+        if (isRegister) {
+            userGroup.style.display = 'flex';
+            userInput.required = true;
+        } else {
+            userGroup.style.display = 'none';
+            userInput.required = false;
+        }
+    }
 };
 
 function renderLogin() {
@@ -424,6 +446,10 @@ function renderLogin() {
                 <h2 id="login-title" style="text-align:center; margin-bottom:25px; color:var(--text-light);">Giriş Yap</h2>
                 
                 <form id="login-form" onsubmit="handleLoginSubmit(event)">
+                    <div class="form-group" id="username-group" style="display:none;">
+                        <label>Kullanıcı Adı</label>
+                        <input type="text" id="login-username" placeholder="Oyuncu Adınız" class="login-input">
+                    </div>
                     <div class="form-group">
                         <label>Email</label>
                         <input type="email" id="login-email" required placeholder="ornek@email.com" class="login-input">
@@ -525,7 +551,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentUser = data.session.user;
         if(btnHeader) btnHeader.style.display = 'none';
         if(profileBtn) profileBtn.style.display = 'block';
-        if(emailDisp) emailDisp.textContent = currentUser.email;
+        
+        // Eğer kullanıcı adı varsa onu göster, yoksa e-posta
+        const displayName = currentUser.user_metadata?.username || currentUser.email;
+        if(emailDisp) emailDisp.textContent = displayName;
     } else {
         if(btnHeader) btnHeader.style.display = 'block';
         if(profileBtn) profileBtn.style.display = 'none';
