@@ -1,13 +1,12 @@
 {
-  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/kritr/(home|discounts|login|discover|settings)",
-      "destination": "/kritr/index.html"
+      "source": "/kritr/(.*)",
+      "destination": "/kritr/"
     },
     {
-      "source": "/kritr/game/(.*)",
-      "destination": "/kritr/index.html"
+      "source": "/terminal/(.*)",
+      "destination": "/terminal/"
     }
   ]
 }
