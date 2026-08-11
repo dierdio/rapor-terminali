@@ -5,6 +5,12 @@ const REVIEWS_API = window.location.hostname === 'localhost' || window.location.
     ? 'http://localhost:3000/api/get-reviews' 
     : '/api/get-reviews'; // Canlıda Vercel proksisi çalışır
 
+// --- SUPABASE AYARLARI ---
+const SUPABASE_URL = 'https://bwajmlxxmxamwneyebax.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3YWptbHh4bXhhbXduZXllYmF4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTA0MTIsImV4cCI6MjA5NDY4NjQxMn0.Buifz0hiJ-3SrXpCX31EiaQ_f8TMgyWOzmsm-9YIMoY';
+const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let currentUser = null;
+
 const appView = document.getElementById('app-view');
 
 // Mağaza ID'lerini ikonlara çeviren basit harita
@@ -359,6 +365,92 @@ async function renderGameDetail(gameID, dealID, steamAppID) {
     }
 }
 
+// --- AUTH FONKSİYONLARI & LOGIN VIEW ---
+window.toggleProfileMenu = function() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (dropdown) dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+};
+
+window.doLogout = async function() {
+    await _supabase.auth.signOut();
+    window.location.reload();
+};
+
+window.handleLoginSubmit = async function(e) {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-password').value;
+    const isRegister = document.getElementById('auth-mode-toggle').checked;
+    
+    const errEl = document.getElementById('login-error');
+    const btn = document.getElementById('login-submit-btn');
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Bekleyin...';
+    
+    try {
+        if (isRegister) {
+            const { data, error } = await _supabase.auth.signUp({ email, password: pass });
+            if (error) throw error;
+            alert("Kayıt başarılı! Lütfen giriş yapın.");
+            document.getElementById('auth-mode-toggle').checked = false;
+            window.updateAuthModeUI();
+        } else {
+            const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
+            if (error) throw error;
+            window.location.href = '/kritr/home';
+        }
+    } catch (err) {
+        errEl.textContent = err.message || "Bir hata oluştu.";
+        errEl.style.display = 'block';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = isRegister ? 'Kayıt Ol' : 'Giriş Yap';
+    }
+};
+
+window.updateAuthModeUI = function() {
+    const isRegister = document.getElementById('auth-mode-toggle').checked;
+    document.getElementById('login-title').textContent = isRegister ? 'Hesap Oluştur' : 'Giriş Yap';
+    document.getElementById('login-submit-btn').textContent = isRegister ? 'Kayıt Ol' : 'Giriş Yap';
+};
+
+function renderLogin() {
+    currentView = 'login';
+    appView.innerHTML = `
+        <div class="view-section" style="display:flex; justify-content:center; align-items:center; min-height:70vh;">
+            <div class="login-card">
+                <div class="logo" style="text-align:center; font-size:2.5rem; margin-bottom:20px;">KRITR</div>
+                <h2 id="login-title" style="text-align:center; margin-bottom:25px; color:var(--text-light);">Giriş Yap</h2>
+                
+                <form id="login-form" onsubmit="handleLoginSubmit(event)">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="login-email" required placeholder="ornek@email.com" class="login-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Şifre</label>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="login-input">
+                    </div>
+                    
+                    <div class="auth-toggle-wrapper">
+                        <span class="auth-toggle-label">Giriş</span>
+                        <label class="switch">
+                            <input type="checkbox" id="auth-mode-toggle" onchange="updateAuthModeUI()">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="auth-toggle-label">Kayıt Ol</span>
+                    </div>
+
+                    <div id="login-error" style="display:none; color:#ff3333; text-align:center; margin-bottom:15px; font-size:0.9rem;"></div>
+                    
+                    <button type="submit" class="submit-btn" id="login-submit-btn">Giriş Yap</button>
+                </form>
+            </div>
+        </div>
+    `;
+}
+
 function renderPlaceholder(pageName) {
     appView.innerHTML = `
         <div class="view-section" style="display:flex; justify-content:center; align-items:center; height:50vh; color: var(--text-muted);">
@@ -413,6 +505,7 @@ function handleRoute() {
 
         if (page === 'home' || page === 'discover') renderHome();
         else if (page === 'discounts') renderDiscounts();
+        else if (page === 'login') renderLogin();
         else renderPlaceholder(page);
     }
 }
@@ -421,7 +514,23 @@ function handleRoute() {
 window.addEventListener('popstate', handleRoute);
 
 // İlk açılışta rotayı yakala
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Session Kontrolü
+    const { data } = await _supabase.auth.getSession();
+    const btnHeader = document.querySelector('.login-btn-header');
+    const profileBtn = document.getElementById('profile-avatar-btn');
+    const emailDisp = document.getElementById('user-email-display');
+    
+    if (data.session) {
+        currentUser = data.session.user;
+        if(btnHeader) btnHeader.style.display = 'none';
+        if(profileBtn) profileBtn.style.display = 'block';
+        if(emailDisp) emailDisp.textContent = currentUser.email;
+    } else {
+        if(btnHeader) btnHeader.style.display = 'block';
+        if(profileBtn) profileBtn.style.display = 'none';
+    }
+
     const searchInput = document.getElementById('search-input');
     if (searchInput) {
         searchInput.addEventListener('input', triggerSearch);

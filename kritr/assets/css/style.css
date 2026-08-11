@@ -440,3 +440,189 @@ body {
         height: 350px;
     }
 }
+
+/* --- Auth & Login Ekranı Stilleri --- */
+.login-btn-header {
+    background-color: var(--neon-green);
+    color: #000;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.login-btn-header:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px var(--neon-green-dim);
+}
+
+.login-card {
+    background-color: var(--bg-panel);
+    padding: 40px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.login-input {
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background-color: rgba(0,0,0,0.2);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.login-input:focus {
+    border-color: var(--neon-green);
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    border: none;
+    background-color: var(--neon-green);
+    color: #000;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.submit-btn:hover {
+    background-color: #00e666;
+    transform: translateY(-2px);
+}
+
+.submit-btn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Switch (Giriş/Kayıt) */
+.auth-toggle-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    margin-top: 10px;
+}
+
+.auth-toggle-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+}
+
+.switch input { 
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255,255,255,0.1);
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: var(--neon-green);
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: rgba(255,255,255,0.2);
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px var(--neon-green);
+}
+
+input:checked + .slider:before {
+    transform: translateX(20px);
+}
+
+.slider.round {
+    border-radius: 20px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Profile Dropdown */
+.profile-dropdown {
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background-color: var(--bg-panel);
+    border-radius: 10px;
+    min-width: 200px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.05);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.dropdown-item {
+    padding: 12px 15px;
+    font-size: 0.9rem;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.dropdown-item:hover {
+    background-color: rgba(255,255,255,0.05);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: rgba(255,255,255,0.1);
+    margin: 0;
+}
+
+.text-danger {
+    color: #ff4444;
+}

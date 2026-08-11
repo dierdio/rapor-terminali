@@ -51,10 +51,20 @@
                         <i class="fas fa-search search-icon"></i>
                     </div>
                     
-                    <div class="profile-container">
-                        <!-- Gerçek avatara dönüştürülecek, şimdilik placeholder -->
-                        <div class="profile-avatar">
+                    <div class="profile-container" id="auth-container">
+                        <!-- Oturum durumuna göre JS ile doldurulacak (Giriş Yap butonu veya Avatar) -->
+                        <button class="login-btn-header" onclick="navigate('login')" style="display: none;">Giriş Yap</button>
+                        <div class="profile-avatar" id="profile-avatar-btn" style="display: none;" onclick="toggleProfileMenu()">
                             <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=KRITR" alt="Profile">
+                        </div>
+                        
+                        <!-- Profil Menüsü (Çıkış Yap vb.) -->
+                        <div class="profile-dropdown" id="profile-dropdown" style="display: none;">
+                            <div class="dropdown-item" id="user-email-display"></div>
+                            <div class="dropdown-divider"></div>
+                            <div class="dropdown-item text-danger" onclick="doLogout()">
+                                <i class="fas fa-sign-out-alt"></i> Çıkış Yap
+                            </div>
                         </div>
                     </div>
                 </div>
