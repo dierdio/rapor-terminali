@@ -63,7 +63,8 @@ const https = require('https');
 
 // Yardımcı: Https üzerinden veri çekme
 const fetchJson = (url) => new Promise((resolve, reject) => {
-    https.get(url, (res) => {
+    const options = { headers: { 'User-Agent': 'ControllinPanel/1.0 (admin@dierdio.com)' } };
+    https.get(url, options, (res) => {
         let body = '';
         res.on('data', chunk => body += chunk);
         res.on('end', () => resolve(JSON.parse(body)));
@@ -73,8 +74,9 @@ const fetchJson = (url) => new Promise((resolve, reject) => {
 // Yardımcı: Dosya İndirme
 const downloadFile = (url, dest) => new Promise((resolve, reject) => {
     const file = fs.createWriteStream(dest);
-    https.get(url, (response) => {
-        if (response.statusCode === 301 || response.statusCode === 302) {
+    const options = { headers: { 'User-Agent': 'ControllinPanel/1.0 (admin@dierdio.com)' } };
+    https.get(url, options, (response) => {
+        if (response.statusCode === 301 || response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307 || response.statusCode === 308) {
             return downloadFile(response.headers.location, dest).then(resolve).catch(reject);
         }
         response.pipe(file);
