@@ -19,17 +19,23 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar">
-            <div class="text-muted text-small mb-2" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">ANA MENÜ</div>
-            <a href="#" class="nav-link active" id="nav-server">Sunucu Kontrolü</a>
-            <a href="#" class="nav-link" id="nav-files">Dosya Yöneticisi</a>
-            <a href="#" class="nav-link" id="nav-users">Kullanıcılar</a>
-            <a href="#" class="nav-link" id="nav-settings">Bağlantı Ayarları</a>
+            <details open class="sidebar-dropdown">
+                <summary class="text-muted text-small mb-2" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px; cursor: pointer; user-select: none; outline: none;">ANA MENÜ</summary>
+                <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px;">
+                    <a href="#" class="nav-link active" id="nav-server">Sunucu Kontrolü</a>
+                    <a href="#" class="nav-link" id="nav-files">Dosya Yöneticisi</a>
+                    <a href="#" class="nav-link" id="nav-users">Kullanıcılar</a>
+                    <a href="#" class="nav-link" id="nav-settings">Bağlantı Ayarları</a>
+                </div>
+            </details>
             
-            <div class="text-muted text-small mb-2 mt-2" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">VDS SUNUCULARI</div>
-            <div id="vds-server-list" style="display: flex; flex-direction: column; gap: 5px;">
-                <!-- VDS'ten gelen sunucular buraya yüklenecek -->
-                <div class="text-small text-muted">Sunucular aranıyor...</div>
-            </div>
+            <details open class="sidebar-dropdown">
+                <summary class="text-muted text-small mb-2" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px; cursor: pointer; user-select: none; outline: none;">VDS SUNUCULARI</summary>
+                <div id="vds-server-list" style="display: flex; flex-direction: column; gap: 5px; margin-left: 10px;">
+                    <!-- VDS'ten gelen sunucular buraya yüklenecek -->
+                    <div class="text-small text-muted">Sunucular aranıyor...</div>
+                </div>
+            </details>
 
             <div style="flex-grow: 1;"></div>
             <button class="b-btn text-error" style="border-color: var(--error-color); width: 100%;" onclick="doLogout()">Çıkış Yap</button>
