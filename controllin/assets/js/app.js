@@ -28,15 +28,40 @@ let statusInterval = null;
     currentUser = profile;
     document.getElementById('current-user').textContent = currentUser.username;
 
-    if (window.location.pathname.endsWith('.html')) {
-        const clean = window.location.pathname.replace(/\.html$/, '');
-        window.history.replaceState(null, '', clean + window.location.search + window.location.hash);
+    const routeMap = {
+        'server': 'sunucu_kontrolu',
+        'files': 'dosya_yoneticisi',
+        'users': 'kullanicilar',
+        'settings': 'ayarlar',
+        'create-server': 'sunucu_kur'
+    };
+    const pathMap = Object.fromEntries(Object.entries(routeMap).map(([k, v]) => [v, k]));
+
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    const lastSegment = pathSegments[pathSegments.length - 1];
+    
+    let initialView = 'server';
+    if (pathMap[lastSegment]) {
+        initialView = pathMap[lastSegment];
+    } else {
+        window.history.replaceState({ viewId: 'server' }, '', '/controllin/sunucu_kontrolu');
     }
+
+    window.addEventListener('popstate', (e) => {
+        if (e.state && e.state.viewId) {
+            showView(e.state.viewId, false);
+        } else {
+            const currentSegment = window.location.pathname.split('/').pop();
+            showView(pathMap[currentSegment] || 'server', false);
+        }
+    });
 
     loadSettings();
     initNavigation();
     fetchUsers();
-    
+    // İlk görünümü yükle (Geçmişe eklemeden)
+    showView(initialView, false);
+
     // Kurulum ekranındaki sürüm listesini doldur
     document.getElementById('create-srv-type').addEventListener('change', loadServerVersions);
     loadServerVersions();
@@ -87,7 +112,15 @@ function initNavigation() {
     });
 }
 
-function showView(viewId) {
+function showView(viewId, pushState = true) {
+    const routeMap = {
+        'server': 'sunucu_kontrolu',
+        'files': 'dosya_yoneticisi',
+        'users': 'kullanicilar',
+        'settings': 'ayarlar',
+        'create-server': 'sunucu_kur'
+    };
+
     const views = ['server', 'files', 'users', 'settings', 'create-server'];
     views.forEach(v => {
         const navEl = document.getElementById(`nav-${v}`);
@@ -99,6 +132,10 @@ function showView(viewId) {
     document.getElementById(`view-${viewId}`).style.display = 'grid';
     
     if (viewId === 'files') loadFileManager(currentFileManagerPath);
+
+    if (pushState && routeMap[viewId]) {
+        window.history.pushState({ viewId }, '', '/controllin/' + routeMap[viewId]);
+    }
 }
 
 // --- VDS API İSTEKLERİ ---
@@ -159,7 +196,7 @@ function selectServer(name) {
     appendConsole(`[SİSTEM] ${name} seçildi. Canlı veriler bekleniyor...`);
     
     // Bug Fix: Dosya yöneticisindeysek, sunucu paneline dön
-    showView('server');
+    showView('server', true);
 
     // Start polling status
     if (statusInterval) clearInterval(statusInterval);
@@ -205,7 +242,7 @@ async function fetchServerStatus() {
 function showCreateServerView(e) {
     e.preventDefault();
     e.stopPropagation();
-    showView('create-server');
+    showView('create-server', true);
 }
 
 async function loadServerVersions() {
@@ -271,7 +308,7 @@ async function installServer() {
         const data = await res.json();
         alert(data.message || "Sunucu başarıyla kuruldu!");
         fetchVDSServers(); // Listeyi yenile
-        showView('server'); // Ana ekrana dön
+        showView('server', true); // Ana ekrana dön
     } catch(err) {
         alert("Kurulum Hatası: " + err.message);
     } finally {
