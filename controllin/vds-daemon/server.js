@@ -3,6 +3,7 @@ const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 const { exec } = require('child_process');
 
 const app = express();
@@ -10,10 +11,9 @@ const PORT = process.env.PORT || 3000;
 const API_TOKEN = process.env.API_TOKEN || 'GUVENLI_TOKEN_BURAYA';
 const BASE_DIR = process.env.BASE_DIR || '/home/minecraft';
 
-app.use(cors()); // Güvenlik için cors ayarlarını Vercel domaininize sınırlayabilirsiniz
+app.use(cors());
 app.use(express.json());
 
-// Yetkilendirme Middleware
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || authHeader.split(' ')[1] !== API_TOKEN) {
@@ -25,22 +25,71 @@ const authMiddleware = (req, res, next) => {
 app.use(authMiddleware);
 
 // --- SUNUCULARI LİSTELEME ---
-// /home/minecraft içindeki klasörleri döner (.cache ve .local hariç)
 app.get('/api/servers', (req, res) => {
     try {
         if (!fs.existsSync(BASE_DIR)) {
             return res.json({ servers: [] });
         }
-
         const entries = fs.readdirSync(BASE_DIR, { withFileTypes: true });
         const servers = entries
             .filter(dirent => dirent.isDirectory() && !['.cache', '.local'].includes(dirent.name))
             .map(dirent => dirent.name);
-            
         res.json({ servers });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+// --- YENİ SUNUCU OLUŞTURMA ---
+app.post('/api/servers', (req, res) => {
+    const serverName = req.body.name;
+    if (!serverName || !/^[a-zA-Z0-9_-]+$/.test(serverName)) {
+        return res.status(400).json({ error: 'Geçersiz sunucu adı (sadece harf, rakam, tire ve altçizgi).' });
+    }
+    const targetDir = path.join(BASE_DIR, serverName);
+    if (fs.existsSync(targetDir)) {
+        return res.status(400).json({ error: 'Bu isimde bir sunucu (klasör) zaten var.' });
+    }
+    try {
+        fs.mkdirSync(targetDir, { recursive: true });
+        res.json({ success: true, message: 'Sunucu klasörü oluşturuldu.' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- SUNUCU DURUMU VE LOG ---
+app.get('/api/servers/:name/status', (req, res) => {
+    const serverName = req.params.name;
+    const targetDir = path.join(BASE_DIR, serverName);
+    
+    // RAM Status
+    const totalMem = (os.totalmem() / (1024 * 1024 * 1024)).toFixed(2);
+    const freeMem = (os.freemem() / (1024 * 1024 * 1024)).toFixed(2);
+    const usedMem = (totalMem - freeMem).toFixed(2);
+    const ramStatus = `${usedMem} GB / ${totalMem} GB`;
+
+    // Screen Durumu kontrolü
+    exec(`screen -list | grep "mc_${serverName}"`, (error, stdout) => {
+        const isRunning = stdout && stdout.includes(`mc_${serverName}`);
+        
+        let consoleOutput = "[SİSTEM] Log bulunamadı veya sunucu henüz log üretmedi.";
+        const screenLogPath = path.join(targetDir, 'screenlog.0');
+        const mcLogPath = path.join(targetDir, 'logs', 'latest.log');
+        
+        let targetLog = null;
+        if (fs.existsSync(screenLogPath)) targetLog = screenLogPath;
+        else if (fs.existsSync(mcLogPath)) targetLog = mcLogPath;
+
+        if (targetLog) {
+            exec(`tail -n 100 ${targetLog}`, (errTail, stdoutTail) => {
+                if (!errTail && stdoutTail) consoleOutput = stdoutTail;
+                res.json({ isRunning: !!isRunning, ramStatus, log: consoleOutput });
+            });
+        } else {
+            res.json({ isRunning: !!isRunning, ramStatus, log: consoleOutput });
+        }
+    });
 });
 
 // --- SUNUCU BAŞLATMA ---
@@ -48,40 +97,48 @@ app.post('/api/servers/:name/start', (req, res) => {
     const serverName = req.params.name;
     const targetDir = path.join(BASE_DIR, serverName);
 
-    // Güvenlik: Path Traversal Koruması
     if (!targetDir.startsWith(BASE_DIR)) return res.status(400).json({ error: 'Invalid path' });
+    if (!fs.existsSync(targetDir)) return res.status(404).json({ error: 'Sunucu klasörü bulunamadı.' });
 
-    if (!fs.existsSync(targetDir)) {
-        return res.status(404).json({ error: 'Sunucu klasörü bulunamadı.' });
-    }
-
-    // run.sh veya start.sh arayalım
     const runScript = fs.existsSync(path.join(targetDir, 'run.sh')) ? 'run.sh' 
                     : fs.existsSync(path.join(targetDir, 'start.sh')) ? 'start.sh' 
                     : null;
 
-    if (!runScript) {
-        return res.status(400).json({ error: 'Başlatma betiği (run.sh veya start.sh) bulunamadı.' });
-    }
+    if (!runScript) return res.status(400).json({ error: 'Başlatma betiği (run.sh veya start.sh) bulunamadı.' });
 
-    // Script'i screen veya tmux ile başlatmak en iyisidir (örn: screen -dmS sunucu_adi bash run.sh)
-    const cmd = `cd ${targetDir} && screen -dmS mc_${serverName} bash ${runScript}`;
+    // screenlog.0 eskiden kalmışsa temizleyelim ki yeni konsol kafa karıştırmasın
+    const screenLogPath = path.join(targetDir, 'screenlog.0');
+    if (fs.existsSync(screenLogPath)) fs.unlinkSync(screenLogPath);
+
+    // -L flagi eklenerek screenlog.0 oluşması sağlanıyor
+    const cmd = `cd ${targetDir} && screen -L -Logfile screenlog.0 -dmS mc_${serverName} bash ${runScript}`;
     
     exec(cmd, (error, stdout, stderr) => {
-        if (error) {
-            return res.status(500).json({ error: error.message, stderr });
-        }
+        if (error) return res.status(500).json({ error: error.message, stderr });
         res.json({ success: true, message: 'Sunucu başlatma komutu gönderildi.' });
+    });
+});
+
+// --- KOMUT GÖNDERME ---
+app.post('/api/servers/:name/command', (req, res) => {
+    const serverName = req.params.name;
+    const command = req.body.command;
+    if (!command) return res.status(400).json({ error: 'Komut boş olamaz.' });
+
+    const safeCommand = command.replace(/"/g, '\\"');
+    const cmd = `screen -S mc_${serverName} -p 0 -X stuff "${safeCommand}\\r"`;
+    
+    exec(cmd, (error) => {
+        if (error) return res.status(500).json({ error: 'Komut gönderilemedi: Sunucu kapalı olabilir.' });
+        res.json({ success: true, message: 'Komut iletildi.' });
     });
 });
 
 // --- DOSYA YÖNETİCİSİ ---
 const upload = multer({ dest: '/tmp/controllin_uploads' });
 
-// 1. Klasör İçeriğini Listele
 app.get('/api/files', (req, res) => {
     let targetPath = req.query.path || '';
-    // Güvenlik
     const fullPath = path.join(BASE_DIR, targetPath);
     if (!fullPath.startsWith(BASE_DIR)) return res.status(400).json({ error: 'Invalid path' });
 
@@ -105,7 +162,6 @@ app.get('/api/files', (req, res) => {
             };
         });
 
-        // Klasörleri başa, dosyaları sona sırala
         files.sort((a, b) => {
             if (a.isDirectory && !b.isDirectory) return -1;
             if (!a.isDirectory && b.isDirectory) return 1;
@@ -118,31 +174,21 @@ app.get('/api/files', (req, res) => {
     }
 });
 
-// 2. Dosya İndir (Export)
 app.get('/api/files/download', (req, res) => {
     const targetPath = req.query.path;
     if (!targetPath) return res.status(400).json({ error: 'Path required' });
-
     const fullPath = path.join(BASE_DIR, targetPath);
     if (!fullPath.startsWith(BASE_DIR)) return res.status(400).json({ error: 'Invalid path' });
-
     if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'File not found' });
-    
     res.download(fullPath);
 });
 
-// 3. Dosya Yükle (Import)
 app.post('/api/files/upload', upload.single('file'), (req, res) => {
     const targetPath = req.body.path || '';
     const fullDir = path.join(BASE_DIR, targetPath);
-    
     if (!fullDir.startsWith(BASE_DIR)) return res.status(400).json({ error: 'Invalid path' });
-
     if (!req.file) return res.status(400).json({ error: 'No file provided' });
-
     const finalPath = path.join(fullDir, req.file.originalname);
-    
-    // Geçici tmp dosyasını hedef klasöre taşı
     fs.rename(req.file.path, finalPath, (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, message: 'Dosya yüklendi.' });
@@ -151,5 +197,4 @@ app.post('/api/files/upload', upload.single('file'), (req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`[controllin-daemon] API Sunucusu port ${PORT} üzerinde çalışıyor.`);
-    console.log(`Hedef Dizin: ${BASE_DIR}`);
 });

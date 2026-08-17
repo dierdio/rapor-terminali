@@ -8,6 +8,7 @@ let currentUser = null;
 let vdsConfig = { url: '', token: '' };
 let currentFileManagerPath = '';
 let activeServerName = null;
+let statusInterval = null;
 
 // Auth Kontrolü
 (async function init() {
@@ -134,9 +135,87 @@ function selectServer(name) {
     document.getElementById('server-name').textContent = name;
     document.getElementById('server-id').textContent = `VDS Klasörü: /home/minecraft/${name}`;
     document.getElementById('status-indicator').className = 'status-dot';
-    document.getElementById('server-status-text').textContent = 'Seçildi (Durum Bilinmiyor)';
+    document.getElementById('server-status-text').textContent = 'Bağlanılıyor...';
     
-    appendConsole(`[SİSTEM] ${name} seçildi. (Not: Tam durum takibi için VDS daemon'a eklenti yapılabilir).`);
+    appendConsole(`[SİSTEM] ${name} seçildi. Canlı veriler bekleniyor...`);
+
+    // Start polling status
+    if (statusInterval) clearInterval(statusInterval);
+    fetchServerStatus(); // Immediate first fetch
+    statusInterval = setInterval(fetchServerStatus, 3000);
+}
+
+async function fetchServerStatus() {
+    if (!activeServerName) return;
+    try {
+        const res = await vdsFetch(`/api/servers/${activeServerName}/status`);
+        const data = await res.json();
+        
+        const dot = document.getElementById('status-indicator');
+        const text = document.getElementById('server-status-text');
+        
+        if (data.isRunning) {
+            dot.className = 'status-dot online';
+            text.textContent = 'Aktif (Çalışıyor)';
+        } else {
+            dot.className = 'status-dot offline';
+            text.textContent = 'Kapalı';
+        }
+        
+        document.getElementById('server-ram').textContent = data.ramStatus;
+        document.getElementById('console-sync-status').innerHTML = '<span style="color:var(--success-color);">🟢 Senkronize (3s)</span>';
+
+        // Update Console
+        const out = document.getElementById('console-output');
+        // Only update if it actually changed to prevent annoying flickers and losing scroll
+        const formattedLog = data.log.replace(/\n/g, '<br>');
+        if (out.innerHTML.trim() !== formattedLog) {
+            const isScrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + 50;
+            out.innerHTML = formattedLog;
+            if (isScrolledToBottom) out.scrollTop = out.scrollHeight;
+        }
+
+    } catch (e) {
+        document.getElementById('console-sync-status').innerHTML = '<span style="color:var(--error-color);">🔴 Bağlantı Koptu</span>';
+    }
+}
+
+async function promptCreateServer(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const sName = prompt("Yeni sunucu klasörü adı: (Boşluk kullanmayın, örn: survival_01)");
+    if (!sName) return;
+    
+    try {
+        await vdsFetch(`/api/servers`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: sName })
+        });
+        alert("Sunucu klasörü oluşturuldu!");
+        fetchVDSServers(); // Listeyi yenile
+    } catch(err) {
+        alert("Hata: " + err.message);
+    }
+}
+
+async function sendServerCommand() {
+    if (!activeServerName) return;
+    const input = document.getElementById('console-input');
+    const cmd = input.value.trim();
+    if (!cmd) return;
+    
+    input.value = '';
+    
+    try {
+        await vdsFetch(`/api/servers/${activeServerName}/command`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ command: cmd })
+        });
+    } catch(err) {
+        alert("Komut hatası: " + err.message);
+    }
 }
 
 async function setServerAction(action) {

@@ -30,7 +30,10 @@
             </details>
             
             <details open class="sidebar-dropdown">
-                <summary class="text-muted text-small mb-2" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px; cursor: pointer; user-select: none; outline: none;">VDS SUNUCULARI</summary>
+                <summary class="text-muted text-small mb-2" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px; cursor: pointer; user-select: none; outline: none; display: flex; justify-content: space-between;">
+                    VDS SUNUCULARI
+                    <span class="text-primary" onclick="promptCreateServer(event)" style="font-weight: bold;" title="Yeni Klasör Oluştur">[+]</span>
+                </summary>
                 <div id="vds-server-list" style="display: flex; flex-direction: column; gap: 5px; margin-left: 10px;">
                     <!-- VDS'ten gelen sunucular buraya yüklenecek -->
                     <div class="text-small text-muted">Sunucular aranıyor...</div>
@@ -57,6 +60,10 @@
                             <span id="server-status-text">Bekliyor</span>
                         </div>
                     </div>
+                    <div style="text-align: right;">
+                        <div class="text-small text-muted">SİSTEM RAM KULLANIMI</div>
+                        <div style="font-family: monospace; font-size: 1.1rem; color: var(--text-color);" id="server-ram">-- GB / -- GB</div>
+                    </div>
                 </div>
 
                 <div class="flex-between mt-2" style="border-top: 1px solid var(--border-color); padding-top: 20px;">
@@ -65,12 +72,17 @@
                 </div>
             </div>
 
-            <div class="b-card large">
+            <div class="b-card large" style="display: flex; flex-direction: column; height: 60vh;">
                 <div class="b-card-header">
                     <h3>Konsol Çıktısı</h3>
+                    <div class="text-small text-muted" id="console-sync-status">Bağlı Değil</div>
                 </div>
-                <div class="console-box" id="console-output">
+                <div class="console-box" id="console-output" style="flex-grow: 1; margin-bottom: 0;">
                     [SİSTEM] VDS bağlantısı bekleniyor...
+                </div>
+                <div style="background: #0a0a0a; border: 1px solid var(--border-color); border-top: none; padding: 10px; display: flex; align-items: center; gap: 10px;">
+                    <span class="text-muted" style="font-family: monospace; font-weight: bold;">>_</span>
+                    <input type="text" id="console-input" class="b-input" style="border: none; background: transparent; padding: 0; margin: 0; box-shadow: none; font-family: monospace; width: 100%;" placeholder="Sunucuya komut gönder (örn: say Merhaba)" onkeydown="if(event.key==='Enter') sendServerCommand()">
                 </div>
             </div>
         </main>
