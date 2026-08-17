@@ -58,6 +58,7 @@ async function doLogin() {
     const { data, error } = await _supabase.auth.signInWithPassword({ email, password: p });
     
     if (error || !data.user) { 
+        errEl.textContent = "HATA: " + (error ? error.message : "KİMLİK DOĞRULANAMADI.");
         errEl.style.display = 'block'; 
         infoEl.style.display = 'none'; 
         btn.disabled = false; 
