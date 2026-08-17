@@ -211,7 +211,7 @@ async function loadServerVersions() {
 
     try {
         if (type === 'paper') {
-            const res = await fetch('https://api.papermc.io/v2/projects/paper');
+            const res = await fetch('/api/get-versions?type=paper');
             const data = await res.json();
             const versions = data.versions.reverse(); // En yeni sürüm en üstte
             select.innerHTML = '';
@@ -222,7 +222,7 @@ async function loadServerVersions() {
                 select.appendChild(opt);
             });
         } else if (type === 'vanilla') {
-            const res = await fetch('https://launchermeta.mojang.com/mc/game/version_manifest.json');
+            const res = await fetch('/api/get-versions?type=vanilla');
             const data = await res.json();
             const versions = data.versions.filter(v => v.type === 'release'); // Sadece tam sürümler
             select.innerHTML = '';
@@ -234,6 +234,7 @@ async function loadServerVersions() {
             });
         }
     } catch(e) {
+        console.error("Versiyon çekme hatası:", e);
         select.innerHTML = '<option value="1.20.4">1.20.4 (Manuel, Yükleme Hatası)</option>';
     } finally {
         select.disabled = false;
