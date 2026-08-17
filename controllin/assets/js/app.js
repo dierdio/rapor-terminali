@@ -37,6 +37,10 @@ let statusInterval = null;
     initNavigation();
     fetchUsers();
     
+    // Kurulum ekranındaki sürüm listesini doldur
+    document.getElementById('create-srv-type').addEventListener('change', loadServerVersions);
+    loadServerVersions();
+    
     if (vdsConfig.url && vdsConfig.token) {
         fetchVDSServers();
     } else {
@@ -197,6 +201,43 @@ function showCreateServerView(e) {
     e.preventDefault();
     e.stopPropagation();
     showView('create-server');
+}
+
+async function loadServerVersions() {
+    const type = document.getElementById('create-srv-type').value;
+    const select = document.getElementById('create-srv-version');
+    select.innerHTML = '<option value="">Sürümler aranıyor...</option>';
+    select.disabled = true;
+
+    try {
+        if (type === 'paper') {
+            const res = await fetch('https://api.papermc.io/v2/projects/paper');
+            const data = await res.json();
+            const versions = data.versions.reverse(); // En yeni sürüm en üstte
+            select.innerHTML = '';
+            versions.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                select.appendChild(opt);
+            });
+        } else if (type === 'vanilla') {
+            const res = await fetch('https://launchermeta.mojang.com/mc/game/version_manifest.json');
+            const data = await res.json();
+            const versions = data.versions.filter(v => v.type === 'release'); // Sadece tam sürümler
+            select.innerHTML = '';
+            versions.forEach(v => {
+                const opt = document.createElement('option');
+                opt.value = v.id;
+                opt.textContent = v.id;
+                select.appendChild(opt);
+            });
+        }
+    } catch(e) {
+        select.innerHTML = '<option value="1.20.4">1.20.4 (Manuel, Yükleme Hatası)</option>';
+    } finally {
+        select.disabled = false;
+    }
 }
 
 async function installServer() {
