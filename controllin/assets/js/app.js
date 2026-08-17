@@ -1,12 +1,13 @@
-/* controllin' App Logic */
+/* controllin' App Logic with VDS Integration */
 
 const SUPABASE_URL = 'https://poxifowrycsxkhduzshx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBveGlmb3dyeWNzeGtoZHV6c2h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzOTI1ODAsImV4cCI6MjEwMTk2ODU4MH0.X0HK_oqako8yY7-Sf9wWGRSgUp7VaYtSFdao7g0OaGE';
-
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let currentUser = null;
-let activeServerId = null;
+let vdsConfig = { url: '', token: '' };
+let currentFileManagerPath = '';
+let activeServerName = null;
 
 // Auth Kontrolü
 (async function init() {
@@ -16,7 +17,6 @@ let activeServerId = null;
         return;
     }
 
-    // Profili Getir
     const { data: profile } = await _supabase.from('controllin_profiles').select('*').eq('id', data.session.user.id).single();
     if (!profile) {
         await _supabase.auth.signOut();
@@ -27,137 +27,133 @@ let activeServerId = null;
     currentUser = profile;
     document.getElementById('current-user').textContent = currentUser.username;
 
-    // Yönlendirme Vercel düzeltmesi
     if (window.location.pathname.endsWith('.html')) {
         const clean = window.location.pathname.replace(/\.html$/, '');
         window.history.replaceState(null, '', clean + window.location.search + window.location.hash);
     }
 
+    loadSettings();
     initNavigation();
-    fetchServerData();
     fetchUsers();
-
-    // Gerçek zamanlı güncellemeler (VDS backend veriyi değiştirirse hemen görsün)
-    const channel = _supabase.channel('public:controllin_servers')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'controllin_servers' }, payload => {
-            if(payload.new.id === activeServerId) {
-                updateServerUI(payload.new);
-            }
-        })
-        .subscribe();
+    
+    if (vdsConfig.url && vdsConfig.token) {
+        fetchVDSServers();
+    } else {
+        document.getElementById('vds-server-list').innerHTML = '<div class="text-error text-small">VDS ayarları eksik.</div>';
+    }
 })();
 
-// Menü Geçişleri
+// --- AYARLAR ---
+function loadSettings() {
+    vdsConfig.url = localStorage.getItem('controllin_vds_url') || '';
+    vdsConfig.token = localStorage.getItem('controllin_vds_token') || '';
+    document.getElementById('setting-api-url').value = vdsConfig.url;
+    document.getElementById('setting-api-token').value = vdsConfig.token;
+}
+
+function saveSettings() {
+    const url = document.getElementById('setting-api-url').value.trim();
+    const token = document.getElementById('setting-api-token').value.trim();
+    localStorage.setItem('controllin_vds_url', url);
+    localStorage.setItem('controllin_vds_token', token);
+    vdsConfig = { url, token };
+    
+    document.getElementById('settings-msg').textContent = 'Ayarlar kaydedildi! Sayfa yenileniyor...';
+    setTimeout(() => window.location.reload(), 1000);
+}
+
+// --- MENÜ ---
 function initNavigation() {
-    const navServer = document.getElementById('nav-server');
-    const navUsers = document.getElementById('nav-users');
-    const viewServer = document.getElementById('view-server');
-    const viewUsers = document.getElementById('view-users');
-
-    navServer.addEventListener('click', (e) => {
-        e.preventDefault();
-        navServer.classList.add('active');
-        navUsers.classList.remove('active');
-        viewServer.style.display = 'grid';
-        viewUsers.style.display = 'none';
-    });
-
-    navUsers.addEventListener('click', (e) => {
-        e.preventDefault();
-        navUsers.classList.add('active');
-        navServer.classList.remove('active');
-        viewUsers.style.display = 'grid';
-        viewServer.style.display = 'none';
+    const views = ['server', 'files', 'users', 'settings'];
+    
+    views.forEach(v => {
+        document.getElementById(`nav-${v}`).addEventListener('click', (e) => {
+            e.preventDefault();
+            views.forEach(v2 => {
+                document.getElementById(`nav-${v2}`).classList.remove('active');
+                document.getElementById(`view-${v2}`).style.display = 'none';
+            });
+            document.getElementById(`nav-${v}`).classList.add('active');
+            document.getElementById(`view-${v}`).style.display = 'grid';
+            
+            if (v === 'files') loadFileManager(currentFileManagerPath);
+        });
     });
 }
 
-// Sunucu Verilerini Çekme
-async function fetchServerData() {
-    const { data, error } = await _supabase.from('controllin_servers').select('*').limit(1).single();
+// --- VDS API İSTEKLERİ ---
+async function vdsFetch(endpoint, options = {}) {
+    if (!vdsConfig.url) throw new Error("VDS URL eksik");
     
-    if (error || !data) {
-        document.getElementById('server-name').textContent = "Sunucu Bulunamadı";
+    const headers = {
+        'Authorization': `Bearer ${vdsConfig.token}`,
+        ...options.headers
+    };
+    
+    const res = await fetch(`${vdsConfig.url}${endpoint}`, { ...options, headers });
+    if (!res.ok) {
+        const errData = await res.json().catch(()=>({}));
+        throw new Error(errData.error || res.statusText);
+    }
+    return res;
+}
+
+// --- SUNUCU YÖNETİMİ ---
+async function fetchVDSServers() {
+    try {
+        const res = await vdsFetch('/api/servers');
+        const data = await res.json();
+        
+        const listEl = document.getElementById('vds-server-list');
+        listEl.innerHTML = '';
+        
+        if (data.servers.length === 0) {
+            listEl.innerHTML = '<div class="text-small text-muted">Sunucu bulunamadı.</div>';
+            return;
+        }
+
+        data.servers.forEach(srv => {
+            const el = document.createElement('a');
+            el.href = '#';
+            el.className = 'nav-link text-small';
+            el.style.paddingLeft = '10px';
+            el.textContent = `> ${srv}`;
+            el.onclick = (e) => {
+                e.preventDefault();
+                selectServer(srv);
+            };
+            listEl.appendChild(el);
+        });
+    } catch (e) {
+        document.getElementById('vds-server-list').innerHTML = `<div class="text-error text-small">Bağlantı Hatası: ${e.message}</div>`;
+    }
+}
+
+function selectServer(name) {
+    activeServerName = name;
+    document.getElementById('server-name').textContent = name;
+    document.getElementById('server-id').textContent = `VDS Klasörü: /home/minecraft/${name}`;
+    document.getElementById('status-indicator').className = 'status-dot';
+    document.getElementById('server-status-text').textContent = 'Seçildi (Durum Bilinmiyor)';
+    
+    appendConsole(`[SİSTEM] ${name} seçildi. (Not: Tam durum takibi için VDS daemon'a eklenti yapılabilir).`);
+}
+
+async function setServerAction(action) {
+    if (!activeServerName) {
+        alert("Önce soldan bir sunucu seçin.");
         return;
     }
-
-    activeServerId = data.id;
-    updateServerUI(data);
-}
-
-// UI Güncelleme (Sunucu)
-function updateServerUI(server) {
-    document.getElementById('server-id').textContent = `ID: ${server.id}`;
-    document.getElementById('server-name').textContent = server.name;
-    document.getElementById('server-players').textContent = `${server.players} / ${server.max_players}`;
     
-    const statusText = document.getElementById('server-status-text');
-    const statusDot = document.getElementById('status-indicator');
+    appendConsole(`[SİSTEM] '${action}' komutu VDS'e gönderiliyor...`);
     
-    statusDot.className = 'status-dot'; // Reset
-    
-    switch(server.status) {
-        case 'online':
-            statusText.textContent = 'AKTİF & ÇEVRİMİÇİ';
-            statusDot.classList.add('online');
-            break;
-        case 'offline':
-            statusText.textContent = 'KAPALI';
-            statusDot.classList.add('offline');
-            break;
-        case 'starting':
-            statusText.textContent = 'BAŞLATILIYOR...';
-            statusDot.classList.add('starting');
-            break;
-        case 'stopping':
-            statusText.textContent = 'DURDURULUYOR...';
-            statusDot.classList.add('starting');
-            break;
-        default:
-            statusText.textContent = server.status.toUpperCase();
-            break;
+    try {
+        const res = await vdsFetch(`/api/servers/${activeServerName}/start`, { method: 'POST' });
+        const data = await res.json();
+        appendConsole(`> BAŞARILI: ${data.message}`);
+    } catch (e) {
+        appendConsole(`> HATA: ${e.message}`);
     }
-
-    // Eğer console'da son log varsa güncelle
-    if (server.last_log) {
-        const out = document.getElementById('console-output');
-        out.innerHTML += `<br>> ${server.last_log}`;
-        out.scrollTop = out.scrollHeight;
-    }
-}
-
-// Aksiyonlar (DB'ye iş emri bırakır, VDS dinler)
-async function setServerAction(action) {
-    if(!activeServerId) return;
-    
-    // UI Feedback
-    let mockStatus = '';
-    if(action === 'start') mockStatus = 'starting';
-    if(action === 'stop') mockStatus = 'stopping';
-    if(action === 'restart') mockStatus = 'starting';
-    
-    updateServerUI({ ...{id: activeServerId, name: document.getElementById('server-name').textContent, players: 0, max_players: 20}, status: mockStatus });
-
-    // DB'ye isteği yazıyoruz (target_action kolonu VDS scripti tarafından okunacak)
-    await _supabase.from('controllin_servers').update({ 
-        target_action: action,
-        status: mockStatus, // (Gerçekte status VDS'ten güncellenmeli ama UX için sahte durum basıyoruz)
-        updated_at: new Date().toISOString()
-    }).eq('id', activeServerId);
-    
-    appendConsole(`[SİSTEM] '${action.toUpperCase()}' komutu VDS'e iletildi...`);
-}
-
-// Konsol
-function sendConsoleCommand() {
-    const input = document.getElementById('console-input');
-    const cmd = input.value.trim();
-    if(!cmd) return;
-    
-    appendConsole(`$ ${cmd}`);
-    input.value = '';
-    
-    // Gerçek bir sistemde bu komut DB'de bir 'commands_queue' tablosuna yazılır.
-    // Şimdilik sadece ui gösterimi.
 }
 
 function appendConsole(text) {
@@ -166,23 +162,85 @@ function appendConsole(text) {
     out.scrollTop = out.scrollHeight;
 }
 
-// Mod Yükleme
-function installMod() {
-    const mod = document.getElementById('mod-input').value.trim();
-    if(!mod) return;
+// --- DOSYA YÖNETİCİSİ ---
+async function loadFileManager(subPath = '') {
+    currentFileManagerPath = subPath;
+    document.getElementById('file-breadcrumb').textContent = `/home/minecraft/${subPath}`;
     
-    appendConsole(`[MOD YÖNETİCİSİ] '${mod}' modunu yükleme isteği kuyruğa alındı.`);
-    document.getElementById('mod-input').value = '';
+    const tbody = document.getElementById('file-list');
+    tbody.innerHTML = '<tr><td colspan="3" style="padding: 10px; text-align: center;">Yükleniyor...</td></tr>';
     
-    // İş emri olarak action = 'install_mod:xxx' kaydedilebilir.
-    if(activeServerId) {
-        _supabase.from('controllin_servers').update({ 
-            target_action: `install_mod:${mod}`
-        }).eq('id', activeServerId).then();
+    try {
+        const res = await vdsFetch(`/api/files?path=${encodeURIComponent(subPath)}`);
+        const data = await res.json();
+        
+        tbody.innerHTML = '';
+        
+        // Üst klasöre çıkma (Eğer root'ta değilsek)
+        if (subPath !== '') {
+            const upPath = subPath.split('/').slice(0, -1).join('/');
+            tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="loadFileManager('${upPath}')">
+                    <td style="padding: 10px;">📁 ..</td>
+                    <td style="padding: 10px;">-</td>
+                    <td style="padding: 10px;">-</td>
+                </tr>
+            `;
+        }
+        
+        if(data.files.length === 0) {
+            tbody.innerHTML += '<tr><td colspan="3" style="padding: 10px; text-align: center;">Klasör boş.</td></tr>';
+            return;
+        }
+
+        data.files.forEach(f => {
+            const icon = f.isDirectory ? '📁' : '📄';
+            const actionHTML = f.isDirectory 
+                ? `<button class="b-btn text-small" style="padding: 4px 8px;" onclick="loadFileManager('${subPath ? subPath+'/' : ''}${f.name}')">İçine Gir</button>`
+                : `<a href="${vdsConfig.url}/api/files/download?path=${encodeURIComponent(subPath ? subPath+'/' : '')}${encodeURIComponent(f.name)}" target="_blank" class="b-btn text-small" style="padding: 4px 8px; text-decoration: none;">İndir</a>`;
+                
+            const sizeHTML = f.isDirectory ? '-' : (f.size / 1024).toFixed(1) + ' KB';
+
+            tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid #2a2a2a;">
+                    <td style="padding: 10px; display: flex; align-items: center; gap: 8px;">${icon} ${f.name}</td>
+                    <td style="padding: 10px; color: var(--text-muted);">${sizeHTML}</td>
+                    <td style="padding: 10px;">${actionHTML}</td>
+                </tr>
+            `;
+        });
+    } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="3" style="padding: 10px; color: var(--error-color);">Hata: ${e.message}</td></tr>`;
     }
 }
 
-// Kullanıcıları Çek
+async function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('path', currentFileManagerPath);
+
+    appendConsole(`[DOSYA] ${file.name} yükleniyor...`);
+    
+    try {
+        const res = await vdsFetch(`/api/files/upload`, {
+            method: 'POST',
+            body: formData,
+            headers: { 'Authorization': `Bearer ${vdsConfig.token}` } // FormData için Content-Type otomatik ayarlanır
+        });
+        const data = await res.json();
+        alert("Dosya başarıyla yüklendi.");
+        loadFileManager(currentFileManagerPath);
+    } catch(err) {
+        alert("Yükleme hatası: " + err.message);
+    }
+    
+    e.target.value = ''; // Reset input
+}
+
+// --- KULLANICI YÖNETİMİ ---
 async function fetchUsers() {
     const list = document.getElementById('users-list');
     const { data, error } = await _supabase.from('controllin_profiles').select('*').order('created_at', { ascending: false });
@@ -205,40 +263,7 @@ async function fetchUsers() {
     });
 }
 
-// Yeni Kullanıcı Oluşturma (Projede varolan api/create-user.js yapısını kullanmaya çalışacağız)
-async function createNewUser() {
-    const name = document.getElementById('new-user-name').value.trim();
-    const pass = document.getElementById('new-user-pass').value;
-    
-    if(!name || !pass) {
-        alert("Kullanıcı adı ve şifre zorunludur.");
-        return;
-    }
-
-    // Terminal projesindeki api mantığı: email üzerinden auth oluşturur, sonra profile ekler.
-    let email = name;
-    if(!email.includes('@')) email = email + '@controllin.local';
-
-    try {
-        const res = await fetch('/api/create-user', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, password: pass, username: name, role: 'admin' }) // Terminal API role, username falan bekler
-        });
-        
-        if(res.ok) {
-            alert("Kullanıcı (Auth) başarıyla oluşturuldu!\nNot: DB tarafındaki trigger'lar veya manuel eklemeler gerekebilir. (Şu an api/create-user terminal için kodlanmış olabilir)");
-            // Terminal api'si terminal_profiles'a ekliyor olabilir, bu yüzden biz de controllin_profiles'a elle auth idsini alıp eklemeliyiz.
-            // Fakat Vercel serverless fonksiyonunu direkt çağırdığımız için, id döndürmezse manuel SQL'den eklemek gerekebilir.
-        } else {
-            alert("API Hatası. Vercel logs'u kontrol edin.");
-        }
-    } catch (e) {
-        alert("Bağlantı hatası: " + e.message);
-    }
-}
-
-// Çıkış
+// Logout
 async function doLogout() {
     await _supabase.auth.signOut();
     window.location.replace('/controllin/login.html');

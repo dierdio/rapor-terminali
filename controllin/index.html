@@ -19,15 +19,24 @@
 
         <!-- SIDEBAR -->
         <aside class="sidebar">
-            <a href="#" class="nav-link active" id="nav-server">Sunucu Yönetimi</a>
+            <div class="text-muted text-small mb-2" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">ANA MENÜ</div>
+            <a href="#" class="nav-link active" id="nav-server">Sunucu Kontrolü</a>
+            <a href="#" class="nav-link" id="nav-files">Dosya Yöneticisi</a>
             <a href="#" class="nav-link" id="nav-users">Kullanıcılar</a>
+            <a href="#" class="nav-link" id="nav-settings">Bağlantı Ayarları</a>
+            
+            <div class="text-muted text-small mb-2 mt-2" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px;">VDS SUNUCULARI</div>
+            <div id="vds-server-list" style="display: flex; flex-direction: column; gap: 5px;">
+                <!-- VDS'ten gelen sunucular buraya yüklenecek -->
+                <div class="text-small text-muted">Sunucular aranıyor...</div>
+            </div>
+
             <div style="flex-grow: 1;"></div>
-            <button class="b-btn text-error" style="border-color: var(--error-color);" onclick="doLogout()">Çıkış Yap</button>
+            <button class="b-btn text-error" style="border-color: var(--error-color); width: 100%;" onclick="doLogout()">Çıkış Yap</button>
         </aside>
 
-        <!-- MAIN CONTENT -->
+        <!-- SERVER CONTROL VIEW -->
         <main class="main-content" id="view-server">
-            <!-- Server Status Card -->
             <div class="b-card large">
                 <div class="b-card-header">
                     <h3>Sunucu Durumu</h3>
@@ -36,56 +45,63 @@
                 
                 <div class="flex-between mb-2">
                     <div>
-                        <div style="font-size: 2rem; font-weight: 300; margin-bottom: 5px;" id="server-name">Yükleniyor...</div>
+                        <div style="font-size: 2rem; font-weight: 300; margin-bottom: 5px;" id="server-name">Sunucu Seçin</div>
                         <div class="text-muted">
-                            <span class="status-dot" id="status-indicator"></span>
-                            <span id="server-status-text">Bilinmiyor</span>
+                            <span class="status-dot offline" id="status-indicator"></span>
+                            <span id="server-status-text">Bekliyor</span>
                         </div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div class="text-muted text-small">OYUNCULAR</div>
-                        <div style="font-size: 1.5rem;" id="server-players">0 / 0</div>
                     </div>
                 </div>
 
                 <div class="flex-between mt-2" style="border-top: 1px solid var(--border-color); padding-top: 20px;">
-                    <button class="b-btn b-btn-primary" id="btn-start" onclick="setServerAction('start')">BAŞLAT</button>
-                    <button class="b-btn" id="btn-restart" onclick="setServerAction('restart')">YENİDEN BAŞLAT</button>
-                    <button class="b-btn text-error" id="btn-stop" style="border-color: var(--error-color);" onclick="setServerAction('stop')">DURDUR</button>
+                    <button class="b-btn b-btn-primary" id="btn-start" onclick="setServerAction('start')">BAŞLAT (run.sh)</button>
+                    <button class="b-btn text-error" id="btn-stop" style="border-color: var(--error-color);" onclick="setServerAction('stop')">ZORLA DURDUR</button>
                 </div>
             </div>
 
-            <!-- Console Card -->
-            <div class="b-card">
+            <div class="b-card large">
                 <div class="b-card-header">
                     <h3>Konsol Çıktısı</h3>
                 </div>
                 <div class="console-box" id="console-output">
                     [SİSTEM] VDS bağlantısı bekleniyor...
                 </div>
-                <div class="flex-between" style="gap: 10px;">
-                    <input type="text" class="b-input" id="console-input" placeholder="Komut girin (örn: /op player)">
-                    <button class="b-btn" onclick="sendConsoleCommand()">GÖNDER</button>
-                </div>
-            </div>
-
-            <!-- Mods Card -->
-            <div class="b-card">
-                <div class="b-card-header">
-                    <h3>Mod Yönetimi</h3>
-                </div>
-                <div class="text-muted text-small mb-2">
-                    Sunucuya yüklenecek modun ismini veya URL'sini girin. VDS tarafı bu isteği işleyecektir.
-                </div>
-                <div class="input-group">
-                    <label>Mod Adı / URL</label>
-                    <input type="text" class="b-input" id="mod-input" placeholder="örn: fabric-api-0.83.0.jar">
-                </div>
-                <button class="b-btn" style="width: 100%;" onclick="installMod()">YÜKLE</button>
             </div>
         </main>
 
-        <!-- USERS VIEW (Hidden by default) -->
+        <!-- FILE MANAGER VIEW -->
+        <main class="main-content" id="view-files" style="display: none;">
+            <div class="b-card large" style="display: flex; flex-direction: column; height: 100%;">
+                <div class="b-card-header">
+                    <h3>Dosya Yöneticisi</h3>
+                    <div>
+                        <input type="file" id="file-upload-input" style="display: none;" onchange="handleFileUpload(event)">
+                        <button class="b-btn text-small" onclick="document.getElementById('file-upload-input').click()">DOSYA YÜKLE</button>
+                    </div>
+                </div>
+                
+                <div class="mb-2 text-muted text-small" id="file-breadcrumb" style="font-family: monospace;">
+                    /
+                </div>
+                
+                <div style="border: 1px solid var(--border-color); flex-grow: 1; overflow-y: auto; background: #111;">
+                    <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.9rem;">
+                        <thead style="background: var(--card-bg); border-bottom: 1px solid var(--border-color);">
+                            <tr>
+                                <th style="padding: 10px; font-weight: 500;">İsim</th>
+                                <th style="padding: 10px; font-weight: 500;">Boyut</th>
+                                <th style="padding: 10px; font-weight: 500;">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="file-list">
+                            <tr><td colspan="3" style="padding: 10px; text-align: center; color: var(--text-muted);">Yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- USERS VIEW -->
         <main class="main-content" id="view-users" style="display: none;">
             <div class="b-card large">
                 <div class="b-card-header">
@@ -110,14 +126,37 @@
                 </div>
 
                 <div id="users-list" style="border-top: 1px solid var(--border-color); padding-top: 20px;">
-                    <!-- Kullanıcılar buraya JS ile yüklenecek -->
                     <div class="text-muted">Kullanıcılar yükleniyor...</div>
                 </div>
+            </div>
+        </main>
+
+        <!-- SETTINGS VIEW -->
+        <main class="main-content" id="view-settings" style="display: none;">
+            <div class="b-card large">
+                <div class="b-card-header">
+                    <h3>VDS Bağlantı Ayarları</h3>
+                </div>
+                <div class="text-muted text-small mb-2">
+                    Bu panelin arka planda VDS (Ubuntu) sunucunuzdaki daemon'a bağlanabilmesi için gerekli bilgiler.
+                    (Bu veriler sadece tarayıcınızda saklanır).
+                </div>
+                
+                <div class="input-group">
+                    <label>VDS API URL (örn: http://123.45.67.89:3000)</label>
+                    <input type="text" class="b-input" id="setting-api-url" placeholder="http://ip_adresiniz:3000">
+                </div>
+                <div class="input-group">
+                    <label>API Token (vds-daemon'daki token)</label>
+                    <input type="text" class="b-input" id="setting-api-token" placeholder="GUVENLI_TOKEN_BURAYA">
+                </div>
+                <button class="b-btn b-btn-primary" onclick="saveSettings()">AYARLARI KAYDET</button>
+                <div id="settings-msg" class="mt-2 text-small" style="color: var(--success-color);"></div>
             </div>
         </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/controllin/assets/js/app.js?v=1.0.0"></script>
+    <script src="/controllin/assets/js/app.js?v=1.0.1"></script>
 </body>
 </html>
