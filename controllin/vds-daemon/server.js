@@ -101,10 +101,10 @@ app.post('/api/servers/install', async (req, res) => {
         // 2. Jar URL'sini Bul
         let jarUrl = null;
         if (type === 'paper') {
-            const vData = await fetchJson(`https://api.papermc.io/v2/projects/paper/versions/${version}`);
-            if (!vData.builds) throw new Error("PaperMC sürümü bulunamadı.");
-            const latestBuild = vData.builds[vData.builds.length - 1];
-            jarUrl = `https://api.papermc.io/v2/projects/paper/versions/${version}/builds/${latestBuild}/downloads/paper-${version}-${latestBuild}.jar`;
+            const vData = await fetchJson(`https://fill.papermc.io/v3/projects/paper/versions/${version}`);
+            if (!vData.builds || vData.builds.length === 0) throw new Error("PaperMC sürümü bulunamadı.");
+            const latestBuild = vData.builds[0]; // v3'te en güncel build 0. index'tedir
+            jarUrl = `https://fill.papermc.io/v3/projects/paper/versions/${version}/builds/${latestBuild}/downloads/paper-${version}-${latestBuild}.jar`;
         } 
         else if (type === 'vanilla') {
             const manifest = await fetchJson('https://launchermeta.mojang.com/mc/game/version_manifest.json');
