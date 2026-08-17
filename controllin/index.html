@@ -204,14 +204,8 @@
                 </div>
 
                 <div class="input-group">
-                    <label>RAM Miktarı (GB)</label>
-                    <select class="b-input" id="create-srv-ram" style="background: var(--bg-color); color: var(--text-color);">
-                        <option value="1">1 GB</option>
-                        <option value="2" selected>2 GB</option>
-                        <option value="4">4 GB</option>
-                        <option value="6">6 GB</option>
-                        <option value="8">8 GB</option>
-                    </select>
+                    <label>RAM Miktarı: <span id="ram-display" style="color: var(--primary-color);">2 GB</span></label>
+                    <input type="range" class="b-input" id="create-srv-ram" min="1" max="16" step="1" value="2" style="cursor: pointer; padding: 0;">
                 </div>
 
                 <button class="b-btn b-btn-primary mt-2" id="btn-install-server" onclick="installServer()">KURULUMU BAŞLAT</button>
@@ -223,6 +217,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="/controllin/assets/js/app.js?v=1.0.3"></script>
+    <script src="/controllin/assets/js/app.js?v=1.0.4"></script>
 </body>
 </html>

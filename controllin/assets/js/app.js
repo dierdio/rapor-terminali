@@ -41,6 +41,11 @@ let statusInterval = null;
     document.getElementById('create-srv-type').addEventListener('change', loadServerVersions);
     loadServerVersions();
     
+    // RAM kaydırmalı barını dinle
+    document.getElementById('create-srv-ram').addEventListener('input', (e) => {
+        document.getElementById('ram-display').textContent = e.target.value + ' GB';
+    });
+    
     if (vdsConfig.url && vdsConfig.token) {
         fetchVDSServers();
     } else {
