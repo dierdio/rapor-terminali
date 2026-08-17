@@ -1,0 +1,276 @@
+/* ======================================================
+   CONTROLLIN - BROKEN GRID TASARIM SISTEMI
+   ====================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg-color: #1a1a1a;
+  --text-color: #e0e0e0;
+  --text-muted: #888888;
+  --border-color: #333333;
+  --accent-color: #ffffff;
+  --error-color: #ff5555;
+  --success-color: #55ff55;
+  --card-bg: #222222;
+  
+  --grid-gap: 20px;
+  --border-width: 1px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: 'Inter', -apple-system, sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tipografi */
+h1, h2, h3, h4 {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--accent-color);
+}
+
+.text-muted { color: var(--text-muted); }
+.text-small { font-size: 0.85rem; }
+
+/* Grid Sistem - Ana Layout */
+.app-container {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  grid-template-rows: 60px 1fr;
+  min-height: 100vh;
+  border: var(--border-width) solid var(--border-color);
+  margin: 20px;
+}
+
+/* Header */
+.top-header {
+  grid-column: 1 / -1;
+  border-bottom: var(--border-width) solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+}
+
+.brand {
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Sidebar */
+.sidebar {
+  border-right: var(--border-width) solid var(--border-color);
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.nav-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 8px 0;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--accent-color);
+  border-bottom-color: var(--border-color);
+}
+
+/* Main Content (Dashboard) */
+.main-content {
+  padding: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--grid-gap);
+  align-content: start;
+}
+
+/* Broken Grid Cards */
+.b-card {
+  border: var(--border-width) solid var(--border-color);
+  background: var(--card-bg);
+  padding: 30px;
+  position: relative;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.b-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.b-card.large {
+  grid-column: span 2;
+}
+
+.b-card-header {
+  border-bottom: var(--border-width) solid var(--border-color);
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.b-card-header h3 {
+  font-size: 1.1rem;
+  text-transform: lowercase;
+}
+
+/* Form Elemanları */
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.b-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: var(--border-width) solid var(--border-color);
+  color: var(--text-color);
+  padding: 10px 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.b-input:focus {
+  border-bottom-color: var(--accent-color);
+}
+
+.b-btn {
+  background: transparent;
+  color: var(--text-color);
+  border: var(--border-width) solid var(--border-color);
+  padding: 12px 24px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.b-btn:hover:not(:disabled) {
+  background: var(--text-color);
+  color: var(--bg-color);
+}
+
+.b-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.b-btn-primary {
+  border-color: var(--accent-color);
+}
+
+/* Status İndikatörleri */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 8px;
+}
+.status-dot.online { background: var(--success-color); box-shadow: 0 0 8px var(--success-color); }
+.status-dot.offline { background: var(--error-color); }
+.status-dot.starting { background: #ffaa00; animation: pulse 1s infinite alternate; }
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* Console / Log Alanı */
+.console-box {
+  background: #0a0a0a;
+  border: var(--border-width) solid var(--border-color);
+  padding: 15px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.85rem;
+  color: #a0a0a0;
+  height: 200px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+/* Utils */
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.mt-2 { margin-top: 20px; }
+.mb-2 { margin-bottom: 20px; }
+.text-error { color: var(--error-color); }
+
+/* Login Sayfası Spesifik */
+.login-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  border: var(--border-width) solid var(--border-color);
+  background: var(--card-bg);
+  padding: 50px;
+}
+
+.login-header {
+  margin-bottom: 40px;
+  border-bottom: var(--border-width) solid var(--border-color);
+  padding-bottom: 20px;
+}
+
+.login-header h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .app-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    margin: 10px;
+  }
+  .sidebar {
+    border-right: none;
+    border-bottom: var(--border-width) solid var(--border-color);
+    flex-direction: row;
+    overflow-x: auto;
+  }
+  .b-card.large { grid-column: span 1; }
+}

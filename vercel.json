@@ -7,6 +7,10 @@
     {
       "source": "/terminal/(.*)",
       "destination": "/terminal/"
+    },
+    {
+      "source": "/controllin/(.*)",
+      "destination": "/controllin/"
     }
   ]
 }

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>controllin' // Login</title>
+    <link rel="stylesheet" href="/controllin/assets/css/style.css">
+</head>
+<body>
+
+    <div class="login-wrapper">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>controllin'</h1>
+                <div class="text-muted text-small">VDS KONTROL PANELI // SISTEM GIRISI</div>
+            </div>
+
+            <div class="login-body">
+                <div class="input-group">
+                    <label>Kullanıcı Adı</label>
+                    <input type="text" class="b-input" id="lu" placeholder="kullanici_adi" autocomplete="off">
+                </div>
+                
+                <div class="input-group">
+                    <label>Şifre</label>
+                    <input type="password" class="b-input" id="lp" placeholder="••••••••">
+                </div>
+
+                <div class="mb-2 text-error text-small" id="lerr" style="display:none;">
+                    HATA: KİMLİK DOĞRULANAMADI.
+                </div>
+                
+                <div class="mb-2 text-small" id="login-info" style="display:none; color: var(--success-color);">
+                    KİMLİK DOĞRULANIYOR...
+                </div>
+
+                <button class="b-btn b-btn-primary" id="login-btn" onclick="doLogin()" style="width: 100%;">
+                    [ SİSTEME GİR ]
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Login Logic -->
+    <script src="/controllin/assets/js/login.js?v=1.0.0"></script>
+</body>
+</html>
