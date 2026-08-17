@@ -147,10 +147,11 @@ async function vdsFetch(endpoint, options = {}) {
         ...options.headers
     };
     
-    const res = await fetch(`${vdsConfig.url}${endpoint}`, { ...options, headers });
+    const targetUrl = `${vdsConfig.url}${endpoint}`;
+    const res = await fetch(targetUrl, { ...options, headers });
     if (!res.ok) {
         const errData = await res.json().catch(()=>({}));
-        throw new Error(errData.error || res.statusText);
+        throw new Error(errData.error || `Bağlantı Hatası: ${res.status} ${res.statusText} (${targetUrl})`);
     }
     return res;
 }

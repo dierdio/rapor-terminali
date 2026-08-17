@@ -104,7 +104,9 @@ app.post('/api/servers/install', async (req, res) => {
             const vData = await fetchJson(`https://fill.papermc.io/v3/projects/paper/versions/${version}`);
             if (!vData.builds || vData.builds.length === 0) throw new Error("PaperMC sürümü bulunamadı.");
             const latestBuild = vData.builds[0]; // v3'te en güncel build 0. index'tedir
-            jarUrl = `https://fill.papermc.io/v3/projects/paper/versions/${version}/builds/${latestBuild}/downloads/paper-${version}-${latestBuild}.jar`;
+            const bData = await fetchJson(`https://fill.papermc.io/v3/projects/paper/versions/${version}/builds/${latestBuild}`);
+            if (!bData.downloads || !bData.downloads['server:default']) throw new Error("PaperMC indirme linki bulunamadı.");
+            jarUrl = bData.downloads['server:default'].url;
         } 
         else if (type === 'vanilla') {
             const manifest = await fetchJson('https://launchermeta.mojang.com/mc/game/version_manifest.json');
