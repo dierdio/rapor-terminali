@@ -58,6 +58,85 @@ app.post('/api/servers', (req, res) => {
     }
 });
 
+// --- TAM OTOMATİK SUNUCU KURULUMU ---
+const https = require('https');
+
+// Yardımcı: Https üzerinden veri çekme
+const fetchJson = (url) => new Promise((resolve, reject) => {
+    https.get(url, (res) => {
+        let body = '';
+        res.on('data', chunk => body += chunk);
+        res.on('end', () => resolve(JSON.parse(body)));
+    }).on('error', reject);
+});
+
+// Yardımcı: Dosya İndirme
+const downloadFile = (url, dest) => new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(dest);
+    https.get(url, (response) => {
+        if (response.statusCode === 301 || response.statusCode === 302) {
+            return downloadFile(response.headers.location, dest).then(resolve).catch(reject);
+        }
+        response.pipe(file);
+        file.on('finish', () => { file.close(); resolve(); });
+    }).on('error', (err) => {
+        fs.unlink(dest, () => reject(err));
+    });
+});
+
+app.post('/api/servers/install', async (req, res) => {
+    const { name, type, version, ram } = req.body;
+    if (!name || !/^[a-zA-Z0-9_-]+$/.test(name)) return res.status(400).json({ error: 'Geçersiz sunucu adı.' });
+    if (!version) return res.status(400).json({ error: 'Sürüm gerekli.' });
+
+    const targetDir = path.join(BASE_DIR, name);
+    if (fs.existsSync(targetDir)) return res.status(400).json({ error: 'Bu isimde bir klasör zaten var.' });
+
+    try {
+        // 1. Klasörü oluştur
+        fs.mkdirSync(targetDir, { recursive: true });
+
+        // 2. Jar URL'sini Bul
+        let jarUrl = null;
+        if (type === 'paper') {
+            const vData = await fetchJson(`https://api.papermc.io/v2/projects/paper/versions/${version}`);
+            if (!vData.builds) throw new Error("PaperMC sürümü bulunamadı.");
+            const latestBuild = vData.builds[vData.builds.length - 1];
+            jarUrl = `https://api.papermc.io/v2/projects/paper/versions/${version}/builds/${latestBuild}/downloads/paper-${version}-${latestBuild}.jar`;
+        } 
+        else if (type === 'vanilla') {
+            const manifest = await fetchJson('https://launchermeta.mojang.com/mc/game/version_manifest.json');
+            const vMeta = manifest.versions.find(v => v.id === version);
+            if (!vMeta) throw new Error("Vanilla sürümü bulunamadı.");
+            const vDetail = await fetchJson(vMeta.url);
+            jarUrl = vDetail.downloads.server.url;
+        } 
+        else {
+            throw new Error("Desteklenmeyen sunucu türü.");
+        }
+
+        // 3. Dosyayı indir
+        const jarPath = path.join(targetDir, 'server.jar');
+        await downloadFile(jarUrl, jarPath);
+
+        // 4. EULA'yı onayla
+        fs.writeFileSync(path.join(targetDir, 'eula.txt'), 'eula=true\n');
+
+        // 5. Başlatma scriptini (run.sh) oluştur
+        const ramG = ram || '2';
+        const runScript = `#!/bin/bash\njava -Xms${ramG}G -Xmx${ramG}G -jar server.jar nogui\n`;
+        fs.writeFileSync(path.join(targetDir, 'run.sh'), runScript);
+        fs.chmodSync(path.join(targetDir, 'run.sh'), '755'); // Çalıştırma izni
+
+        res.json({ success: true, message: `${type} ${version} başarıyla kuruldu ve başlatılmaya hazır!` });
+
+    } catch (err) {
+        // Hata olursa klasörü temizle
+        if (fs.existsSync(targetDir)) fs.rmSync(targetDir, { recursive: true, force: true });
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // --- SUNUCU DURUMU VE LOG ---
 app.get('/api/servers/:name/status', (req, res) => {
     const serverName = req.params.name;

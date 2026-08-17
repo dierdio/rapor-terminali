@@ -65,21 +65,31 @@ function saveSettings() {
 
 // --- MENÜ ---
 function initNavigation() {
-    const views = ['server', 'files', 'users', 'settings'];
+    const views = ['server', 'files', 'users', 'settings', 'create-server'];
     
     views.forEach(v => {
-        document.getElementById(`nav-${v}`).addEventListener('click', (e) => {
-            e.preventDefault();
-            views.forEach(v2 => {
-                document.getElementById(`nav-${v2}`).classList.remove('active');
-                document.getElementById(`view-${v2}`).style.display = 'none';
+        const navEl = document.getElementById(`nav-${v}`);
+        if(navEl) {
+            navEl.addEventListener('click', (e) => {
+                e.preventDefault();
+                showView(v);
             });
-            document.getElementById(`nav-${v}`).classList.add('active');
-            document.getElementById(`view-${v}`).style.display = 'grid';
-            
-            if (v === 'files') loadFileManager(currentFileManagerPath);
-        });
+        }
     });
+}
+
+function showView(viewId) {
+    const views = ['server', 'files', 'users', 'settings', 'create-server'];
+    views.forEach(v => {
+        const navEl = document.getElementById(`nav-${v}`);
+        if(navEl) navEl.classList.remove('active');
+        document.getElementById(`view-${v}`).style.display = 'none';
+    });
+    const targetNav = document.getElementById(`nav-${viewId}`);
+    if(targetNav) targetNav.classList.add('active');
+    document.getElementById(`view-${viewId}`).style.display = 'grid';
+    
+    if (viewId === 'files') loadFileManager(currentFileManagerPath);
 }
 
 // --- VDS API İSTEKLERİ ---
@@ -138,6 +148,9 @@ function selectServer(name) {
     document.getElementById('server-status-text').textContent = 'Bağlanılıyor...';
     
     appendConsole(`[SİSTEM] ${name} seçildi. Canlı veriler bekleniyor...`);
+    
+    // Bug Fix: Dosya yöneticisindeysek, sunucu paneline dön
+    showView('server');
 
     // Start polling status
     if (statusInterval) clearInterval(statusInterval);
@@ -180,22 +193,43 @@ async function fetchServerStatus() {
     }
 }
 
-async function promptCreateServer(e) {
+function showCreateServerView(e) {
     e.preventDefault();
     e.stopPropagation();
-    const sName = prompt("Yeni sunucu klasörü adı: (Boşluk kullanmayın, örn: survival_01)");
-    if (!sName) return;
+    showView('create-server');
+}
+
+async function installServer() {
+    const sName = document.getElementById('create-srv-name').value.trim();
+    const type = document.getElementById('create-srv-type').value;
+    const version = document.getElementById('create-srv-version').value.trim();
+    const ram = document.getElementById('create-srv-ram').value;
+
+    if (!sName || !version) {
+        alert("Lütfen tüm alanları doldurun.");
+        return;
+    }
+
+    const btn = document.getElementById('btn-install-server');
+    const prog = document.getElementById('install-progress');
+    btn.disabled = true;
+    prog.style.display = 'block';
     
     try {
-        await vdsFetch(`/api/servers`, {
+        const res = await vdsFetch(`/api/servers/install`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: sName })
+            body: JSON.stringify({ name: sName, type, version, ram })
         });
-        alert("Sunucu klasörü oluşturuldu!");
+        const data = await res.json();
+        alert(data.message || "Sunucu başarıyla kuruldu!");
         fetchVDSServers(); // Listeyi yenile
+        showView('server'); // Ana ekrana dön
     } catch(err) {
-        alert("Hata: " + err.message);
+        alert("Kurulum Hatası: " + err.message);
+    } finally {
+        btn.disabled = false;
+        prog.style.display = 'none';
     }
 }
 
