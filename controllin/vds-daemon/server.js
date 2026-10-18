@@ -8,8 +8,17 @@ const { exec } = require('child_process');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const API_TOKEN = process.env.API_TOKEN || 'GUVENLI_TOKEN_BURAYA';
-const BASE_DIR = process.env.BASE_DIR || '/home/minecraft';
+const API_TOKEN = process.env.API_TOKEN;
+const BASE_DIR = path.resolve(process.env.BASE_DIR || '/home/minecraft');
+
+// GÜVENLİK: Token zorunludur. Varsayılan token ile çalışmak, paneli internete
+// açık kapı haline getirir. Lütfen başlatırken API_TOKEN=... belirleyin.
+if (!API_TOKEN) {
+    console.error('[controllin-daemon] HATA: API_TOKEN ortam değişkeni tanımlı değil!');
+    console.error('[controllin-daemon] Güvenlik nedeniyle daemon başlatılmıyor.');
+    console.error('[controllin-daemon] Başlatma örneği: API_TOKEN="uzun-ve-rastgele-bir-token" node server.js');
+    process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +32,18 @@ const authMiddleware = (req, res, next) => {
 };
 
 app.use(authMiddleware);
+
+// --- GÜVENLİK YARDIMCILARI ---
+// Sunucu adları yalnızca harf, rakam, tire ve alt çizgi içerebilir (shell enjeksiyonu engeli).
+const validName = (n) => typeof n === 'string' && /^[a-zA-Z0-9_-]+$/.test(n);
+
+// Path traversal engeli: Çözümlenen yol her zaman BASE_DIR içinde kalmalı.
+// (Eski startsWith kontrolü "/home/minecraft-eviltwin" gibi kardeş klasörlere izin veriyordu.)
+function safeJoin(...parts) {
+    const resolved = path.resolve(path.join(...parts));
+    if (resolved !== BASE_DIR && !resolved.startsWith(BASE_DIR + path.sep)) return null;
+    return resolved;
+}
 
 // --- SUNUCULARI LİSTELEME ---
 app.get('/api/servers', (req, res) => {
@@ -43,10 +64,11 @@ app.get('/api/servers', (req, res) => {
 // --- YENİ SUNUCU OLUŞTURMA ---
 app.post('/api/servers', (req, res) => {
     const serverName = req.body.name;
-    if (!serverName || !/^[a-zA-Z0-9_-]+$/.test(serverName)) {
+    if (!validName(serverName)) {
         return res.status(400).json({ error: 'Geçersiz sunucu adı (sadece harf, rakam, tire ve altçizgi).' });
     }
-    const targetDir = path.join(BASE_DIR, serverName);
+    const targetDir = safeJoin(BASE_DIR, serverName);
+    if (!targetDir) return res.status(400).json({ error: 'Geçersiz yol.' });
     if (fs.existsSync(targetDir)) {
         return res.status(400).json({ error: 'Bu isimde bir sunucu (klasör) zaten var.' });
     }
@@ -88,10 +110,11 @@ const downloadFile = (url, dest) => new Promise((resolve, reject) => {
 
 app.post('/api/servers/install', async (req, res) => {
     const { name, type, version, ram } = req.body;
-    if (!name || !/^[a-zA-Z0-9_-]+$/.test(name)) return res.status(400).json({ error: 'Geçersiz sunucu adı.' });
-    if (!version) return res.status(400).json({ error: 'Sürüm gerekli.' });
+    if (!validName(name)) return res.status(400).json({ error: 'Geçersiz sunucu adı.' });
+    if (!version || typeof version !== 'string' || !/^[a-zA-Z0-9._-]+$/.test(version)) return res.status(400).json({ error: 'Geçersiz sürüm.' });
 
-    const targetDir = path.join(BASE_DIR, name);
+    const targetDir = safeJoin(BASE_DIR, name);
+    if (!targetDir) return res.status(400).json({ error: 'Geçersiz yol.' });
     if (fs.existsSync(targetDir)) return res.status(400).json({ error: 'Bu isimde bir klasör zaten var.' });
 
     try {
@@ -144,7 +167,9 @@ app.post('/api/servers/install', async (req, res) => {
 // --- SUNUCU DURUMU VE LOG ---
 app.get('/api/servers/:name/status', (req, res) => {
     const serverName = req.params.name;
-    const targetDir = path.join(BASE_DIR, serverName);
+    if (!validName(serverName)) return res.status(400).json({ error: 'Geçersiz sunucu adı.' });
+    const targetDir = safeJoin(BASE_DIR, serverName);
+    if (!targetDir || !fs.existsSync(targetDir)) return res.status(404).json({ error: 'Sunucu klasörü bulunamadı.' });
     
     // RAM Status
     const totalMem = (os.totalmem() / (1024 * 1024 * 1024)).toFixed(2);
@@ -178,9 +203,10 @@ app.get('/api/servers/:name/status', (req, res) => {
 // --- SUNUCU BAŞLATMA ---
 app.post('/api/servers/:name/start', (req, res) => {
     const serverName = req.params.name;
-    const targetDir = path.join(BASE_DIR, serverName);
+    if (!validName(serverName)) return res.status(400).json({ error: 'Geçersiz sunucu adı.' });
 
-    if (!targetDir.startsWith(BASE_DIR)) return res.status(400).json({ error: 'Invalid path' });
+    const targetDir = safeJoin(BASE_DIR, serverName);
+    if (!targetDir) return res.status(400).json({ error: 'Geçersiz yol.' });
     if (!fs.existsSync(targetDir)) return res.status(404).json({ error: 'Sunucu klasörü bulunamadı.' });
 
     const runScript = fs.existsSync(path.join(targetDir, 'run.sh')) ? 'run.sh' 
@@ -205,15 +231,31 @@ app.post('/api/servers/:name/start', (req, res) => {
 // --- KOMUT GÖNDERME ---
 app.post('/api/servers/:name/command', (req, res) => {
     const serverName = req.params.name;
-    const command = req.body.command;
-    if (!command) return res.status(400).json({ error: 'Komut boş olamaz.' });
+    if (!validName(serverName)) return res.status(400).json({ error: 'Geçersiz sunucu adı.' });
+    const command = typeof req.body.command === 'string' ? req.body.command : '';
+    if (!command.trim()) return res.status(400).json({ error: 'Komut boş olamaz.' });
+    if (command.length > 500) return res.status(400).json({ error: 'Komut çok uzun.' });
 
-    const safeCommand = command.replace(/"/g, '\\"');
+    // Kabuk için güvenli hale getir: çift tırnak, ters bölü, $ ve backtick kaçırılır
+    // (aksi halde $(...) veya `...` ile komut enjeksiyonu mümkündü).
+    const safeCommand = command.replace(/[\\"$`]/g, '\\$&');
     const cmd = `screen -S mc_${serverName} -p 0 -X stuff "${safeCommand}\\r"`;
     
-    exec(cmd, (error) => {
+    exec(cmd, { timeout: 5000 }, (error) => {
         if (error) return res.status(500).json({ error: 'Komut gönderilemedi: Sunucu kapalı olabilir.' });
         res.json({ success: true, message: 'Komut iletildi.' });
+    });
+});
+
+// --- SUNUCU DURDURMA ---
+app.post('/api/servers/:name/stop', (req, res) => {
+    const serverName = req.params.name;
+    if (!validName(serverName)) return res.status(400).json({ error: 'Geçersiz sunucu adı.' });
+
+    // Panelin 'ZORLA DURDUR' butonu çalışsın diye eklendi (screen oturumunu kapatır).
+    exec(`screen -S mc_${serverName} -p 0 -X quit`, { timeout: 5000 }, (error) => {
+        if (error) return res.status(500).json({ error: 'Durdurulamadı: Sunucu zaten kapalı olabilir.' });
+        res.json({ success: true, message: 'Sunucu durdurma komutu gönderildi.' });
     });
 });
 
@@ -221,9 +263,9 @@ app.post('/api/servers/:name/command', (req, res) => {
 const upload = multer({ dest: '/tmp/controllin_uploads' });
 
 app.get('/api/files', (req, res) => {
-    let targetPath = req.query.path || '';
-    const fullPath = path.join(BASE_DIR, targetPath);
-    if (!fullPath.startsWith(BASE_DIR)) return res.status(400).json({ error: 'Invalid path' });
+    let targetPath = typeof req.query.path === 'string' ? req.query.path : '';
+    const fullPath = safeJoin(BASE_DIR, targetPath);
+    if (!fullPath) return res.status(400).json({ error: 'Invalid path' });
 
     try {
         if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'Not found' });
@@ -259,19 +301,21 @@ app.get('/api/files', (req, res) => {
 
 app.get('/api/files/download', (req, res) => {
     const targetPath = req.query.path;
-    if (!targetPath) return res.status(400).json({ error: 'Path required' });
-    const fullPath = path.join(BASE_DIR, targetPath);
-    if (!fullPath.startsWith(BASE_DIR)) return res.status(400).json({ error: 'Invalid path' });
+    if (!targetPath || typeof targetPath !== 'string') return res.status(400).json({ error: 'Path required' });
+    const fullPath = safeJoin(BASE_DIR, targetPath);
+    if (!fullPath) return res.status(400).json({ error: 'Invalid path' });
     if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'File not found' });
     res.download(fullPath);
 });
 
 app.post('/api/files/upload', upload.single('file'), (req, res) => {
-    const targetPath = req.body.path || '';
-    const fullDir = path.join(BASE_DIR, targetPath);
-    if (!fullDir.startsWith(BASE_DIR)) return res.status(400).json({ error: 'Invalid path' });
+    const targetPath = typeof req.body.path === 'string' ? req.body.path : '';
+    const fullDir = safeJoin(BASE_DIR, targetPath);
+    if (!fullDir) return res.status(400).json({ error: 'Invalid path' });
     if (!req.file) return res.status(400).json({ error: 'No file provided' });
-    const finalPath = path.join(fullDir, req.file.originalname);
+    // Yüklenen dosyanın adı yol içermemeli (safeJoin zaten korur, ama isim de temizlenir)
+    const safeName = path.basename(req.file.originalname || 'dosya');
+    const finalPath = path.join(fullDir, safeName);
     fs.rename(req.file.path, finalPath, (err) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true, message: 'Dosya yüklendi.' });

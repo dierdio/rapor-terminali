@@ -10,6 +10,9 @@ let currentFileManagerPath = '';
 let activeServerName = null;
 let statusInterval = null;
 
+// --- GÜVENLİK: XSS kaçış yardımcıları ---
+function esc(s) { return String(s ?? '').replace(/&/g, '&' + 'amp;').replace(/</g, '&' + 'lt;').replace(/>/g, '&' + 'gt;').replace(/"/g, '&' + 'quot;').replace(/'/g, '&' + '#39;'); }
+
 // Auth Kontrolü
 (async function init() {
     const { data } = await _supabase.auth.getSession();
@@ -228,7 +231,8 @@ async function fetchServerStatus() {
         // Update Console
         const out = document.getElementById('console-output');
         // Only update if it actually changed to prevent annoying flickers and losing scroll
-        const formattedLog = data.log.replace(/\n/g, '<br>');
+        // (Oyun sohbeti HTML içerebildiği için log önce escape edilir)
+        const formattedLog = esc(data.log).replace(/\n/g, '<br>');
         if (out.innerHTML.trim() !== formattedLog) {
             const isScrolledToBottom = out.scrollHeight - out.clientHeight <= out.scrollTop + 50;
             out.innerHTML = formattedLog;
@@ -327,7 +331,7 @@ async function sendServerCommand() {
     input.value = '';
     
     try {
-        await vdsFetch(`/api/servers/${activeServerName}/command`, {
+        await vdsFetch(`/api/servers/${encodeURIComponent(activeServerName)}/command`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ command: cmd })
@@ -343,10 +347,11 @@ async function setServerAction(action) {
         return;
     }
     
+    const endpoint = action === 'stop' ? 'stop' : 'start';
     appendConsole(`[SİSTEM] '${action}' komutu VDS'e gönderiliyor...`);
     
     try {
-        const res = await vdsFetch(`/api/servers/${activeServerName}/start`, { method: 'POST' });
+        const res = await vdsFetch(`/api/servers/${encodeURIComponent(activeServerName)}/${endpoint}`, { method: 'POST' });
         const data = await res.json();
         appendConsole(`> BAŞARILI: ${data.message}`);
     } catch (e) {
@@ -356,7 +361,7 @@ async function setServerAction(action) {
 
 function appendConsole(text) {
     const out = document.getElementById('console-output');
-    out.innerHTML += `<br>${text}`;
+    out.innerHTML += `<br>${esc(text)}`;
     out.scrollTop = out.scrollHeight;
 }
 
@@ -378,7 +383,7 @@ async function loadFileManager(subPath = '') {
         if (subPath !== '') {
             const upPath = subPath.split('/').slice(0, -1).join('/');
             tbody.innerHTML += `
-                <tr style="border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="loadFileManager('${upPath}')">
+                <tr style="border-bottom: 1px solid var(--border-color); cursor: pointer;" data-nav="${esc(upPath)}">
                     <td style="padding: 10px;">📁 ..</td>
                     <td style="padding: 10px;">-</td>
                     <td style="padding: 10px;">-</td>
@@ -393,22 +398,28 @@ async function loadFileManager(subPath = '') {
 
         data.files.forEach(f => {
             const icon = f.isDirectory ? '📁' : '📄';
+            const navPath = `${subPath ? subPath+'/' : ''}${f.name}`;
             const actionHTML = f.isDirectory 
-                ? `<button class="b-btn text-small" style="padding: 4px 8px;" onclick="loadFileManager('${subPath ? subPath+'/' : ''}${f.name}')">İçine Gir</button>`
+                ? `<button class="b-btn text-small" style="padding: 4px 8px;" data-nav="${esc(navPath)}">İçine Gir</button>`
                 : `<a href="${vdsConfig.url}/api/files/download?path=${encodeURIComponent(subPath ? subPath+'/' : '')}${encodeURIComponent(f.name)}" target="_blank" class="b-btn text-small" style="padding: 4px 8px; text-decoration: none;">İndir</a>`;
                 
             const sizeHTML = f.isDirectory ? '-' : (f.size / 1024).toFixed(1) + ' KB';
 
             tbody.innerHTML += `
                 <tr style="border-bottom: 1px solid #2a2a2a;">
-                    <td style="padding: 10px; display: flex; align-items: center; gap: 8px;">${icon} ${f.name}</td>
+                    <td style="padding: 10px; display: flex; align-items: center; gap: 8px;">${icon} ${esc(f.name)}</td>
                     <td style="padding: 10px; color: var(--text-muted);">${sizeHTML}</td>
                     <td style="padding: 10px;">${actionHTML}</td>
                 </tr>
             `;
         });
+
+        // Klasör gezinme bağlantıları (güvenli: dosya adları onclick'e gömülmez)
+        tbody.querySelectorAll('[data-nav]').forEach(el => {
+            el.addEventListener('click', () => loadFileManager(el.dataset.nav));
+        });
     } catch(e) {
-        tbody.innerHTML = `<tr><td colspan="3" style="padding: 10px; color: var(--error-color);">Hata: ${e.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="3" style="padding: 10px; color: var(--error-color);">Hata: ${esc(e.message)}</td></tr>`;
     }
 }
 
@@ -453,8 +464,8 @@ async function fetchUsers() {
         list.innerHTML += `
             <div class="flex-between mb-2">
                 <div>
-                    <strong>${user.username}</strong>
-                    <div class="text-small text-muted">ID: ${user.id.substring(0,8)}... | Rol: ${user.role}</div>
+                    <strong>${esc(user.username)}</strong>
+                    <div class="text-small text-muted">ID: ${esc(user.id.substring(0,8))}... | Rol: ${esc(user.role)}</div>
                 </div>
             </div>
         `;

@@ -11,6 +11,10 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 let currentUser = null;
 
+// --- GÜVENLİK: XSS kaçış yardımcıları ---
+function esc(s) { return String(s ?? '').replace(/&/g, '&' + 'amp;').replace(/</g, '&' + 'lt;').replace(/>/g, '&' + 'gt;').replace(/"/g, '&' + 'quot;').replace(/'/g, '&' + '#39;'); }
+function jesc(s) { return esc(String(s ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"')); }
+
 const appView = document.getElementById('app-view');
 
 // Mağaza ID'lerini ikonlara çeviren basit harita
@@ -158,8 +162,8 @@ async function renderHome(isLoadMore = false) {
         games.forEach(game => {
             const imgUrl = getHighResImage(game.thumb, game.steamAppID);
             html += `
-                <div class="game-card" onclick="openGameDetail('${game.gameID}', '${game.dealID}', '${game.steamAppID}')">
-                    <img loading="lazy" src="${imgUrl}" alt="${game.title}" class="game-poster" onerror="this.onerror=null; this.src='${game.thumb}';">
+                <div class="game-card" onclick="openGameDetail('${jesc(game.gameID)}', '${jesc(game.dealID)}', '${jesc(game.steamAppID)}')">
+                    <img loading="lazy" src="${jesc(imgUrl)}" alt="${esc(game.title)}" class="game-poster" onerror="this.onerror=null; this.src='${jesc(game.thumb)}';">
                 </div>
             `;
         });
@@ -229,12 +233,12 @@ async function renderDiscounts(isLoadMore = false) {
             const iconClass = storeIcons[item.storeID] || 'fas fa-gamepad';
 
             html += `
-                <div class="game-card" onclick="openGameDetail('${item.gameID}', '${item.dealID}', '${item.steamAppID}')">
+                <div class="game-card" onclick="openGameDetail('${jesc(item.gameID)}', '${jesc(item.dealID)}', '${jesc(item.steamAppID)}')">
                     <div class="discount-badge">-${savings}%</div>
                     <div class="platform-logo">
                         <i class="${iconClass}" style="color: white; font-size: 20px;"></i>
                     </div>
-                    <img loading="lazy" src="${imgUrl}" alt="${item.title}" class="game-poster" onerror="this.onerror=null; this.src='${item.thumb}';">
+                    <img loading="lazy" src="${jesc(imgUrl)}" alt="${esc(item.title)}" class="game-poster" onerror="this.onerror=null; this.src='${jesc(item.thumb)}';">
                 </div>
             `;
         });
@@ -262,16 +266,17 @@ async function renderGameDetail(gameID, dealID, steamAppID) {
     showLoading();
     try {
         // 1. CheapShark'tan oyun detayını çek (Fiyat, İsim, Metacritic vs.)
-        const gameRes = await fetch(`${CHEAPSHARK_API}/games?id=${gameID}`);
+        const gameRes = await fetch(`${CHEAPSHARK_API}/games?id=${encodeURIComponent(gameID)}`);
         const gameData = await gameRes.json();
         const info = gameData.info;
         
         // 2. Steam'den Yorumları Çek (Vercel API üzerinden)
         let reviews = [];
+        let querySummary = null; // Her oyunda sıfırlanır (önceki oyunun verisi taşınmaz)
         if (steamAppID && steamAppID !== 'null') {
             try {
                 // Not: Geliştirme ortamında vercel dev çalışmıyorsa direkt atlayabilir
-                const revRes = await fetch(`${REVIEWS_API}?appid=${steamAppID}`);
+                const revRes = await fetch(`${REVIEWS_API}?appid=${encodeURIComponent(steamAppID)}`);
                 if (revRes.ok) {
                     const revData = await revRes.json();
                     if (revData.reviews) reviews = revData.reviews;
@@ -303,28 +308,28 @@ async function renderGameDetail(gameID, dealID, steamAppID) {
         let html = `
             <div class="view-section game-detail">
                 <div class="game-banner">
-                    <img src="${bannerImg}" alt="${info.title} Banner" onerror="this.onerror=null; this.src='${fallbackBanner}'">
+                    <img src="${jesc(bannerImg)}" alt="${esc(info.title)} Banner" onerror="this.onerror=null; this.src='${jesc(fallbackBanner)}'">
                 </div>
                 
                 <!-- Fiyat Bilgisi (Ekstra) -->
                 <div style="text-align: center; color: var(--neon-green); font-size: 1.5rem; font-weight: bold;">
-                    En Ucuz Fiyat: $${gameData.cheapestPriceEver.price}
+                    En Ucuz Fiyat: $${esc(gameData.cheapestPriceEver?.price ?? '?')}
                 </div>
 
                 <div class="scores-grid">
                     <div class="score-item">
                         <img src="https://upload.wikimedia.org/wikipedia/commons/2/20/Metacritic.svg" class="score-logo" alt="Metacritic" style="filter: invert(1); height: 30px;">
-                        <div class="score-box score-metacritic" style="${metaScore === 'N/A' ? 'background:#444' : ''}">${metaScore}</div>
+                        <div class="score-box score-metacritic" style="${metaScore === 'N/A' ? 'background:#444' : ''}">${esc(metaScore)}</div>
                     </div>
                     <div class="score-item" style="flex-direction: column; justify-content: center; gap: 5px;">
                         <i class="fab fa-steam" style="font-size: 24px; color: white;"></i>
                         <span style="font-size: 0.7rem; color: #aaa; text-align: center;">Steam Puanı</span>
-                        <div class="score-box" style="font-size: 1.2rem; background: ${steamPercent === 'N/A' ? '#444' : '#66c0f4'}; color: #fff;">${steamPercent}</div>
+                        <div class="score-box" style="font-size: 1.2rem; background: ${steamPercent === 'N/A' ? '#444' : '#66c0f4'}; color: #fff;">${esc(steamPercent)}</div>
                     </div>
                     <div class="score-item" style="flex-direction: column; justify-content: center; gap: 5px;">
                         <i class="fas fa-users" style="font-size: 24px; color: white;"></i>
                         <span style="font-size: 0.7rem; color: #aaa; text-align: center;">Genel Durum</span>
-                        <div class="score-box" style="font-size: 0.8rem; background: ${steamStatus === 'N/A' ? '#444' : 'var(--neon-green)'}; padding: 5px; color: #000; text-align: center;">${steamStatus}</div>
+                        <div class="score-box" style="font-size: 0.8rem; background: ${steamStatus === 'N/A' ? '#444' : 'var(--neon-green)'}; padding: 5px; color: #000; text-align: center;">${esc(steamStatus)}</div>
                     </div>
                 </div>
 
@@ -346,7 +351,7 @@ async function renderGameDetail(gameID, dealID, steamAppID) {
                             <span>${recText} • ${playtime} hrs on record</span>
                         </div>
                         <div class="comment-body">
-                            ${review.review.replace(/\n/g, '<br>')}
+                            ${esc(review.review).replace(/\r?\n/g, '<br>')}
                         </div>
                     </div>
                 `;
