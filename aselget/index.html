@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASELGET | Oyun Tasarımı Topluluğu</title>
+  <meta name="description" content="ASELGET — Aselsan Oyun Geliştiricileri Topluluğu üyelik, ders, yoklama ve takvim yönetim sistemi.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/aselget/assets/css/style.css">
+</head>
+<body>
+  <div class="bg-glow" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <!-- ÜST BAR -->
+  <header class="topbar" id="topbar" style="display:none">
+    <div class="brand" onclick="location.hash='#/panel'">
+      <div class="brand-logo">AG</div>
+      <div class="brand-text">
+        <div class="brand-name">ASELGET</div>
+        <div class="brand-sub">OYUN TASARIMI TOPLULUĞU</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="user-chip" id="user-chip" onclick="location.hash='#/profil'">
+      <img id="chip-avatar" alt="" width="30" height="30">
+      <span id="chip-name">—</span>
+      <span class="chip-role" id="chip-role"></span>
+    </div>
+    <button class="icon-btn" id="logout-btn" title="Çıkış Yap" onclick="doLogout()">⏻</button>
+  </header>
+
+  <!-- İÇERİK -->
+  <main id="app-view" class="app-view"></main>
+
+  <footer class="footer" id="footer" style="display:none">
+    <span>ASELGET — Aselsan Oyun Geliştiricileri Topluluğu</span>
+    <span class="footer-links">
+      <a href="https://www.instagram.com/aselgetoplulugu/" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://www.linkedin.com/company/aselget" target="_blank" rel="noopener">LinkedIn</a>
+    </span>
+    <span class="build-ver">v1.0.0</span>
+  </footer>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal-box" id="modal-box"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/aselget/assets/js/app.js?v=1.0.0"></script>
+</body>
+</html>

@@ -10,6 +10,7 @@ DIERDIO ekosistemi — Vercel üzerinde yayında olan çok bileşenli web projes
 | `terminal/` | Tesis-62 // Rapor Terminali | SCP temalı raporlama sistemi: deney/günlük/kaza/muhafaza/örnek raporları, rütbe sistemi, onay akışı, iç mesajlaşma, güvenlik logları |
 | `kritr/` | KRITR Oyuncu Merkezi | CheapShark tabanlı oyun/indirim keşfi + Steam yorumları |
 | `controllin/` | Minecraft Kontrol Paneli | VDS'teki Minecraft sunucularını yönetme paneli |
+| `aselget/` | ASELGET Topluluk Sistemi | Aselsan Oyun Geliştiricileri Topluluğu: üye dizini, ders yönetimi, yoklama alma, etkinlik takvimi, duyurular |
 | `controllin/vds-daemon/` | Daemon | VDS üzerinde çalışan Express API: sunucu kurulumu (Paper/Vanilla), screen oturum yönetimi, dosya yöneticisi |
 | `api/` | Vercel Serverless | `create-user`, `manage-user` (Supabase admin işlemleri, JWT + yetkili kontrolü), `get-versions`, `get-reviews` (proxy) |
 | `supabase/` | SQL Scriptleri | Storage bucket ve RLS sertleştirme scriptleri |
@@ -19,7 +20,13 @@ DIERDIO ekosistemi — Vercel üzerinde yayında olan çok bileşenli web projes
 - **Frontend:** Statik HTML/CSS/JS (Vercel rewrite'ları ile SPA yönlendirme)
 - **Backend:** Vercel Serverless Functions + Supabase (Auth, Postgres, Realtime, Storage)
 - **Daemon:** Node.js (Express) — `API_TOKEN` ile korunur
-- İki ayrı Supabase projesi kullanılır: `terminal` (bwajmlxx...) ve `kritr` + `controllin` (poxifowr...)
+- İki ayrı Supabase projesi kullanılır: `terminal` (bwajmlxx...) ve `kritr` + `controllin` + `aselget` (poxifowr...)
+
+## ASELGET Kurulumu
+
+`aselget/` uygulamasının tabloları için `supabase/aselget-setup.sql` scriptini
+Supabase SQL Editor'de (poxifowr... projesi) çalıştırın. İlk kayıt olan kişi
+otomatik olarak admin olur. Detaylar scriptin içinde.
 
 ## Vercel Environment Variables
 
