@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Royaledle Classic - Clash Royale Kart Tahmin Oyunu</title>
+  <style>
+    :root {
+      --royalgreen: #19b419;
+      --royalred: #b41919;
+      --royalyellow: #bd9b37;
+      --bg: #0d0d0d;
+      --card-bg: #1a1a1a;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Baloo 2', sans-serif;
+      background: var(--bg);
+      color: white;
+      margin: 0;
+      min-height: 100vh;
+    }
+    
+    /* Header */
+    header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid #333;
+    }
+    
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-between;
+      align-items: center;
+    }
+    
+    .title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    
+    /* Game Container */
+    .game-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    
+    /* Search Section */
+    .search-section {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 3rem;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--royalgreen);
+    }
+    
+    /* Cards Grid */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+    
+    .card-preview {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+      transition: transform 0.2s;
+      cursor: pointer;
+    }
+    
+    .card-preview:hover {
+      transform: translateY(-4px);
+    }
+    
+    .card-preview img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      margin: 0 auto 0.5rem;
+      background: #333;
+      border-radius: 6px;
+    }
+    
+    .card-preview .name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin: 0.25rem 0;
+    }
+    
+    .card-preview .cost {
+      font-size: 0.75rem;
+      color: #888;
+    }
+    
+    /* Comparison Table */
+    .comparison-table {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .table-header {
+      display: grid;
+      grid-template-columns repeat(8, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      color: #666;
+    }
+    
+    .table-cell {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+    
+    .correct { background: var(--royalgreen); color: white; }
+    .low { background: var(--royalred); color: white; }
+    .high { background: var(--royalred); color: white; }
+    .equal { background: var(--royalyellow); color: #000; }
+    
+    .arrow-up { color: #ff6b6b; }
+    .arrow-down { color: #5f27cd; }
+    
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--royalgreen);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      opacity: 0.9;
+    }
+    
+    .btn-secondary {
+      background: #333;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      opacity: 0.9;
+    }
+    
+    /* Status */
+    .status {
+      margin: 1rem 0;
+      padding: 0.75rem;
+      background: var(--card-bg);
+      border-radius: 8px;
+    }
+    
+    /* How to Play */
+    .how-to-play {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-top: 2rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 640px) {
+      .table-header .col-span-8 {
+        grid-column: span 8 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1 class="title">🏰 Royaledle Classic</h1>
+      <div>
+        <span>Günlük: <strong id="streak">0</strong> Gün</span>
+        <span>|</span>
+        <span>Toplam: <strong id="totalGames">0</strong></span>
+      </div>
+    </div>
+  </header>
+  
+  <div class="game-container">
+    <!-- Search -->
+    <section class="search-section mb-6">
+      <input type="text" id="searchInput" class="search-input" placeholder="Kart adı veya emoji ile ara..." />
+    </section>
+    
+    <!-- Cards Grid -->
+    <section>
+      <div class="cards-grid" id="cardsGrid">
+        <!-- Cards will be populated by JS -->
+      </div>
+    </section>
+    
+    <!-- Comparison Table -->
+    <section id="comparisonSection" class="comparison-table hidden">
+      <div class="table-header">
+        <div>Kart</div>
+        <div>İksir</div>
+        <div>Nadirlik</div>
+        <div>Tür</div>
+        <div>Hedef</div>
+        <div>Menzil</div>
+        <div>Vuruş Hız</div>
+        <div>Hareket Hız</div>
+      </div>
+      <div class="table-body" id="tableBody">
+        <!-- Rows will be populated by JS -->
+      </div>
+    </section>
+    
+    <!-- Game Status -->
+    <div class="status mb-4" id="status">
+      <p>Tahmin sayısı: <strong id="guessCount">0</strong> / 8</p>
+    </div>
+    
+    <!-- Controls -->
+    <div class="controls">
+      <button id="submitBtn" class="btn btn-primary" disabled>Tahmin Et</button>
+      <button id="restartBtn" class="btn btn-secondary">Yeniden Başla</button>
+    </div>
+    
+    <!-- How to Play -->
+    <div class="how-to-play mt-8">
+      <h3 class="font-bold mb-3">Nasıl Oynanır?</h3>
+      <ul class="text-sm text-gray-300 space-y-2">
+        <li>
+          <strong>Günlük Kart:</strong> Her gün aynı kart, dünyadaki tüm oyuncular aynı kartı tahmin eder.
+        </li>
+        <li>
+          <strong>Tahmin:</strong> Arama kutusundan kart seçip gönder. Ya da klavyenizle oklar ile gezin.
+        </li>
+        <li>
+          <strong>Geri Bildirim:</strong> <span class="text-green-400">Yeşil</span> = Tam doğru, <span class="text-red-400">Kırmızı</span> = Yanlış, <span class="text-yellow-400">Sarı</span> = Kısmen yakın, <span class="text-gray-400">Oklar</span> = Sayısal yön (↑/↓).
+        </li>
+        <li>
+          <strong>Kazanma:</strong> Tüm özelliklerinizi doğru tahmin edip gizli kartı bul!
+        </li>
+      </ul>
+    </div>
+  </div>
+  
+  <script type="module">
+    // Clash Royale kart veritabanı (123 kart - örnek veri)
+    const ALL_CARDS = [
+      { id: 1, name: 'Goblin', cost: 2, rarity: 'Common', type: 'Birlik', targets: 'Ground', range: 'Melee', hit_speed: 'Medium', speed: 'Fast', release_year: 2016, emoji: '👹' },
+      { id: 2, name: 'Goblin King', cost: 3, rarity: 'Common', type: 'Birlik', targets: 'Ground', range: 'Melee', hit_speed: 'Medium', speed: 'Fast', release_year: 2016, emoji: '👑' },
+      { id: 3, name: 'Skeleton', cost: 3, rarity: 'Common', type: 'Birlik', targets: 'Ground', range: 'Melee', hit_speed: 'Medium', speed: 'Medium', release_year: 2016, emoji: '☠️' },
+      { id: 4, name: 'Stone', cost: 1, rarity: 'Common', type: 'Birlik', targets: 'Ground', range: 'Melee', hit_speed: 'Medium', speed: 'Medium', release_year: 2016, emoji: '🪨' },
+      { id: 5, name: 'Cannon', cost: 3, rarity: 'Common', type: 'Birlik', targets: 'Ground', range: 'Melee', hit_speed: 'Fast', speed: 'Medium', release_year: 2016, emoji: '💣' },
+      { id: 6, name: 'Fireball', cost: 2, rarity: 'Common', type: 'Birlik', targets: 'Ground', range: 'Melee', hit_speed: 'Medium', speed: 'Fast', release_year: 2016, emoji: '🔥' },
+      { id: 7, name: 'Minion', cost: 3, rarity: 'Common', type: 'Birlik', targets: 'Air', range: 'Melee', hit_speed: 'Medium', speed: 'Fast', release_year: 2016, emoji: '🕊️' },
+      { id: 8, name: 'Archers', cost: 3, rarity: 'Common', type: 'Birlik', targets: 'Ground', range: 'Melee', hit_speed: 'Medium', speed: 'Medium', release_year: 2016, emoji: '🏹' },
+      { id: 9, name: 'Minion Horde', cost: 4, rarity: 'Common', type: 'Birlik', targets: 'Ground', range: 'Melee', hit_speed: 'Medium', speed: 'Medium', release_year: 2016, emoji: '👺' },
+      { id: 10, name: 'Knight', cost: 5, rarity: 'Common', type: 'Birlik', targets: 'Ground', range: 'Melee', hit_speed: 'Medium', speed: 'Medium', release_year: 2016, emoji: '🐎' }
+    ];
+    
+    // Game state
+    let answerIndex = 0;
+    let guesses = [];
+    let history = [];
+    let gameOver = false;
+    let won = false;
+    let searchOpen = false;
+    
+    // DOM elements
+    const cardsGrid = document.getElementById('cardsGrid');
+    const comparisonSection = document.getElementById('comparisonSection');
+    const tableBody = document.getElementById('tableBody');
+    const searchInput = document.getElementById('searchInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const streakEl = document.getElementById('streak');
+    const totalGamesEl = document.getElementById('totalGames');
+    const statusEl = document.getElementById('status');
+    const guessCountEl = document.getElementById('guessCount');
+    
+    // rarity order
+    const rarityOrder = { Common: 1, Rare: 2, Epic: 3, Legendary: 4 };
+    const typeOrder = { Birlik: 1, Büyü: 2, Bina: 3 };
+    const targetOrder = { Kara: 1, Hava: 2, 'Her ikisi': 3, Binalar: 4 };
+    
+    // Format comparison result
+    function compareValues(g, a, key) {
+      if (g === a) return 'correct';
+      if (typeof g === 'number' && typeof a === 'number') return g < a ? 'low' : 'high';
+      
+      const orderMaps = {
+        rarity: rarityOrder,
+        type: typeOrder,
+        targets: targetOrder
+      };
+      const order = orderMaps[key];
+      if (order && typeof g === 'string' && typeof a === 'string') {
+        const gRank = order[g] ?? 999;
+        const aRank = order[a] ?? 999;
+        return gRank < aRank ? 'low' : 'high';
+      }
+      return 'equal';
+    }
+    
+    function getArrowDirection(guess, answer, key) {
+      const cmp = compareValues(guess[key], answer[key], key);
+      if (cmp === 'correct') return null;
+      return cmp === 'high' ? 'down' : 'up';
+    }
+    
+    // Initialize game
+    function initGame() {
+      // Simple day-based deterministic answer
+      const now = new Date();
+      const key = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+      let seed = parseInt(key.replace(/-/g, ''), 10);
+      let rng = seed;
+      const shuffled = [...ALL_CARDS].sort(() => {
+        rng = (rng * 1103515245 + 12345) & 0x7fffffff;
+        return rng / 2147483648 - 0.5;
+      });
+      answerIndex = (rng < 0 ? rng * -1 : rng % ALL_CARDS.length);
+      
+      // Update stats from localStorage
+      const saved = localStorage.getItem('royaledle_progress');
+      if (saved) {
+        const progress = JSON.parse(saved);
+        streakEl.textContent = progress.streak || 0;
+        totalGamesEl.textContent = progress.totalGames || 0;
+      }
+      
+      renderCards();
+    }
+    
+    // Render cards grid
+    function renderCards() {
+      const answerCard = ALL_CARDS[answerIndex];
+      const availableCards = ALL_CARDS.filter(c => c.id !== answerCard.id);
+      
+      cardsGrid.innerHTML = '';
+      
+      // Show all cards except the answer
+      availableCards.forEach(card => {
+        const cardEl = document.createElement('div');
+        cardEl.className = 'card-preview';
+        cardEl.innerHTML = `
+          <img src="https://royaleapi.github.io/cr-api-assets/cards/${card.img}.png" alt="${card.name}" />
+          <div class="name">${card.name}</div>
+          <div class="cost">${card.cost} IX</div>
+        `;
+        cardEl.addEventListener('click', () => selectCard(card));
+        cardsGrid.appendChild(cardEl);
+      });
+    }
+    
+    // Select card for guess
+    function selectCard(card) {
+      if (gameOver) return;
+      
+      selectedCard = card;
+      searchInput.value = card.name;
+      
+      // Show comparison table
+      comparisonSection.classList.remove('hidden');
+      renderComparisonTable(card);
+      submitBtn.disabled = false;
+      guessCountEl.textContent = parseInt(guessCountEl.textContent) + 1;
+    }
+    
+    // Render comparison table
+    function renderComparisonTable(guessCard) {
+      const answerCard = ALL_CARDS[answerIndex];
+      const detailKeys = ['cost', 'rarity', 'type', 'targets', 'range', 'hit_speed', 'speed', 'release_year'];
+      
+      tableBody.innerHTML = '';
+      
+      detailKeys.forEach((key, idx) => {
+        const cmp = compareValues(guessCard[key], answerCard[key], key);
+        const arrow = getArrowDirection(guessCard, answerCard, key);
+        
+        const row = document.createElement('div');
+        row.className = `table-cell ${cmp}`;
+        row.innerHTML = `
+          ${guessCard[key]}${cmp !== 'correct' ? (arrow === 'down' ? '↓' : '↑') : '✓'}
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+    
+    // Handle submit
+    submitBtn.addEventListener('click', () => {
+      if (!selectedCard || gameOver) return;
+      
+      const answerCard = ALL_CARDS[answerIndex];
+      const detailKeys = ['cost', 'rarity', 'type', 'targets', 'range', 'hit_speed', 'speed', 'release_year'];
+      
+      // Build comparison
+      const comparisons = {};
+      const arrows = {};
+      
+      detailKeys.forEach(key => {
+        const cmp = compareValues(selectedCard[key], answerCard[key], key);
+        comparisons[key] = cmp;
+        arrows[key] = getArrowDirection(selectedCard, answerCard, key);
+      });
+      
+      // Check if all correct
+      const allCorrect = detailKeys.every(key => comparisons[key] === 'correct');
+      
+      // Add to history
+      history.push({
+        card: selectedCard,
+        comparisons,
+        arrows
+      });
+      
+      // Update UI
+      guessCountEl.textContent = parseInt(guessCountEl.textContent) - 0 + history.length; // already incremented
+      
+      renderComparisonTable(selectedCard);
+      
+      if (allCorrect) {
+        won = true;
+        gameOver = true;
+        
+        // Update streak
+        const saved = localStorage.getItem('royaledle_progress');
+        let progress = { streak: 0, totalGames: 0, wins: [] };
+        if (saved) progress = JSON.parse(saved);
+        
+        progress.streak = Math.max((progress.streak || 0) + 1, 1);
+        progress.totalGames = (progress.totalGames || 0) + 1;
+        progress.wins.push(history.length);
+        
+        localStorage.setItem('royaledle_progress', JSON.stringify(progress));
+        
+        streakEl.textContent = progress.streak;
+        totalGamesEl.textContent = progress.totalGames;
+        
+        // Show win message
+        setTimeout(() => {
+          alert(`Tebrikler! ${history.length} denemede kazandınız!`);
+          restartGame();
+        }, 500);
+      } else if (history.length >= 8) {
+        // Max guesses reached
+        gameOver = true;
+        setTimeout(() => {
+          alert('Tahmin hakkı bitti! Tekrar deneyin.');
+          restartGame();
+        }, 500);
+      } else {
+        selectedCard = null;
+        submitBtn.disabled = true;
+      }
+    });
+    
+    // Restart game
+    function restartGame() {
+      gameOver = false;
+      won = false;
+      guesses = [];
+      history = [];
+      searchOpen = false;
+      
+      // Reset search
+      searchInput.value = '';
+      comparisonSection.classList.add('hidden');
+      tableBody.innerHTML = '';
+      submitBtn.disabled = true;
+      
+      // Start new game
+      initGame();
+    }
+    
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchOpen = false;
+        searchInput.value = '';
+        comparisonSection.classList.add('hidden');
+        tableBody.innerHTML = '';
+        submitBtn.disabled = true;
+        selectedCard = null;
+      }
+    });
+    
+    // Initialize on load
+    initGame();
+  </script>
+</body>
+</html>
