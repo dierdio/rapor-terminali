@@ -287,9 +287,13 @@ export function shareText(
 
 /* --- Arama ---------------------------------------------------------------- */
 
-/** Kart arama: ad, Turkce ad ve arena alaninda ara */
-export function searchCards(cards: Card[], query: string, excludeIds: number[] = []): Card[] {
-  const q = query
+/**
+ * Aramayi normalize eder: kucuk harf, Turkce karakterler sade, noktalama ve
+ * bosluklar tamamen cikarilir. Boylece "pekka" -> "P.E.K.K.A", "x bow" -> "X-Bow",
+ * "valkyrie" -> "Valkür" eslesir.
+ */
+function normalize(text: string): string {
+  return text
     .toLocaleLowerCase('tr')
     .replace(/[ıİ]/g, 'i')
     .replace(/[şŞ]/g, 's')
@@ -297,21 +301,32 @@ export function searchCards(cards: Card[], query: string, excludeIds: number[] =
     .replace(/[üÜ]/g, 'u')
     .replace(/[öÖ]/g, 'o')
     .replace(/[çÇ]/g, 'c')
-    .trim()
+    .replace(/[^a-z0-9]/g, '')
+}
+
+/** Kart arama: ad, Turkce ad ve arena alaninda ara (noktalama duyarsiz) */
+export function searchCards(cards: Card[], query: string, excludeIds: number[] = []): Card[] {
+  const q = normalize(query)
   const excluded = new Set(excludeIds)
   if (!q) {
     return cards.filter((c) => !excluded.has(c.id)).slice(0, 40)
   }
-  return cards
-    .filter((c) => !excluded.has(c.id))
-    .filter((c) => {
-      const haystack = [c.name, c.name_tr, c.arena]
-        .filter(Boolean)
-        .join(' ')
-        .toLocaleLowerCase('tr')
-        .replace(/[ıİ]/g, 'i').replace(/[şŞ]/g, 's').replace(/[ğĞ]/g, 'g')
-        .replace(/[üÜ]/g, 'u').replace(/[öÖ]/g, 'o').replace(/[çÇ]/g, 'c')
-      return haystack.includes(q)
-    })
-    .slice(0, 40)
+
+  const scored: Array<{ card: Card; score: number }> = []
+  for (const card of cards) {
+    if (excluded.has(card.id)) continue
+    const names = [card.name, card.name_tr].filter((v): v is string => Boolean(v)).map(normalize)
+    const arena = normalize(card.arena ?? '')
+
+    let score = -1
+    if (names.some((n) => n === q)) score = 0 // tam eslesme en ustte
+    else if (names.some((n) => n.startsWith(q))) score = 1
+    else if (names.some((n) => n.includes(q))) score = 2
+    else if (arena.includes(q)) score = 3 // arena eslesmesi en sonda
+
+    if (score >= 0) scored.push({ card, score })
+  }
+
+  scored.sort((a, b) => a.score - b.score)
+  return scored.slice(0, 40).map((s) => s.card)
 }

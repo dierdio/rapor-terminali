@@ -635,7 +635,7 @@ function App(): React.ReactElement {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-2 text-center text-xs text-gray-500">
-        Clashdle v1.4.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir
+        Clashdle v1.5.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir
       </footer>
 
       {showHelp && <HowToPlay onClose={() => setShowHelp(false)} />}
