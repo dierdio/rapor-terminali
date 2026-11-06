@@ -499,7 +499,7 @@ function App(): React.ReactElement {
                     >
                       <CardFace card={c} size="sm" />
                       <span className="flex-1">
-                        <span className="font-semibold">{c.name_tr ?? c.name}</span>
+                        <span className="text-base font-semibold">{c.name_tr ?? c.name}</span>
                         <span className="ml-2 text-xs text-gray-400">{c.name}</span>
                       </span>
                       <span className="rounded bg-gray-700 px-2 py-0.5 text-xs">{c.cost} iksir</span>
@@ -523,7 +523,7 @@ function App(): React.ReactElement {
               <div className="min-w-0 flex-1">
                 <h3 className="text-xl font-bold">{selected.name_tr ?? selected.name}</h3>
                 <p className="text-sm text-gray-400">{selected.name}</p>
-                <p className="mt-1 text-sm text-gray-300">
+                <p className="mt-2 text-base text-gray-200">
                   {ATTRIBUTES.map((a, i) => (
                     <span key={a.key}>
                       {i > 0 && <span className="mx-1 text-gray-500">·</span>}
@@ -550,13 +550,17 @@ function App(): React.ReactElement {
             </p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-sm">
+              <table className="w-full min-w-[880px] border-collapse">
                 <thead>
-                  <tr className="bg-gray-900 text-xs uppercase tracking-wide text-gray-400">
-                    <th className="sticky left-0 z-10 bg-gray-900 px-3 py-2 text-left">Kart</th>
+                  <tr className="bg-gray-900 text-sm tracking-wide text-gray-300">
+                    <th className="sticky left-0 z-10 bg-gray-900 px-3 py-3 text-left">Kart</th>
                     {ATTRIBUTES.map((a) => (
-                      <th key={a.key} className="px-2 py-2 text-center" title={a.hint}>
-                        {a.label}
+                      <th
+                        key={a.key}
+                        className="px-1.5 py-3 text-center"
+                        title={a.hint}
+                      >
+                        {a.label.toLocaleUpperCase('tr')}
                       </th>
                     ))}
                   </tr>
@@ -565,20 +569,22 @@ function App(): React.ReactElement {
                   {rows.map((row, i) => (
                     <tr key={row.card.id} className="border-t border-gray-700">
                       <td className="sticky left-0 z-10 flex items-center gap-2 bg-gray-800 px-3 py-2">
-                        <span className="w-5 text-right text-xs text-gray-500">{guessCount - i}</span>
+                        <span className="w-5 text-right text-sm text-gray-400">{guessCount - i}</span>
                         <CardFace card={row.card} size="sm" />
-                        <span className="font-semibold" title={row.card.name}>
+                        <span className="text-base font-semibold" title={row.card.name}>
                           {row.card.name_tr ?? row.card.name}
                         </span>
                       </td>
                       {row.comparisons.map(({ attr, status }) => (
-                        <td key={attr.key} className="px-1 py-2 text-center">
+                        <td key={attr.key} className="px-1.5 py-2 text-center">
                           <div
-                            className={`mx-auto flex h-9 w-full max-w-[76px] flex-col items-center justify-center rounded-lg font-bold ${cellStyle[status]}`}
+                            className={`mx-auto flex h-14 w-full max-w-[96px] flex-col items-center justify-center gap-0.5 rounded-lg font-bold ${cellStyle[status]}`}
                             title={`${attr.label}: ${formatAttr(attr, row.card)}`}
                           >
-                            <span className="text-base leading-none">{arrowOf(status)}</span>
-                            <span className="mt-0.5 text-[10px] leading-none opacity-80">
+                            <span className="text-2xl leading-none">{arrowOf(status)}</span>
+                            <span
+                              className={`text-sm leading-none ${status === 'na' ? 'text-gray-200' : 'opacity-90'}`}
+                            >
                               {status === 'na' ? '—' : formatAttr(attr, row.card)}
                             </span>
                           </div>
@@ -629,7 +635,7 @@ function App(): React.ReactElement {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-2 text-center text-xs text-gray-500">
-        Clashdle v1.3.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir
+        Clashdle v1.4.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir
       </footer>
 
       {showHelp && <HowToPlay onClose={() => setShowHelp(false)} />}

@@ -66,17 +66,18 @@ const ORDERS: Partial<Record<AttrKey, Record<string, number>>> = {
   target: TARGET_ORDER,
 }
 
+/** Oyunun kendi Turkce yerellestirme etiketleri (RoyaleAPI oyun verisi / texts.json) */
 export const RARITY_LABEL: Record<string, string> = {
-  Common: 'Temel', Rare: 'Nadir', Epic: 'Epik', Legendary: 'Efsanevi', Champion: 'Şampiyon',
+  Common: 'Sıradan', Rare: 'Ender', Epic: 'Destansı', Legendary: 'Efsanevi', Champion: 'Şampiyon',
 }
 export const TYPE_LABEL: Record<string, string> = {
   Troop: 'Birlik', Building: 'Bina', Spell: 'Büyü',
 }
 export const TARGET_LABEL: Record<string, string> = {
-  Buildings: 'Binalar', Ground: 'Kara', Air: 'Hava', 'Air & Ground': 'Her ikisi', Special: 'Özel',
+  Buildings: 'Binalar', Ground: 'Kara', Air: 'Hava', 'Air & Ground': 'Hava ve Kara', Special: 'Özel',
 }
 export const SPEED_LABEL: Record<number, string> = {
-  45: 'Yavaş', 60: 'Orta', 90: 'Hızlı', 120: 'Çok hızlı',
+  45: 'Yavaş', 60: 'Orta', 90: 'Hızlı', 120: 'Çok Hızlı',
 }
 
 /** Sayiyi Turkce 1 ondalikli yazar */
@@ -93,7 +94,7 @@ export const ATTRIBUTES: AttributeDef[] = [
   },
   {
     key: 'rarity', label: 'Nadirlik',
-    hint: 'Temel < Nadir < Epik < Efsanevi < Şampiyon sırasına göre karşılaştırılır.',
+    hint: 'Sıradan < Ender < Destansı < Efsanevi < Şampiyon sırasına göre karşılaştırılır.',
     value: (c) => c.rarity,
   },
   {
@@ -103,7 +104,7 @@ export const ATTRIBUTES: AttributeDef[] = [
   },
   {
     key: 'target', label: 'Hedef',
-    hint: 'Kartın vurabildiği hedef: Kara, Hava, Her ikisi, Binalar veya Özel (dost birlikler/kule).',
+    hint: 'Kartın vurabildiği hedef: Kara, Hava, Hava ve Kara, Binalar veya Özel (dost birlikler/kule).',
     value: (c) => c.target,
   },
   {
@@ -137,7 +138,7 @@ export function formatAttr(attr: AttributeDef, card: Card): string {
     case 'rarity': return labelOf(RARITY_LABEL, v as string) as string
     case 'type': return labelOf(TYPE_LABEL, v as string) as string
     case 'target': return labelOf(TARGET_LABEL, v as string) as string
-    case 'range': return `${num(v as number)} kare`
+    case 'range': return `${num(v as number)}`
     case 'hit_speed': return `${num(v as number)} sn`
     case 'speed': return SPEED_LABEL[v as number] ?? `${v}`
     case 'release_year': return String(v)
