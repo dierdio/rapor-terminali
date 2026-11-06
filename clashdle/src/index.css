@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* clashdle - ozel katmanlar */
+
+body {
+  font-family: 'Baloo 2', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #0d0d0d;
+}
+
+/* Kararsilastirma renkleri (wordle benzeri geri bildirim) */
+@layer components {
+  .bg-correct { background-color: #19b419; }
+  .bg-wrong { background-color: #b41919; }
+  .bg-na { background-color: #4b5563; }
+}
+
+/* Kaydirma cubugu */
+*::-webkit-scrollbar { height: 8px; width: 8px; }
+*::-webkit-scrollbar-track { background: #1f2937; }
+*::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+*::-webkit-scrollbar-thumb:hover { background: #6b7280; }

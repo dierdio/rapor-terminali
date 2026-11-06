@@ -11,6 +11,7 @@ DIERDIO ekosistemi — Vercel üzerinde yayında olan çok bileşenli web projes
 | `kritr/` | KRITR Oyuncu Merkezi | CheapShark tabanlı oyun/indirim keşfi + Steam yorumları |
 | `controllin/` | Minecraft Kontrol Paneli | VDS'teki Minecraft sunucularını yönetme paneli |
 | `aselget/` | ASELGET Topluluk Sistemi | Aselsan Oyun Geliştiricileri Topluluğu: üye dizini, ders yönetimi, yoklama alma, etkinlik takvimi, duyurular |
+| `clashdle/` | Clashdle | Günlük Clash Royale kart tahmin oyunu (Vite + React + TypeScript + Tailwind), Wordle tarzı 8 özellik karşılaştırması + rastgele antrenman modu |
 | `controllin/vds-daemon/` | Daemon | VDS üzerinde çalışan Express API: sunucu kurulumu (Paper/Vanilla), screen oturum yönetimi, dosya yöneticisi |
 | `api/` | Vercel Serverless | `create-user`, `manage-user` (Supabase admin işlemleri, JWT + yetkili kontrolü), `get-versions`, `get-reviews` (proxy) |
 | `supabase/` | SQL Scriptleri | Storage bucket ve RLS sertleştirme scriptleri |
@@ -18,6 +19,8 @@ DIERDIO ekosistemi — Vercel üzerinde yayında olan çok bileşenli web projes
 ## Mimari
 
 - **Frontend:** Statik HTML/CSS/JS (Vercel rewrite'ları ile SPA yönlendirme)
+- **Clashdle:** Vite + React 18 + TypeScript + Tailwind (kendi alt projesi: `clashdle/`). Kart verisi
+  `clashdle/scripts/build-cards.cjs` scripti ile Clash Royale Wiki + RoyaleAPI i18n çeviri verisinden üretilir.
 - **Backend:** Vercel Serverless Functions + Supabase (Auth, Postgres, Realtime, Storage)
 - **Daemon:** Node.js (Express) — `API_TOKEN` ile korunur
 - İki ayrı Supabase projesi kullanılır: `terminal` (bwajmlxx...) ve `kritr` + `controllin` + `aselget` (poxifowr...)
@@ -53,3 +56,26 @@ Bucket yoksa sistem eski davranışa geri döner — hiçbir şey kırılmaz.
 
 Her JS/CSS değişikliğinde ilgili uygulamanın sürüm numarası bir artırılır
 (cache-busting `?v=` parametresi + görsel etiket). Detay: `AGENTS.md`.
+
+## Clashdle (dierdio.com/clashdle)
+
+Günlük mod + rastgele antrenman modu içeren Clash Royale kart tahmin oyunu.
+
+```bash
+cd clashdle
+node scripts/build-cards.cjs               # kart verisini yenile (Wiki + i18n çeviriler)
+node scripts/fetch-fallback-images.cjs     # CDN'de olmayan kart görsellerini yerle indir
+npm run dev                                # geliştirme sunucusu (:5183) — start-dev.cmd de kullanılabilir
+npm run typecheck                          # tsc --noEmit
+npm run build                              # üretim derlemesi -> clashdle/dist
+```
+
+Kart kapsamı yalnızca **ana oyun**: evrim (Evolution) kartlar ve oyundan kaldırılmış
+kartlar veriye girmez. Türkçe adlar RoyaleAPI'nin resmî çeviri verisinden alınır;
+orada henüz olmayan yeni kartlar `deckshop.pro` üzerinden doğrulanır (örnek:
+Berserker → Yaramaz, Minion Giant → Minyon Dev).
+
+`clashdle/dist/` derleme çıktısı repoya işlenir: Vercel bu depoyu statik olarak
+yayınladığı için `/clashdle/` adresinden doğrudan sunulur (bkz. `vercel.json`
+rewrite kuralları ve `vite.config.ts` içindeki `base: '/clashdle/'`).
+RoyaleAPI CDN'inde bulunmayan görseller `public/cards/` altına indirilir.

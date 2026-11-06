@@ -1,17 +1,21 @@
 {
-  "name": "royaledle",
+  "name": "clashdle",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.3.0",
+  "description": "Günlük Clash Royale kart tahmin oyunu (Vite + React + TypeScript)",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "cards": "node scripts/build-cards.cjs",
+    "cards:check": "node scripts/build-cards.cjs --check",
+    "cards:images": "node scripts/fetch-fallback-images.cjs"
   },
   "dependencies": {
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.3",
