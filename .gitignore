@@ -5,10 +5,6 @@ terminal-yedek/
 node_modules/
 dist/
 
-# Clashdle derleme çıktısı repoya girer (statik hosting için gerekli)
-!clashdle/dist/
-!clashdle/dist/**
-
 # İşletim sistemi artıkları
 .DS_Store
 Thumbs.db

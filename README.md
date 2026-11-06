@@ -65,17 +65,23 @@ Günlük mod + rastgele antrenman modu içeren Clash Royale kart tahmin oyunu.
 cd clashdle
 node scripts/build-cards.cjs               # kart verisini yenile (Wiki + i18n çeviriler)
 node scripts/fetch-fallback-images.cjs     # CDN'de olmayan kart görsellerini yerle indir
-npm run dev                                # geliştirme sunucusu (:5183) — start-dev.cmd de kullanılabilir
+npm run dev                                # geliştirme sunucusu (:5183) — dev.html açar
 npm run typecheck                          # tsc --noEmit
-npm run build                              # üretim derlemesi -> clashdle/dist
+npm run build                              # uretim derlemesi -> clashdle/index.html + assets/
+```
+
+Derleme ciktisi `clashdle/` klasorunun kendisine yazilir ve `index.html` olarak
+yeniden adlandirilir (giris dosyasi `dev.template.html` sabronundan `dev.html`
+olarak uretilir). Boylece Vercel rewrite'a gerek kalmadan:
+
+```
+/clashdle/index.html   -> https://dierdio.com/clashdle/
+/clashdle/assets/*     -> https://dierdio.com/clashdle/assets/*
+/clashdle/cards/*      -> https://dierdio.com/clashdle/cards/*
 ```
 
 Kart kapsamı yalnızca **ana oyun**: evrim (Evolution) kartlar ve oyundan kaldırılmış
 kartlar veriye girmez. Türkçe adlar RoyaleAPI'nin resmî çeviri verisinden alınır;
 orada henüz olmayan yeni kartlar `deckshop.pro` üzerinden doğrulanır (örnek:
-Berserker → Yaramaz, Minion Giant → Minyon Dev).
-
-`clashdle/dist/` derleme çıktısı repoya işlenir: Vercel bu depoyu statik olarak
-yayınladığı için `/clashdle/` adresinden doğrudan sunulur (bkz. `vercel.json`
-rewrite kuralları ve `vite.config.ts` içindeki `base: '/clashdle/'`).
-RoyaleAPI CDN'inde bulunmayan görseller `public/cards/` altına indirilir.
+Berserker → Yaramaz, Minion Giant → Minyon Dev). RoyaleAPI CDN'inde bulunmayan
+görseller `public/cards/` altına indirilir.

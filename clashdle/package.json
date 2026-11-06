@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/prebuild.cjs && vite build && node scripts/postbuild.cjs",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "cards": "node scripts/build-cards.cjs",

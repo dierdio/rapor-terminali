@@ -15,14 +15,7 @@
     {
       "source": "/aselget/(.*)",
       "destination": "/aselget/"
-    },
-    {
-      "source": "/clashdle/assets/(.*)",
-      "destination": "/clashdle/dist/assets/$1"
-    },
-    {
-      "source": "/clashdle/(.*)",
-      "destination": "/clashdle/dist/$1"
     }
-  ]
+  ],
+  "$schema": "https://openapi.vercel.sh/vercel.json"
 }
