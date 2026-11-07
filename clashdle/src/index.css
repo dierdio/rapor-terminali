@@ -2,11 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
-/* clashdle - ozel katmanlar */
+/* Clashdle - ozel katmanlar */
+
+/*
+ * Clash Royale tarzi yuvarlak font (Baloo 2) butun metinlere uygulanir.
+ * Tailwind'in sans yigininin tamamini bu fontla degistirdik; bu kural
+ * font-sans/font-mono gibi siniflardan bagimsiz olarak her seyi kapsar.
+ */
+html,
+body,
+button,
+input,
+select,
+textarea,
+table,
+th,
+td,
+pre,
+code,
+kbd {
+  font-family: 'Baloo 2', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
 
 body {
-  font-family: 'Baloo 2', 'Segoe UI', system-ui, -apple-system, sans-serif;
   background-color: #0d0d0d;
+}
+
+/* Sayacta rakamlar kaymasin diye esit genislikli rakamlar */
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Kararsilastirma renkleri (wordle benzeri geri bildirim) */

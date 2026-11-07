@@ -454,7 +454,7 @@ function App(): React.ReactElement {
                 </span>
               ) : (
                 <span>
-                  Sıradaki kart: <span className="font-mono">{formatDuration(countdown)}</span>
+                  Sıradaki kart: <span className="tabular">{formatDuration(countdown)}</span>
                 </span>
               )}
             </p>
@@ -638,7 +638,7 @@ function App(): React.ReactElement {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-2 text-center text-xs text-gray-500">
-        Clashdle v1.6.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir
+        Clashdle v1.7.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir
       </footer>
 
       {showHelp && <HowToPlay onClose={() => setShowHelp(false)} />}
