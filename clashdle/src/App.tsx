@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Card } from './types'
+import { clearAccess, grantAccess, hasAccess } from './game/access'
+import Gate from './Gate'
 import {
   ATTRIBUTES,
   CARDS,
@@ -184,6 +186,28 @@ function HowToPlay({ onClose }: { onClose: () => void }) {
 }
 
 function App(): React.ReactElement {
+  // Erisim kapisi: dogru kod girilene kadar oyun yuklenmez
+  const [unlocked, setUnlocked] = useState(() => hasAccess())
+
+  if (!unlocked) {
+    return (
+      <Gate
+        onUnlock={(remember) => {
+          grantAccess(remember)
+          setUnlocked(true)
+        }}
+      />
+    )
+  }
+  const lock = () => {
+    clearAccess()
+    setUnlocked(false)
+  }
+  return <Game onLock={lock} />
+}
+
+/** Oyunun kendisi (kilit acildiktan sonra) */
+function Game({ onLock }: { onLock: () => void }): React.ReactElement {
   const [today, setToday] = useState(() => dayKey())
   const [mode, setMode] = useState<Mode>(() => loadMode())
   const [randomGame, setRandomGame] = useState<RandomState>(
@@ -368,7 +392,7 @@ function App(): React.ReactElement {
           <div className="flex flex-wrap items-center gap-3">
             <span className="text-3xl">🏰</span>
             <div>
-              <h1 className="text-2xl font-bold tracking-wide">Clashdle</h1>
+              <h1 className="text-2xl font-extrabold tracking-wide">Clashdle</h1>
               <p className="text-xs text-gray-400">
                 Clash Royale kart tahmin oyunu · {CARDS.length} kart ·{' '}
                 {mode === 'daily' ? `günün kartı (${today})` : 'rastgele antrenman'}
@@ -638,7 +662,10 @@ function App(): React.ReactElement {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-2 text-center text-xs text-gray-500">
-        Clashdle v1.7.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir
+        Clashdle v1.8.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir ·{' '}
+        <button onClick={onLock} className="underline decoration-dotted hover:text-gray-300">
+          kilitli çık
+        </button>
       </footer>
 
       {showHelp && <HowToPlay onClose={() => setShowHelp(false)} />}

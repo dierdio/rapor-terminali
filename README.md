@@ -85,3 +85,23 @@ kartlar veriye girmez. Türkçe adlar RoyaleAPI'nin resmî çeviri verisinden al
 orada henüz olmayan yeni kartlar `deckshop.pro` üzerinden doğrulanır (örnek:
 Berserker → Yaramaz, Minion Giant → Minyon Dev). RoyaleAPI CDN'inde bulunmayan
 görseller `public/cards/` altına indirilir.
+
+## Erişim Kodu (Clashdle)
+
+Clashdle davetiyelidir: doğru kod girilmeden oyun açılmaz.
+
+```bash
+# Kendi kodunu ayarlamak icin:
+node -e "console.log(require('crypto').createHash('sha256').update('KODUN').digest('hex'))"
+```
+
+Çıkan değeri `clashdle/src/game/access.ts` içindeki `CODE_HASH` ile değiştir
+(şu anki kod: `clash2026`). Kodun kendisi kaynak dosyada **düz metin olarak
+tutulmaz**, sadece SHA-256 özeti saklanır.
+
+- Girilen kod tarayıcıda hash'lenip karşılaştırılır; doğruysa oturum açılır.
+- "Beni hatırla" işaretlenirse 7 gün, işaretlenmezse sekme kapanana kadar
+  hatırlanır. Alt bilgideki **kilitli çık** bağlantısı kilidi yeniden kilitler.
+- Depo herkese açık olduğu için bu bir "yol lambası"dır, gercek güvenlik değil.
+  Gerçek koruma için Vercel panelinde **Deployment Protection → Password
+  Protection** açın (bu tüm projeyi korur, sadece `/clashdle/` değil).
