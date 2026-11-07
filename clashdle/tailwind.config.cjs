@@ -2,10 +2,10 @@
 module.exports = {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
-    // Clash Royale tarzi yuvarlak font her yerde kullanilir
+    // Clash Royale fontu her yerde kullanilir (yedege Baloo 2 duser)
     fontFamily: {
-      sans: ['"Baloo 2"', '"Segoe UI"', 'system-ui', '-apple-system', 'sans-serif'],
-      royal: ['"Baloo 2"', '"Segoe UI"', 'system-ui', 'sans-serif'],
+      sans: ['Clash', '"Baloo 2"', '"Segoe UI"', 'system-ui', '-apple-system', 'sans-serif'],
+      royal: ['Clash', '"Baloo 2"', '"Segoe UI"', 'system-ui', 'sans-serif'],
     },
     extend: {
       colors: {

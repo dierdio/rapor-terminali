@@ -662,7 +662,7 @@ function Game({ onLock }: { onLock: () => void }): React.ReactElement {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-2 text-center text-xs text-gray-500">
-        Clashdle v1.8.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir ·{' '}
+        Clashdle v1.9.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir ·{' '}
         <button onClick={onLock} className="underline decoration-dotted hover:text-gray-300">
           kilitli çık
         </button>
