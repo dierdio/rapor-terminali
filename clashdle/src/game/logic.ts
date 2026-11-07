@@ -304,17 +304,22 @@ function normalize(text: string): string {
     .replace(/[^a-z0-9]/g, '')
 }
 
-/** Kart arama: ad, Turkce ad ve arena alaninda ara (noktalama duyarsiz) */
+/**
+ * Kart arama: ad, Turkce ad ve arena alaninda ara (noktalama duyarsiz).
+ * Sorgu bosken liste Turkce ada gore alfabetik siralanir ve tum kartlar
+ * dondurulir; arayuz kaydirma ile artirarak yukler.
+ */
 export function searchCards(cards: Card[], query: string, excludeIds: number[] = []): Card[] {
   const q = normalize(query)
   const excluded = new Set(excludeIds)
+  const pool = cards.filter((c) => !excluded.has(c.id))
+
   if (!q) {
-    return cards.filter((c) => !excluded.has(c.id)).slice(0, 40)
+    return pool.sort((a, b) => (a.name_tr ?? a.name).localeCompare(b.name_tr ?? b.name, 'tr'))
   }
 
   const scored: Array<{ card: Card; score: number }> = []
-  for (const card of cards) {
-    if (excluded.has(card.id)) continue
+  for (const card of pool) {
     const names = [card.name, card.name_tr].filter((v): v is string => Boolean(v)).map(normalize)
     const arena = normalize(card.arena ?? '')
 
@@ -327,6 +332,6 @@ export function searchCards(cards: Card[], query: string, excludeIds: number[] =
     if (score >= 0) scored.push({ card, score })
   }
 
-  scored.sort((a, b) => a.score - b.score)
-  return scored.slice(0, 40).map((s) => s.card)
+  scored.sort((a, b) => a.score - b.score || (a.card.name_tr ?? a.card.name).localeCompare(b.card.name_tr ?? b.card.name, 'tr'))
+  return scored.map((s) => s.card)
 }
