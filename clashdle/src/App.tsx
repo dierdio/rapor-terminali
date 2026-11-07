@@ -526,7 +526,6 @@ function Game({ onLock }: { onLock: () => void }): React.ReactElement {
                         <span className="text-base font-semibold">{c.name_tr ?? c.name}</span>
                         <span className="ml-2 text-xs text-gray-400">{c.name}</span>
                       </span>
-                      <span className="rounded bg-gray-700 px-2 py-0.5 text-xs">{c.cost} iksir</span>
                     </button>
                   </li>
                 ))}
@@ -550,13 +549,8 @@ function Game({ onLock }: { onLock: () => void }): React.ReactElement {
               <div className="min-w-0 flex-1">
                 <h3 className="text-xl font-bold">{selected.name_tr ?? selected.name}</h3>
                 <p className="text-sm text-gray-400">{selected.name}</p>
-                <p className="mt-2 text-base text-gray-200">
-                  {ATTRIBUTES.map((a, i) => (
-                    <span key={a.key}>
-                      {i > 0 && <span className="mx-1 text-gray-500">·</span>}
-                      <span className="text-gray-400">{a.label}:</span> {formatAttr(a, selected)}
-                    </span>
-                  ))}
+                <p className="mt-3 text-sm text-gray-400">
+                  Özellikleri ancak tahmin ettikten sonra görürsün — ipucu yok, tahmin et!
                 </p>
               </div>
               <button
@@ -662,7 +656,7 @@ function Game({ onLock }: { onLock: () => void }): React.ReactElement {
       </main>
 
       <footer className="mx-auto max-w-6xl px-4 pb-10 pt-2 text-center text-xs text-gray-500">
-        Clashdle v1.9.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir ·{' '}
+        Clashdle v2.0.0 · veriler Clash Royale Wiki + RoyaleAPI'den üretilir · Supercell'e bağlı değildir ·{' '}
         <button onClick={onLock} className="underline decoration-dotted hover:text-gray-300">
           kilitli çık
         </button>
