@@ -76,14 +76,23 @@ adımda Java 1.0'dan güncel sürümlere, ardından Pocket Edition, konsol,
 Better Together, Dungeons, Legends ve Microsoft satın alımı gibi çapraz
 platform kayıtlarına genişletilecektir.
 
-## Base path
+## Bağımsız deployment
 
-Production build `vite.config.ts` içindeki `base: '/mctimeline/'` ayarı sayesinde
-şu adreste çalışacak şekilde tasarlanmıştır:
+Proje bağımsız bir repository ve domain/subdomain üzerinde yayınlanacak şekilde
+`vite.config.ts` içinde `base: '/'` kullanır. Önerilen adres:
 
 ```text
-https://dierdio.com/mctimeline/
+https://mctimeline.dierdio.com/
 ```
 
-Geliştirme sırasında Vite kök path kullanır; production asset URL'leri otomatik
-olarak `/mctimeline/` ile başlar.
+GitHub Pages, Cloudflare Pages veya Netlify üzerinde build çıktısı `dist/`
+klasörüdür. GitHub Pages için `.github/workflows/deploy.yml` workflow'u hazırdır.
+
+### Build
+
+```bash
+npm install
+npm run typecheck
+npm run build
+npm run preview
+```
