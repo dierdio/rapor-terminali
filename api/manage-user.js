@@ -16,26 +16,31 @@ export default async function handler(req, res) {
   try {
     if (action === 'delete') {
       // 1. Auth'tan sil
-      await fetch(`${supabaseUrl}/auth/v1/admin/users/${targetUserId}`, { method: 'DELETE', headers });
+      const authDelete = await fetch(`${supabaseUrl}/auth/v1/admin/users/${targetUserId}`, { method: 'DELETE', headers });
+      if (!authDelete.ok) return res.status(502).json({ error: 'Auth kullanıcısı silinemedi.' });
       // 2. Profiles'dan sil
-      await fetch(`${supabaseUrl}/rest/v1/profiles?username=eq.${targetUsername}`, { method: 'DELETE', headers });
+      const profileDelete = await fetch(`${supabaseUrl}/rest/v1/profiles?username=eq.${encodeURIComponent(targetUsername)}`, { method: 'DELETE', headers });
+      if (!profileDelete.ok) return res.status(502).json({ error: 'Profil silinemedi.' });
       return res.status(200).json({ success: true });
     } 
     
     if (action === 'update') {
       // Şifre değişecekse Auth güncelle
       if (newPassword && newPassword.trim() !== '') {
-        await fetch(`${supabaseUrl}/auth/v1/admin/users/${targetUserId}`, {
+        const authUpdate = await fetch(`${supabaseUrl}/auth/v1/admin/users/${targetUserId}`, {
           method: 'PUT', headers, body: JSON.stringify({ password: newPassword })
         });
+        if (!authUpdate.ok) return res.status(502).json({ error: 'Şifre güncellenemedi.' });
       }
       // Profiles tablosunu güncelle (İsim, Yetki, Rütbe)
-      await fetch(`${supabaseUrl}/rest/v1/profiles?username=eq.${targetUsername}`, {
+      const profileUpdate = await fetch(`${supabaseUrl}/rest/v1/profiles?username=eq.${encodeURIComponent(targetUsername)}`, {
         method: 'PATCH', headers,
         body: JSON.stringify({ display_name: newName, role: newRole, rutbe: newRutbe })
       });
+      if (!profileUpdate.ok) return res.status(502).json({ error: 'Profil güncellenemedi.' });
       return res.status(200).json({ success: true });
     }
+    return res.status(400).json({ error: 'Geçersiz işlem.' });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }

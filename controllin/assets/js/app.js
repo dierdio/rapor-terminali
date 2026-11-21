@@ -92,9 +92,16 @@ function loadSettings() {
 function saveSettings() {
     const url = document.getElementById('setting-api-url').value.trim();
     const token = document.getElementById('setting-api-token').value.trim();
-    localStorage.setItem('controllin_vds_url', url);
+    let parsedUrl;
+    try { parsedUrl = new URL(url); } catch { document.getElementById('settings-msg').textContent = 'Geçerli bir VDS URL girin.'; return; }
+    if (!['http:', 'https:'].includes(parsedUrl.protocol) || !token) {
+        document.getElementById('settings-msg').textContent = 'HTTPS/HTTP URL ve token zorunludur.';
+        return;
+    }
+    const normalizedUrl = parsedUrl.origin;
+    localStorage.setItem('controllin_vds_url', normalizedUrl);
     localStorage.setItem('controllin_vds_token', token);
-    vdsConfig = { url, token };
+    vdsConfig = { url: normalizedUrl, token };
     
     document.getElementById('settings-msg').textContent = 'Ayarlar kaydedildi! Sayfa yenileniyor...';
     setTimeout(() => window.location.reload(), 1000);
@@ -151,7 +158,12 @@ async function vdsFetch(endpoint, options = {}) {
     };
     
     const targetUrl = `${vdsConfig.url}${endpoint}`;
-    const res = await fetch(targetUrl, { ...options, headers });
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    let res;
+    try { res = await fetch(targetUrl, { ...options, headers, signal: controller.signal }); }
+    catch (error) { throw new Error(error.name === 'AbortError' ? 'VDS isteği zaman aşımına uğradı.' : 'VDS bağlantısı kurulamadı.'); }
+    finally { clearTimeout(timeout); }
     if (!res.ok) {
         const errData = await res.json().catch(()=>({}));
         throw new Error(errData.error || `Bağlantı Hatası: ${res.status} ${res.statusText} (${targetUrl})`);

@@ -5,6 +5,15 @@ export default async function handler(req, res) {
   }
 
   const { username, password, tam_isim, seviye, yetkili } = req.body;
+  if (typeof username !== 'string' || !/^[a-zA-Z0-9_.-]{3,32}$/.test(username)) {
+    return res.status(400).json({ error: 'Geçersiz kullanıcı adı.' });
+  }
+  if (typeof password !== 'string' || password.length < 8 || password.length > 128) {
+    return res.status(400).json({ error: 'Şifre 8-128 karakter arasında olmalıdır.' });
+  }
+  if (typeof tam_isim !== 'string' || tam_isim.trim().length < 2 || tam_isim.length > 100) {
+    return res.status(400).json({ error: 'Geçersiz ad soyad.' });
+  }
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 

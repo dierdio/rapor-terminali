@@ -10,6 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const API_TOKEN = process.env.API_TOKEN;
 const BASE_DIR = path.resolve(process.env.BASE_DIR || '/home/minecraft');
+const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || '';
 
 // GÜVENLİK: Token zorunludur. Varsayılan token ile çalışmak, paneli internete
 // açık kapı haline getirir. Lütfen başlatırken API_TOKEN=... belirleyin.
@@ -20,8 +21,8 @@ if (!API_TOKEN) {
     process.exit(1);
 }
 
-app.use(cors());
-app.use(express.json());
+app.use(cors({ origin: ALLOWED_ORIGIN || true }));
+app.use(express.json({ limit: '1mb' }));
 
 const authMiddleware = (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -112,6 +113,10 @@ app.post('/api/servers/install', async (req, res) => {
     const { name, type, version, ram } = req.body;
     if (!validName(name)) return res.status(400).json({ error: 'Geçersiz sunucu adı.' });
     if (!version || typeof version !== 'string' || !/^[a-zA-Z0-9._-]+$/.test(version)) return res.status(400).json({ error: 'Geçersiz sürüm.' });
+    const ramValue = Number(ram || 2);
+    if (!Number.isInteger(ramValue) || ramValue < 1 || ramValue > 64) {
+        return res.status(400).json({ error: 'RAM 1 ile 64 GB arasında tam sayı olmalıdır.' });
+    }
 
     const targetDir = safeJoin(BASE_DIR, name);
     if (!targetDir) return res.status(400).json({ error: 'Geçersiz yol.' });
@@ -150,8 +155,7 @@ app.post('/api/servers/install', async (req, res) => {
         fs.writeFileSync(path.join(targetDir, 'eula.txt'), 'eula=true\n');
 
         // 5. Başlatma scriptini (run.sh) oluştur
-        const ramG = ram || '2';
-        const runScript = `#!/bin/bash\njava -Xms${ramG}G -Xmx${ramG}G -jar server.jar nogui\n`;
+        const runScript = `#!/bin/bash\njava -Xms${ramValue}G -Xmx${ramValue}G -jar server.jar nogui\n`;
         fs.writeFileSync(path.join(targetDir, 'run.sh'), runScript);
         fs.chmodSync(path.join(targetDir, 'run.sh'), '755'); // Çalıştırma izni
 
@@ -260,7 +264,10 @@ app.post('/api/servers/:name/stop', (req, res) => {
 });
 
 // --- DOSYA YÖNETİCİSİ ---
-const upload = multer({ dest: '/tmp/controllin_uploads' });
+const upload = multer({
+    dest: '/tmp/controllin_uploads',
+    limits: { fileSize: 100 * 1024 * 1024 }
+});
 
 app.get('/api/files', (req, res) => {
     let targetPath = typeof req.query.path === 'string' ? req.query.path : '';
@@ -305,6 +312,7 @@ app.get('/api/files/download', (req, res) => {
     const fullPath = safeJoin(BASE_DIR, targetPath);
     if (!fullPath) return res.status(400).json({ error: 'Invalid path' });
     if (!fs.existsSync(fullPath)) return res.status(404).json({ error: 'File not found' });
+    if (!fs.statSync(fullPath).isFile()) return res.status(400).json({ error: 'Only files can be downloaded' });
     res.download(fullPath);
 });
 
@@ -317,7 +325,10 @@ app.post('/api/files/upload', upload.single('file'), (req, res) => {
     const safeName = path.basename(req.file.originalname || 'dosya');
     const finalPath = path.join(fullDir, safeName);
     fs.rename(req.file.path, finalPath, (err) => {
-        if (err) return res.status(500).json({ error: err.message });
+        if (err) {
+            fs.unlink(req.file.path, () => {});
+            return res.status(500).json({ error: err.message });
+        }
         res.json({ success: true, message: 'Dosya yüklendi.' });
     });
 });
