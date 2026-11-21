@@ -1,0 +1,179 @@
+[
+  {
+    "id": "cave-game-tech-test",
+    "date": "2009-05-10",
+    "datePrecision": "day",
+    "version": "Cave Game tech test",
+    "era": "pre-classic",
+    "category": "milestone",
+    "title": {
+      "tr": "Cave Game: ilk prototip",
+      "en": "Cave Game: the first prototype"
+    },
+    "summary": {
+      "tr": "Notch'un Minecraft fikrini sınadığı, blok yerleştirme ve kırma temellerini içeren erken prototip.",
+      "en": "An early prototype by Notch exploring Minecraft's core ideas: placing and breaking blocks."
+    },
+    "details": {
+      "tr": "Minecraft'ın kamuya açık sürümlerinden önceki bu deneysel aşama, oyunun temel dünya ve blok etkileşimi fikrini ortaya koydu. Henüz hayatta kalma sistemi veya envanter gibi modern sistemler bulunmuyordu.",
+      "en": "This experimental phase predates Minecraft's public releases and established the basic world and block-interaction concept. Survival, inventory and most modern systems did not exist yet."
+    },
+    "features": [
+      { "tr": "İlk blok dünyası prototipi", "en": "First block-world prototype" },
+      { "tr": "Blok yerleştirme ve kırma", "en": "Block placement and breaking" }
+    ],
+    "tags": ["Cave Game", "Pre-Classic", "Java"],
+    "sources": [
+      "https://minecraft.wiki/w/Java_Edition_pre-Classic",
+      "https://minecraft.wiki/w/Java_Edition_Classic"
+    ]
+  },
+  {
+    "id": "classic-0-0-11a",
+    "date": "2009-05-17",
+    "datePrecision": "day",
+    "version": "0.0.11a",
+    "era": "classic",
+    "category": "java",
+    "title": {
+      "tr": "Classic: ilk halka açık sürüm",
+      "en": "Classic: the first public release"
+    },
+    "summary": {
+      "tr": "Minecraft'ın ilk halka açık geliştirme sürümü; yaratıcı yapı deneyimini erişilebilir hâle getirdi.",
+      "en": "Minecraft's first public development release made the creative building experiment accessible."
+    },
+    "details": {
+      "tr": "Classic dönemi, oyuncuların sınırsız bloklarla yapı kurabildiği yaratıcı oynanışın temelini attı. Bu aşamada oyun henüz ücretli bir ürün veya tam teşekküllü hayatta kalma oyunu değildi.",
+      "en": "The Classic era established creative play with unlimited blocks. The game was not yet a paid product or a full survival experience."
+    },
+    "features": [
+      { "tr": "Halka açık tarayıcı sürümü", "en": "Public browser release" },
+      { "tr": "Yaratıcı yapı odaklı oynanış", "en": "Creative building-focused gameplay" }
+    ],
+    "tags": ["Classic", "Java", "Creative"],
+    "sources": [
+      "https://minecraft.wiki/w/Java_Edition_Classic",
+      "https://minecraft.wiki/w/Java_Edition_Classic_0.0.11a"
+    ]
+  },
+  {
+    "id": "indev-0-31",
+    "date": "2009-12-23",
+    "datePrecision": "day",
+    "version": "Indev 0.31",
+    "era": "indev",
+    "category": "java",
+    "title": {
+      "tr": "Indev: hayatta kalmanın temelleri",
+      "en": "Indev: the foundations of survival"
+    },
+    "summary": {
+      "tr": "Envanter, işleme, gündüz-gece döngüsü ve ilk hayatta kalma mekanikleri oyuna girmeye başladı.",
+      "en": "Inventory, crafting, the day-night cycle and early survival mechanics began to take shape."
+    },
+    "details": {
+      "tr": "Indev, Minecraft'ın yaratıcı bir yapı deneyinden sistemleri olan bir oyuna dönüşmesinde kritik bir adımdı. Dünyalar sınırlıydı ve sürümler deneysel olsa da hayatta kalma döngüsünün ana parçaları burada şekillendi.",
+      "en": "Indev was a critical step in Minecraft's transition from a building experiment to a systems-driven game. Worlds were limited and builds were experimental, but the core survival loop took shape here."
+    },
+    "features": [
+      { "tr": "Envanter ve işleme", "en": "Inventory and crafting" },
+      { "tr": "Gündüz-gece döngüsü", "en": "Day-night cycle" },
+      { "tr": "İlk hayatta kalma sistemleri", "en": "Early survival systems" }
+    ],
+    "tags": ["Indev", "Java", "Survival", "Crafting"],
+    "sources": [
+      "https://minecraft.wiki/w/Java_Edition_Indev",
+      "https://minecraft.wiki/w/Java_Edition_Indev_0.31"
+    ]
+  },
+  {
+    "id": "infdev-infinite-worlds",
+    "date": "2010-02-27",
+    "datePrecision": "day",
+    "version": "Infdev",
+    "era": "infdev",
+    "category": "java",
+    "title": {
+      "tr": "Infdev: sonsuz dünyalara geçiş",
+      "en": "Infdev: the move to infinite worlds"
+    },
+    "summary": {
+      "tr": "Sınırsız dünya üretimi ve yeni arazi sistemi, Minecraft'ın keşif duygusunu kalıcı olarak değiştirdi.",
+      "en": "Infinite world generation and a new terrain system permanently changed Minecraft's sense of exploration."
+    },
+    "details": {
+      "tr": "Infdev sürümleri, Indev'in sınırlı haritalarından ayrılarak sonsuz dünya üretimini denedi. Bu karar, Minecraft'ın keşif ve prosedürel dünya kimliğinin teknik temelini oluşturdu.",
+      "en": "Infdev moved away from Indev's limited maps and experimented with infinite world generation. This decision became the technical foundation of Minecraft's exploration and procedural-world identity."
+    },
+    "features": [
+      { "tr": "Sonsuz dünya üretimi", "en": "Infinite world generation" },
+      { "tr": "Yeni arazi üretim yaklaşımı", "en": "New terrain-generation approach" }
+    ],
+    "tags": ["Infdev", "Java", "World Generation", "Exploration"],
+    "sources": [
+      "https://minecraft.wiki/w/Java_Edition_Infdev",
+      "https://minecraft.wiki/w/Java_Edition_Infdev_20100227-1421"
+    ]
+  },
+  {
+    "id": "alpha-1-0-0",
+    "date": "2010-06-30",
+    "datePrecision": "day",
+    "version": "Alpha v1.0.0",
+    "era": "alpha",
+    "category": "java",
+    "title": {
+      "tr": "Alpha: hayatta kalma deneyimi büyüyor",
+      "en": "Alpha: the survival experience expands"
+    },
+    "summary": {
+      "tr": "Minecraft'ın ücretli Alpha dönemi başladı; çok oyunculu hayatta kalma ve yeni sistemler hızla eklendi.",
+      "en": "Minecraft's paid Alpha era began as multiplayer survival and new systems expanded rapidly."
+    },
+    "details": {
+      "tr": "Alpha dönemi, oyunun çekirdek hayatta kalma formülünü genişletti. Nether'ın temelleri, redstone, yataklar ve çok oyunculu oynanış gibi dönüştürücü özellikler bu dönemin önemli kilometre taşları arasındadır.",
+      "en": "The Alpha era expanded Minecraft's core survival formula. The foundations of the Nether, redstone, beds and multiplayer were among its transformative milestones."
+    },
+    "features": [
+      { "tr": "Ücretli Alpha dönemi", "en": "Paid Alpha era" },
+      { "tr": "Çok oyunculu hayatta kalma", "en": "Multiplayer survival" },
+      { "tr": "Nether, redstone ve yataklara giden yol", "en": "The road to the Nether, redstone and beds" }
+    ],
+    "tags": ["Alpha", "Java", "Multiplayer", "Survival"],
+    "sources": [
+      "https://minecraft.wiki/w/Java_Edition_Alpha",
+      "https://minecraft.wiki/w/Java_Edition_Alpha_v1.0.0"
+    ]
+  },
+  {
+    "id": "beta-1-0",
+    "date": "2010-12-20",
+    "datePrecision": "day",
+    "version": "Beta 1.0",
+    "era": "beta",
+    "category": "java",
+    "title": {
+      "tr": "Beta: daha büyük bir maceranın eşiğinde",
+      "en": "Beta: on the edge of a bigger adventure"
+    },
+    "summary": {
+      "tr": "Beta, Minecraft'ın tam sürüme yaklaşırken sistemlerini ve topluluk kimliğini sağlamlaştırdığı dönemdi.",
+      "en": "Beta was the period when Minecraft solidified its systems and community identity on the way to release."
+    },
+    "details": {
+      "tr": "Beta dönemi; hava durumu, deneyim, açlık, pistonlar ve daha gelişmiş dünya/oyuncu sistemleriyle oyunun kapsamını büyüttü. 1.0 Adventure Update'e giden yol burada şekillendi.",
+      "en": "Beta expanded the game's scope with weather, experience, hunger, pistons and more advanced world and player systems. The road to the 1.0 Adventure Update took shape here."
+    },
+    "features": [
+      { "tr": "Deneyim ve açlık sistemleri", "en": "Experience and hunger systems" },
+      { "tr": "Pistonlar ve gelişmiş redstone", "en": "Pistons and advanced redstone" },
+      { "tr": "Tam sürüme hazırlık", "en": "Preparation for the full release" }
+    ],
+    "tags": ["Beta", "Java", "Redstone", "Adventure Update"],
+    "sources": [
+      "https://minecraft.wiki/w/Java_Edition_Beta",
+      "https://minecraft.wiki/w/Java_Edition_Beta_1.0"
+    ]
+  }
+]
