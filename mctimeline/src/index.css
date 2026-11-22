@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: monospace;
+  color: #f1f5e9;
+  background: #10150f;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+.placeholder {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}

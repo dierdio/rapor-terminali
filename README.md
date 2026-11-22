@@ -12,6 +12,7 @@ DIERDIO ekosistemi — Vercel üzerinde yayında olan çok bileşenli web projes
 | `controllin/` | Minecraft Kontrol Paneli | VDS'teki Minecraft sunucularını yönetme paneli |
 | `aselget/` | ASELGET Topluluk Sistemi | Aselsan Oyun Geliştiricileri Topluluğu: üye dizini, ders yönetimi, yoklama alma, etkinlik takvimi, duyurular |
 | `clashdle/` | Clashdle | Günlük Clash Royale kart tahmin oyunu (Vite + React + TypeScript + Tailwind), Wordle tarzı 8 özellik karşılaştırması + rastgele antrenman modu |
+| `mctimeline/` | Minecraft Timeline | Minecraft tarihini Pre-Classic'ten günümüze çift dilli sunan React/Vite zaman çizelgesi (`dierdio.com/mctimeline/`) |
 | `controllin/vds-daemon/` | Daemon | VDS üzerinde çalışan Express API: sunucu kurulumu (Paper/Vanilla), screen oturum yönetimi, dosya yöneticisi |
 | `api/` | Vercel Serverless | `create-user`, `manage-user` (Supabase admin işlemleri, JWT + yetkili kontrolü), `get-versions`, `get-reviews` (proxy) |
 | `supabase/` | SQL Scriptleri | Storage bucket ve RLS sertleştirme scriptleri |

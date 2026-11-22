@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm --prefix mctimeline install && npm --prefix mctimeline run build",
   "rewrites": [
     {
       "source": "/kritr/(.*)",
