@@ -4,7 +4,12 @@ const item = (id: string, date: string, version: string, era: TimelineMilestone[
   id, date, datePrecision: 'day', version, era, category, title, summary,
   details: { tr: summary.tr, en: summary.en }, features, tags,
   sources: [`https://minecraft.wiki/w/${encodeURIComponent(version.split(' ').join('_'))}`], isMajor,
+  icon: `https://mcasset.cloud/26.3/assets/minecraft/textures/${assetFor(id)}`,
 })
+
+const assetFor = (id: string) => ({
+  'cave-game': 'block/stone.png', classic: 'block/grass_block_side.png', 'survival-test': 'item/wooden_sword.png', indev: 'item/crafting_table.png', infdev: 'item/diamond.png', alpha: 'item/bed.png', halloween: 'block/netherrack.png', beta: 'block/piston.png', 'java-1': 'item/enchanted_golden_apple.png', pocket: 'item/compass.png', 'pretty-scary': 'item/nether_star.png', microsoft: 'item/emerald.png', aquatic: 'item/trident.png', 'better-together': 'item/ender_pearl.png', nether: 'item/netherite_ingot.png', 'caves-cliffs': 'block/amethyst_block.png', wild: 'item/recovery_compass.png', 'trails-tales': 'item/brush.png', 'tricky-trials': 'item/mace.png', dungeons: 'item/diamond_sword.png', legends: 'item/banner.png', 'game-drops': 'item/bundle.png',
+} as Record<string, string>)[id] ?? 'block/grass_block_top.png'
 
 export const timelineData: TimelineMilestone[] = [
   item('cave-game', '2009-05-13', 'Cave Game', 'pre-classic', 'milestone', { tr: 'Cave Game: ilk kıvılcım', en: 'Cave Game: the first spark' }, { tr: 'Notch’un blok tabanlı dünya fikrini sınadığı ilk prototip.', en: 'The first prototype testing Notch’s idea of a block-based world.' }, [{ tr: 'Blok yerleştirme ve kırma', en: 'Block placement and breaking' }, { tr: 'İlk prosedürel dünya', en: 'First procedural world' }], ['Pre-Classic', 'Prototype', 'Java']),
