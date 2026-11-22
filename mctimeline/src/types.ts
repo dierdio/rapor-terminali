@@ -1,8 +1,8 @@
 export type Locale = 'tr' | 'en'
 
-export type TimelineFilter = 'all' | 'java' | 'platforms' | 'milestones'
+export type TimelineFilter = 'all' | 'java' | 'platforms' | 'updates' | 'milestones'
 
-export type Era = 'pre-classic' | 'classic' | 'indev' | 'infdev' | 'alpha' | 'beta'
+export type Era = 'pre-classic' | 'classic' | 'indev' | 'infdev' | 'alpha' | 'beta' | 'release' | 'modern' | 'cross-platform'
 
 export type TimelineCategory = 'java' | 'platform' | 'milestone'
 
@@ -32,4 +32,7 @@ export interface TimelineMilestone {
   tags: string[]
   media?: TimelineMedia
   sources: string[]
+  isMajor?: boolean
+  icon?: string
+  screenshot?: string
 }

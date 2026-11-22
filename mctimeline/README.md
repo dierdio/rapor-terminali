@@ -14,7 +14,7 @@ etkileşimli biçimde sunacak proje.
 - **Web Audio API:** Harici telifli ses dosyalarına bağımlı kalmadan arayüz
   seslerini üretmek için ses katmanı. Minecraft sesleri kullanılacaksa lisans ve
   dağıtım koşulları ayrıca doğrulanacak.
-- **Statik veri modülü/JSON:** `src/data/timelineData.json` içerik editörlüğü
+- **Tipli statik veri modülü:** `src/data/timelineData.ts` içerik editörlüğü
   için tek ve kolay genişletilebilir kaynak olacak. Her kayıt TR/EN metin,
   sınıflandırma, tarih, özellik, medya ve kaynak bilgisi taşır.
 
@@ -32,7 +32,7 @@ mctimeline/
     ├── index.css              # Global/Tailwind giriş stili
     ├── types.ts               # Timeline ve i18n tipleri
     ├── data/
-    │   └── timelineData.json  # İlk çift dilli örnek kayıtlar
+    │   └── timelineData.ts    # Çift dilli kronoloji verisi
     ├── components/             # Sonraki adım: timeline, modal, filtre, header
     ├── hooks/                  # Sonraki adım: locale, audio, responsive state
     ├── lib/                    # Sonraki adım: tarih, ses ve asset yardımcıları
