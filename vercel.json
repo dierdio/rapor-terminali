@@ -1,5 +1,6 @@
 {
-  "buildCommand": "npm --prefix mctimeline install && npm --prefix mctimeline run build",
+  "buildCommand": "rm -rf public && mkdir -p public && cp index.html public/index.html && cp -r terminal kritr controllin aselget clashdle public/ && npm --prefix mctimeline install && npm --prefix mctimeline run build",
+  "outputDirectory": "public",
   "rewrites": [
     {
       "source": "/kritr/(.*)",

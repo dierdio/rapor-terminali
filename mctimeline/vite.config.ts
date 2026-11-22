@@ -6,9 +6,9 @@ export default defineConfig(({ command }) => ({
   plugins: [react()],
   base: command === 'build' ? '/mctimeline/' : '/',
   build: {
-    // Vercel ana repoyu statik yayınladığı için çıktıyı bu klasöre yazarız.
-    outDir: '.',
-    emptyOutDir: false,
+    // Ana repo build sırasında public/mctimeline içine kopyalanır.
+    outDir: '../public/mctimeline',
+    emptyOutDir: true,
   },
   server: {
     port: 5184,
